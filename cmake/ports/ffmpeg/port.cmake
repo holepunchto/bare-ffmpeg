@@ -169,11 +169,13 @@ foreach(name IN LISTS libraries)
     INTERFACE "${ffmpeg_PREFIX}/include"
   )
 
-  target_link_options(
-    ${name}
-    INTERFACE
-      "-Wl,-Bsymbolic"
-  )
+  if(LINUX OR ANDROID)
+    target_link_options(
+      ${name}
+      INTERFACE
+        "-Wl,-Bsymbolic"
+    )
+  endif()
 endforeach()
 
 if(APPLE)
