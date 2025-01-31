@@ -173,3 +173,32 @@ foreach(name IN LISTS libraries)
   )
 endforeach()
 
+if(APPLE)
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      "-framework VideoToolbox"
+      "-framework CoreFoundation"
+      "-framework CoreMedia"
+      "-framework CoreVideo"
+      "-framework CoreServices"
+  )
+
+  target_link_libraries(
+    avutil
+    INTERFACE
+      "-framework VideoToolbox"
+      "-framework CoreFoundation"
+      "-framework CoreMedia"
+      "-framework CoreVideo"
+      "-framework CoreServices"
+  )
+
+  if(NOT IOS)
+    target_link_libraries(
+      avcodec
+      INTERFACE
+        "-framework AudioToolbox"
+    )
+  endif()
+endif()
