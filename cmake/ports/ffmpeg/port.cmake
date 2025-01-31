@@ -171,6 +171,12 @@ foreach(name IN LISTS libraries)
     ${name}
     INTERFACE "${ffmpeg_PREFIX}/include"
   )
+
+  target_link_options(
+    ${name}
+    INTERFACE
+      "-Wl,-Bsymbolic"
+  )
 endforeach()
 
 if(APPLE)
