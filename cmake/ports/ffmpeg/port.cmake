@@ -48,6 +48,22 @@ elseif(CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
   list(APPEND args --disable-debug --enable-small)
 endif()
 
+if(APPLE AND CMAKE_OSX_ARCHITECTURES)
+  set(arch ${CMAKE_OSX_ARCHITECTURES})
+elseif(MSVC AND CMAKE_GENERATOR_PLATFORM)
+  set(arch ${CMAKE_GENERATOR_PLATFORM})
+elseif(ANDROID AND CMAKE_ANDROID_ARCH_ABI)
+  set(arch ${CMAKE_ANDROID_ARCH_ABI})
+elseif(CMAKE_SYSTEM_PROCESSOR)
+  set(arch ${CMAKE_SYSTEM_PROCESSOR})
+else()
+  set(arch ${CMAKE_HOST_SYSTEM_PROCESSOR})
+endif()
+
+string(TOLOWER "${arch}" arch)
+
+list(APPEND args --arch=${arch})
+
 if(CMAKE_OBJC_COMPILER)
   list(APPEND args
     "--objcc=${CMAKE_OBJC_COMPILER}"
@@ -114,8 +130,6 @@ elseif(ANDROID)
 
     --enable-jni
     --enable-mediacodec
-
-    --disable-inline-asm
   )
 elseif(WIN32)
   list(APPEND args
