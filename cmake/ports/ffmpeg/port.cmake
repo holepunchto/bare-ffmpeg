@@ -114,6 +114,8 @@ elseif(ANDROID)
 
     --enable-jni
     --enable-mediacodec
+
+    --disable-inline-asm
   )
 elseif(WIN32)
   list(APPEND args
