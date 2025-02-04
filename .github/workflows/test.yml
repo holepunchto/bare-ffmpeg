@@ -17,9 +17,9 @@ jobs:
           - os: macos-latest
             platform: darwin
             arch: arm64
-          # - os: windows-latest
-          #   platform: win32
-          #   arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
@@ -27,6 +27,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            git
+            make
+            ninja
+        if: ${{ matrix.platform == 'win32' }}
       - run: |
           sudo apt update
           sudo apt install -y meson nasm
