@@ -15,13 +15,7 @@ set(byproducts)
 foreach(name IN LISTS libraries)
   add_library(${name} STATIC IMPORTED GLOBAL)
 
-  if(WIN32)
-    set(lib lib${name}.lib)
-  else()
-    set(lib lib${name}.a)
-  endif()
-
-  list(APPEND byproducts lib/${lib})
+  list(APPEND byproducts lib/lib${name}.a)
 endforeach()
 
 set(args
@@ -32,12 +26,6 @@ set(args
 
   --enable-pic
   --enable-cross-compile
-
-  "--cc=${CMAKE_C_COMPILER}"
-  "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-
-  "--cxx=${CMAKE_CXX_COMPILER}"
-  "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -64,37 +52,111 @@ string(TOLOWER "${arch}" arch)
 
 list(APPEND args --arch=${arch})
 
-if(CMAKE_OBJC_COMPILER)
+if(CMAKE_C_COMPILER)
+  cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
+  cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
+
+  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
+    set(CC_filename "clang.exe")
+  endif()
+
   list(APPEND args
-    "--objcc=${CMAKE_OBJC_COMPILER}"
+    "--cc=${CC_filename}"
+    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
+endif()
+
+if(CMAKE_CXX_COMPILER)
+  cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
+  cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+
+  if(WIN32 AND CXX_filename MATCHES "clang-cl.exe")
+    set(CXX_filename "clang.exe")
+  endif()
+
+  list(APPEND args
+    "--cxx=${CXX_filename}"
+    "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
+endif()
+
+if(CMAKE_OBJC_COMPILER)
+  cmake_path(GET CMAKE_OBJC_COMPILER PARENT_PATH OBJC_path)
+  cmake_path(GET CMAKE_OBJC_COMPILER FILENAME OBJC_filename)
+
+  list(APPEND args
+    "--objcc=${OBJC_filename}"
     "--extra-objcflags=--target=${CMAKE_OBJC_COMPILER_TARGET}"
   )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${OBJC_path}")
 endif()
 
 if(CMAKE_RC_COMPILER)
-  list(APPEND args "--windres=${CMAKE_RC_COMPILER}")
+  cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
+  cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
+
+  list(APPEND args "--windres=${RC_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
 endif()
 
 if(WIN32 AND CMAKE_LINKER)
-  list(APPEND args "--ld=${CMAKE_LINKER}")
+  cmake_path(GET CMAKE_LINKER PARENT_PATH LD_path)
+  cmake_path(GET CMAKE_LINKER FILENAME LD_filename)
+
+  list(APPEND args
+    "--ld=${LD_filename}"
+    "--extra-ldflags=libcmt.lib"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${LD_path}")
 else()
   list(APPEND args "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}")
 endif()
 
 if(CMAKE_AR)
-  list(APPEND args "--ar=${CMAKE_AR}")
+  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
+  cmake_path(GET CMAKE_AR FILENAME AR_filename)
+
+  if(WIN32 AND AR_filename MATCHES "llvm-lib.exe")
+    set(AR_filename "llvm-ar.exe")
+  endif()
+
+  list(APPEND args "--ar=${AR_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
 endif()
 
 if(CMAKE_NM)
-  list(APPEND args "--nm=${CMAKE_NM}")
+  cmake_path(GET CMAKE_NM PARENT_PATH NM_path)
+  cmake_path(GET CMAKE_NM FILENAME NM_filename)
+
+  list(APPEND args "--nm=${NM_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${NM_path}")
 endif()
 
 if(CMAKE_RANLIB)
-  list(APPEND args "--ranlib=${CMAKE_RANLIB}")
+  cmake_path(GET CMAKE_RANLIB PARENT_PATH RANLIB_path)
+  cmake_path(GET CMAKE_RANLIB FILENAME RANLIB_filename)
+
+  list(APPEND args "--ranlib=${RANLIB_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${RANLIB_path}")
 endif()
 
 if(CMAKE_STRIP)
-  list(APPEND args "--strip=${CMAKE_STRIP}")
+  cmake_path(GET CMAKE_STRIP PARENT_PATH STRIP_path)
+  cmake_path(GET CMAKE_STRIP FILENAME STRIP_filename)
+
+  list(APPEND args "--strip=${STRIP_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${STRIP_path}")
 endif()
 
 if(APPLE)
@@ -168,16 +230,10 @@ file(MAKE_DIRECTORY "${ffmpeg_PREFIX}/include")
 foreach(name IN LISTS libraries)
   add_dependencies(${name} ${ffmpeg})
 
-  if(WIN32)
-    set(lib lib${name}.lib)
-  else()
-    set(lib lib${name}.a)
-  endif()
-
   set_target_properties(
     ${name}
     PROPERTIES
-    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/${lib}"
+    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/lib${name}.a"
   )
 
   target_include_directories(
@@ -193,6 +249,12 @@ foreach(name IN LISTS libraries)
     )
   endif()
 endforeach()
+
+target_link_libraries(
+  avcodec
+  INTERFACE
+    swresample
+)
 
 if(APPLE)
   target_link_libraries(
@@ -222,4 +284,19 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
+endif()
+
+if(WIN32)
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      mfuuid
+      strmiids
+  )
+
+  target_link_libraries(
+    avutil
+    INTERFACE
+      bcrypt
+  )
 endif()
