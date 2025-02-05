@@ -41,6 +41,8 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: pacman --noconfirm -S git make ninja pkgconf
         shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
+        env:
+          PATH: C:\tools\msys64\usr\bin
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
