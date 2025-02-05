@@ -34,6 +34,7 @@ jobs:
             git
             make
             ninja
+            pkgconf
         if: ${{ matrix.platform == 'win32' }}
       - run: |
           sudo apt update
