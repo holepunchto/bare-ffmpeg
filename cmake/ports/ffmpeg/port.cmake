@@ -219,7 +219,11 @@ if("dav1d" IN_LIST features)
 endif()
 
 if(CMAKE_HOST_WIN32)
-  file(REAL_PATH "/tools/msys64" msys2)
+  find_path(
+    msys2
+    NAMES msys2.exe
+    REQUIRED
+  )
 
   find_program(
     pkg-config
