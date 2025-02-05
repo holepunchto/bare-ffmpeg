@@ -108,6 +108,7 @@ if(CMAKE_C_COMPILER)
 
   list(APPEND args
     "--cc=${CC_filename}"
+    "--host-cc=${CC_filename}"
     "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
   )
 
