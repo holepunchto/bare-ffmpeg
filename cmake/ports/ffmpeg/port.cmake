@@ -161,10 +161,7 @@ if(WIN32 AND CMAKE_LINKER)
   cmake_path(GET CMAKE_LINKER PARENT_PATH LD_path)
   cmake_path(GET CMAKE_LINKER FILENAME LD_filename)
 
-  list(APPEND args
-    "--ld=${LD_filename}"
-    "--extra-ldflags=libcmt.lib"
-  )
+  list(APPEND args "--ld=${LD_filename}")
 
   list(APPEND env --modify "PATH=path_list_prepend:${LD_path}")
 else()
