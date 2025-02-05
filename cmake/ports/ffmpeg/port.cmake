@@ -90,8 +90,6 @@ elseif(WIN32)
   list(APPEND args
     --target-os=win32
 
-    --toolchain=msvc
-
     --enable-w32threads
     --enable-d3d11va
     --enable-d3d12va
@@ -106,11 +104,22 @@ if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
   cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
 
+  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
+    set(CC_filename "clang.exe")
+  endif()
+
   list(APPEND args
     "--cc=${CC_filename}"
     "--host-cc=${CC_filename}"
     "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+    "--ld=${CC_filename}"
+    "--host-ld=${CC_filename}"
+    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
   )
+
+  if(CMAKE_LINKER_TYPE MATCHES "LLD")
+    list(APPEND args --extra-ldflags=-fuse-ld=lld)
+  endif()
 
   list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
 endif()
@@ -118,6 +127,10 @@ endif()
 if(CMAKE_CXX_COMPILER)
   cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
   cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+
+  if(WIN32 AND CXX_filename MATCHES "clang-cl.exe")
+    set(CXX_filename "clang.exe")
+  endif()
 
   list(APPEND args
     "--cxx=${CXX_filename}"
@@ -157,20 +170,13 @@ if(CMAKE_RC_COMPILER)
   list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
 endif()
 
-if(WIN32 AND CMAKE_LINKER)
-  cmake_path(GET CMAKE_LINKER PARENT_PATH LD_path)
-  cmake_path(GET CMAKE_LINKER FILENAME LD_filename)
-
-  list(APPEND args "--ld=${LD_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${LD_path}")
-else()
-  list(APPEND args "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}")
-endif()
-
 if(CMAKE_AR)
   cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
   cmake_path(GET CMAKE_AR FILENAME AR_filename)
+
+  if(WIN32 AND AR_filename MATCHES "llvm-lib.exe")
+    set(AR_filename "llvm-ar.exe")
+  endif()
 
   list(APPEND args "--ar=${AR_filename}")
 
@@ -238,13 +244,10 @@ else()
   )
 endif()
 
-list(APPEND args "--pkg-config=${pkg-config}")
-
-if(WIN32)
-  list(APPEND args "--pkg-config-flags=--static --msvc")
-else()
-  list(APPEND args "--pkg-config-flags=--static")
-endif()
+list(APPEND args
+  "--pkg-config=${pkg-config}"
+  "--pkg-config-flags=--static"
+)
 
 declare_port(
   "git:git.ffmpeg.org/ffmpeg#n7.1"
