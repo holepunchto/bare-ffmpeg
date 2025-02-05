@@ -27,20 +27,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-      - uses: msys2/setup-msys2@v2
-        id: msys2
-        with:
-          update: true
-          install: >-
-            git
-            make
-            ninja
-            pkgconf
-        if: ${{ matrix.platform == 'win32' }}
-      - env:
-          MSYS2: ${{ steps.msys2.outputs.msys2-location }}
-        run: $env:MSYS2 | Out-File -FilePath "$env:GITHUB_PATH" -Append
-        if: ${{ matrix.platform == 'win32' }}
       - run: |
           sudo apt update
           sudo apt install -y meson nasm
@@ -48,10 +34,13 @@ jobs:
       - run: brew install meson nasm
         if: ${{ matrix.platform == 'darwin' }}
       - run: |
-          choco install meson nasm
-          choco upgrade llvm
+          choco install meson nasm msys2
           "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
           "C:\Program Files\Meson" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+          "C:\tools\msys64" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+        if: ${{ matrix.platform == 'win32' }}
+      - run: pacman -S --noconfirm git make ninja pkgconf
+        shell: msys2 {0}
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
