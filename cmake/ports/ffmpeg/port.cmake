@@ -52,113 +52,6 @@ string(TOLOWER "${arch}" arch)
 
 list(APPEND args --arch=${arch})
 
-if(CMAKE_C_COMPILER)
-  cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
-  cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
-
-  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
-    set(CC_filename "clang.exe")
-  endif()
-
-  list(APPEND args
-    "--cc=${CC_filename}"
-    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-  )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
-endif()
-
-if(CMAKE_CXX_COMPILER)
-  cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
-  cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
-
-  if(WIN32 AND CXX_filename MATCHES "clang-cl.exe")
-    set(CXX_filename "clang.exe")
-  endif()
-
-  list(APPEND args
-    "--cxx=${CXX_filename}"
-    "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
-  )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
-endif()
-
-if(CMAKE_OBJC_COMPILER)
-  cmake_path(GET CMAKE_OBJC_COMPILER PARENT_PATH OBJC_path)
-  cmake_path(GET CMAKE_OBJC_COMPILER FILENAME OBJC_filename)
-
-  list(APPEND args
-    "--objcc=${OBJC_filename}"
-    "--extra-objcflags=--target=${CMAKE_OBJC_COMPILER_TARGET}"
-  )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${OBJC_path}")
-endif()
-
-if(CMAKE_RC_COMPILER)
-  cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
-  cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
-
-  list(APPEND args "--windres=${RC_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
-endif()
-
-if(WIN32 AND CMAKE_LINKER)
-  cmake_path(GET CMAKE_LINKER PARENT_PATH LD_path)
-  cmake_path(GET CMAKE_LINKER FILENAME LD_filename)
-
-  list(APPEND args
-    "--ld=${LD_filename}"
-    "--extra-ldflags=libcmt.lib"
-  )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${LD_path}")
-else()
-  list(APPEND args "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}")
-endif()
-
-if(CMAKE_AR)
-  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
-  cmake_path(GET CMAKE_AR FILENAME AR_filename)
-
-  if(WIN32 AND AR_filename MATCHES "llvm-lib.exe")
-    set(AR_filename "llvm-ar.exe")
-  endif()
-
-  list(APPEND args "--ar=${AR_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
-endif()
-
-if(CMAKE_NM)
-  cmake_path(GET CMAKE_NM PARENT_PATH NM_path)
-  cmake_path(GET CMAKE_NM FILENAME NM_filename)
-
-  list(APPEND args "--nm=${NM_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${NM_path}")
-endif()
-
-if(CMAKE_RANLIB)
-  cmake_path(GET CMAKE_RANLIB PARENT_PATH RANLIB_path)
-  cmake_path(GET CMAKE_RANLIB FILENAME RANLIB_filename)
-
-  list(APPEND args "--ranlib=${RANLIB_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${RANLIB_path}")
-endif()
-
-if(CMAKE_STRIP)
-  cmake_path(GET CMAKE_STRIP PARENT_PATH STRIP_path)
-  cmake_path(GET CMAKE_STRIP FILENAME STRIP_filename)
-
-  list(APPEND args "--strip=${STRIP_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${STRIP_path}")
-endif()
-
 if(APPLE)
   list(APPEND args
     --target-os=darwin
@@ -197,12 +90,120 @@ elseif(WIN32)
   list(APPEND args
     --target-os=win32
 
+    --toolchain=msvc
+
     --enable-w32threads
     --enable-d3d11va
     --enable-d3d12va
     --enable-dxva2
     --enable-mediafoundation
   )
+endif()
+
+set(env)
+
+if(CMAKE_C_COMPILER)
+  cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
+  cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
+
+  list(APPEND args
+    "--cc=${CC_filename}"
+    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
+endif()
+
+if(CMAKE_CXX_COMPILER)
+  cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
+  cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+
+  list(APPEND args
+    "--cxx=${CXX_filename}"
+    "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
+endif()
+
+if(CMAKE_OBJC_COMPILER)
+  cmake_path(GET CMAKE_OBJC_COMPILER PARENT_PATH OBJC_path)
+  cmake_path(GET CMAKE_OBJC_COMPILER FILENAME OBJC_filename)
+
+  list(APPEND args
+    "--objcc=${OBJC_filename}"
+    "--extra-objcflags=--target=${CMAKE_OBJC_COMPILER_TARGET}"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${OBJC_path}")
+endif()
+
+if(CMAKE_ASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
+  cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
+
+  list(APPEND args "--as=${AS_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AS_path}")
+endif()
+
+if(CMAKE_RC_COMPILER)
+  cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
+  cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
+
+  list(APPEND args "--windres=${RC_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
+endif()
+
+if(WIN32 AND CMAKE_LINKER)
+  cmake_path(GET CMAKE_LINKER PARENT_PATH LD_path)
+  cmake_path(GET CMAKE_LINKER FILENAME LD_filename)
+
+  list(APPEND args
+    "--ld=${LD_filename}"
+    "--extra-ldflags=libcmt.lib"
+  )
+
+  list(APPEND env --modify "PATH=path_list_prepend:${LD_path}")
+else()
+  list(APPEND args "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}")
+endif()
+
+if(CMAKE_AR)
+  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
+  cmake_path(GET CMAKE_AR FILENAME AR_filename)
+
+  list(APPEND args "--ar=${AR_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+endif()
+
+if(CMAKE_NM)
+  cmake_path(GET CMAKE_NM PARENT_PATH NM_path)
+  cmake_path(GET CMAKE_NM FILENAME NM_filename)
+
+  list(APPEND args "--nm=${NM_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${NM_path}")
+endif()
+
+if(CMAKE_RANLIB)
+  cmake_path(GET CMAKE_RANLIB PARENT_PATH RANLIB_path)
+  cmake_path(GET CMAKE_RANLIB FILENAME RANLIB_filename)
+
+  list(APPEND args "--ranlib=${RANLIB_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${RANLIB_path}")
+endif()
+
+if(CMAKE_STRIP)
+  cmake_path(GET CMAKE_STRIP PARENT_PATH STRIP_path)
+  cmake_path(GET CMAKE_STRIP FILENAME STRIP_filename)
+
+  list(APPEND args "--strip=${STRIP_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${STRIP_path}")
 endif()
 
 set(depends)
@@ -212,8 +213,35 @@ if("dav1d" IN_LIST features)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
+  list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
+endif()
+
+if(CMAKE_HOST_WIN32)
+  file(REAL_PATH "/tools/msys64" msys2)
+
+  find_program(
+    pkg-config
+    NAMES pkg-config
+    PATHS "${msys2}/usr/bin"
+    REQUIRED
+    NO_DEFAULT_PATH
+  )
+else()
+  find_program(
+    pkg-config
+    NAMES pkg-config
+    REQUIRED
+  )
+endif()
+
+list(APPEND args "--pkg-config=${pkg-config}")
+
+if(WIN32)
+  list(APPEND args "--pkg-config-flags=--static --msvc")
+else()
+  list(APPEND args "--pkg-config-flags=--static")
 endif()
 
 declare_port(
@@ -223,6 +251,7 @@ declare_port(
   DEPENDS ${depends}
   BYPRODUCTS ${byproducts}
   ARGS ${args}
+  ENV ${env}
 )
 
 file(MAKE_DIRECTORY "${ffmpeg_PREFIX}/include")
@@ -253,6 +282,36 @@ endforeach()
 target_link_libraries(
   avcodec
   INTERFACE
+    avutil
+    swresample
+)
+
+target_link_libraries(
+  avdevice
+  INTERFACE
+    avcodec
+    avfilter
+    avformat
+    avutil
+    swresample
+    swscale
+)
+
+target_link_libraries(
+  avfilter
+  INTERFACE
+    avcodec
+    avformat
+    avutil
+    swresample
+    swscale
+)
+
+target_link_libraries(
+  avformat
+  INTERFACE
+    avcodec
+    avutil
     swresample
 )
 
@@ -284,19 +343,34 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
-endif()
-
-if(WIN32)
+elseif(WIN32)
   target_link_libraries(
     avcodec
     INTERFACE
       mfuuid
+      ole32
+      ole32
       strmiids
+      user32
+  )
+
+  target_link_libraries(
+    avdevice
+    INTERFACE
+      gdi32
+      ole32
+      oleaut32
+      psapi
+      shlwapi
+      strmiids
+      uuid
+      vfw32
   )
 
   target_link_libraries(
     avutil
     INTERFACE
+      user32
       bcrypt
   )
 endif()
