@@ -11,12 +11,12 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: ubuntu-latest
-          #   platform: linux
-          #   arch: x64
-          # - os: macos-latest
-          #   platform: darwin
-          #   arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
           - os: windows-latest
             platform: win32
             arch: x64
@@ -48,10 +48,6 @@ jobs:
       - run: npm install
       - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug
       - run: bare-make build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: config.log
-          path: build/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg-build/ffbuild/config.log
         if: ${{ failure() }}
       - run: bare-make install
       - run: npm test
