@@ -50,6 +50,18 @@ endif()
 
 string(TOLOWER "${arch}" arch)
 
+if(arch MATCHES "arm64|aarch64")
+  set(arch "aarch64")
+elseif(arch MATCHES "armv7-a|armeabi-v7a")
+  set(arch "arm")
+elseif(arch MATCHES "x64|x86_64|amd64")
+  set(arch "x86")
+elseif(arch MATCHES "x86|i386|i486|i586|i686")
+  set(arch "x86_32")
+else()
+  message(FATAL_ERROR "Unsupported architecture '${arch}'")
+endif()
+
 list(APPEND args --arch=${arch})
 
 if(APPLE)
