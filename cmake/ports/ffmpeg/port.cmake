@@ -156,6 +156,10 @@ if(CMAKE_ASM_COMPILER)
   cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
 
+  if(WIN32 AND AS_filename MATCHES "clang-cl.exe")
+    set(AS_filename "clang.exe")
+  endif()
+
   list(APPEND args "--as=${AS_filename}")
 
   list(APPEND env --modify "PATH=path_list_prepend:${AS_path}")
