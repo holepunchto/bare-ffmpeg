@@ -47,12 +47,12 @@ jobs:
             arch: x64
             tags: -simulator
             flags: --simulator
-          # - os: windows-2022
-          #   platform: win32
-          #   arch: x64
-          # - os: windows-2022
-          #   platform: win32
-          #   arch: arm64
+          - os: windows-2022
+            platform: win32
+            arch: x64
+          - os: windows-2022
+            platform: win32
+            arch: arm64
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
@@ -67,9 +67,15 @@ jobs:
       - run: brew install meson nasm
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: |
-          choco install meson nasm
+          choco install meson nasm msys2
           "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
           "C:\Program Files\Meson" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+          "C:\tools\msys64" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+        if: ${{ matrix.platform == 'win32' }}
+      - run: pacman --noconfirm -S git make ninja pkgconf
+        shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
+        env:
+          PATH: C:\tools\msys64\usr\bin
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
