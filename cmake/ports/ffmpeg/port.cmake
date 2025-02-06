@@ -98,6 +98,10 @@ elseif(ANDROID)
     --enable-jni
     --enable-mediacodec
   )
+
+  if(arch MATCHES "x86_32")
+    list(APPEND args --disable-asm)
+  endif()
 elseif(WIN32)
   list(APPEND args
     --target-os=win32
