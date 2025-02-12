@@ -1,4 +1,5 @@
 build/
 prebuilds/
+sandbox/
 node_modules/
 package-lock.json

@@ -2,7 +2,7 @@ const test = require('brittle')
 const ffmpeg = require('.')
 
 test('decode .heic', (t) => {
-  const image = require('./test/fixtures/grapefruit.heic', {
+  const image = require('./test/fixtures/image/sample.heic', {
     with: { type: 'binary' }
   })
 
@@ -20,8 +20,6 @@ test('decode .heic', (t) => {
     decoder.sendPacket(packet)
     decoder.receiveFrame(raw)
 
-    packet.destroy()
-
     const image = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
     image.fill(rgba)
 
@@ -37,10 +35,47 @@ test('decode .heic', (t) => {
     scaler.scale(raw, rgba)
     scaler.destroy()
 
+    packet.destroy()
     raw.destroy()
     rgba.destroy()
+    decoder.destroy()
 
     t.comment(image)
+  }
+
+  format.destroy()
+  io.destroy()
+})
+
+test('decode .aiff', (t) => {
+  const audio = require('./test/fixtures/audio/sample.aiff', {
+    with: { type: 'binary' }
+  })
+
+  const io = new ffmpeg.IOContext(audio)
+  const format = new ffmpeg.FormatContext(io)
+
+  for (const stream of format.streams) {
+    const packet = new ffmpeg.Packet()
+    const frame = new ffmpeg.Frame()
+
+    const decoder = stream.decoder()
+
+    const buffers = []
+
+    while (format.readFrame(packet)) {
+      decoder.sendPacket(packet)
+
+      while (decoder.receiveFrame(frame)) {
+        buffers.push(frame.channel(0))
+      }
+    }
+
+    packet.destroy()
+    frame.destroy()
+    decoder.destroy()
+
+    t.comment(Buffer.concat(buffers))
   }
 
   format.destroy()
