@@ -40,7 +40,9 @@ test('decode .heic', (t) => {
     rgba.destroy()
     decoder.destroy()
 
-    t.comment(image)
+    t.comment('width', image.width)
+    t.comment('height', image.height)
+    t.comment('data', image.data)
   }
 
   format.destroy()
@@ -75,7 +77,9 @@ test('decode .aiff', (t) => {
     frame.destroy()
     decoder.destroy()
 
-    t.comment(Buffer.concat(buffers))
+    t.comment('hz', stream.codecParameters.sampleRate)
+    t.comment('bits', stream.codecParameters.bitsPerCodedSample)
+    t.comment('data', Buffer.concat(buffers))
   }
 
   format.destroy()

@@ -603,6 +603,98 @@ bare_ffmpeg_codec_context_receive_frame(js_env_t *env, js_callback_info_t *info)
 }
 
 static js_value_t *
+bare_ffmpeg_codec_parameters_get_bit_rate(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_int64(env, parameters->handle->bit_rate, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_parameters_get_bits_per_coded_sample(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_int64(env, parameters->handle->bits_per_coded_sample, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_parameters_get_bits_per_raw_sample(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_int64(env, parameters->handle->bits_per_raw_sample, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_parameters_get_sample_rate(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_int64(env, parameters->handle->sample_rate, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_ffmpeg_frame_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -971,6 +1063,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecContextHeight", bare_ffmpeg_codec_context_get_height)
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextFrame", bare_ffmpeg_codec_context_receive_frame)
+
+  V("getCodecParametersBitRate", bare_ffmpeg_codec_parameters_get_bit_rate)
+  V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
+  V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
+  V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
