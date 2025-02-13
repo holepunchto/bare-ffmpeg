@@ -18,6 +18,8 @@ test('decode .heic', (t) => {
 
     const decoder = stream.decoder()
     decoder.sendPacket(packet)
+    packet.unref()
+
     decoder.receiveFrame(raw)
 
     const image = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
