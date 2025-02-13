@@ -6,49 +6,11 @@ test('decode .heic', (t) => {
     with: { type: 'binary' }
   })
 
-  const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.FormatContext(io)
+  const decoded = decodeImage(image)
 
-  for (const stream of format.streams) {
-    const packet = new ffmpeg.Packet()
-    format.readFrame(packet)
-
-    const raw = new ffmpeg.Frame()
-    const rgba = new ffmpeg.Frame()
-
-    const decoder = stream.decoder()
-    decoder.sendPacket(packet)
-    packet.unref()
-
-    decoder.receiveFrame(raw)
-
-    const image = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
-    image.fill(rgba)
-
-    const scaler = new ffmpeg.Scaler(
-      decoder.pixelFormat,
-      decoder.width,
-      decoder.height,
-      image.pixelFormat,
-      image.width,
-      image.height
-    )
-
-    scaler.scale(raw, rgba)
-    scaler.destroy()
-
-    packet.destroy()
-    raw.destroy()
-    rgba.destroy()
-    decoder.destroy()
-
-    t.comment('width', image.width)
-    t.comment('height', image.height)
-    t.comment('data', image.data)
-  }
-
-  format.destroy()
-  io.destroy()
+  t.comment('width', decoded.width)
+  t.comment('height', decoded.height)
+  t.comment('data', decoded.data)
 })
 
 test('decode .avif', (t) => {
@@ -56,8 +18,42 @@ test('decode .avif', (t) => {
     with: { type: 'binary' }
   })
 
+  const decoded = decodeImage(image)
+
+  t.comment('width', decoded.width)
+  t.comment('height', decoded.height)
+  t.comment('data', decoded.data)
+})
+
+test('decode .jpeg', (t) => {
+  const image = require('./test/fixtures/image/sample.jpeg', {
+    with: { type: 'binary' }
+  })
+
+  const decoded = decodeImage(image)
+
+  t.comment('width', decoded.width)
+  t.comment('height', decoded.height)
+  t.comment('data', decoded.data)
+})
+
+test('decode .aiff', (t) => {
+  const audio = require('./test/fixtures/audio/sample.aiff', {
+    with: { type: 'binary' }
+  })
+
+  const decoded = decodeAudio(audio)
+
+  t.comment('hz', decoded.hx)
+  t.comment('bits', decoded.bits)
+  t.comment('data', decoded.data)
+})
+
+function decodeImage(image) {
   const io = new ffmpeg.IOContext(image)
   const format = new ffmpeg.FormatContext(io)
+
+  let result
 
   for (const stream of format.streams) {
     const packet = new ffmpeg.Packet()
@@ -68,46 +64,41 @@ test('decode .avif', (t) => {
 
     const decoder = stream.decoder()
     decoder.sendPacket(packet)
-    packet.unref()
-
     decoder.receiveFrame(raw)
 
-    const image = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
-    image.fill(rgba)
+    result = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
+    result.fill(rgba)
 
     const scaler = new ffmpeg.Scaler(
       decoder.pixelFormat,
       decoder.width,
       decoder.height,
-      image.pixelFormat,
-      image.width,
-      image.height
+      result.pixelFormat,
+      result.width,
+      result.height
     )
 
     scaler.scale(raw, rgba)
     scaler.destroy()
 
+    packet.unref()
     packet.destroy()
     raw.destroy()
     rgba.destroy()
     decoder.destroy()
-
-    t.comment('width', image.width)
-    t.comment('height', image.height)
-    t.comment('data', image.data)
   }
 
   format.destroy()
   io.destroy()
-})
 
-test('decode .aiff', (t) => {
-  const audio = require('./test/fixtures/audio/sample.aiff', {
-    with: { type: 'binary' }
-  })
+  return result
+}
 
+function decodeAudio(audio) {
   const io = new ffmpeg.IOContext(audio)
   const format = new ffmpeg.FormatContext(io)
+
+  let result
 
   for (const stream of format.streams) {
     const packet = new ffmpeg.Packet()
@@ -131,11 +122,15 @@ test('decode .aiff', (t) => {
     frame.destroy()
     decoder.destroy()
 
-    t.comment('hz', stream.codecParameters.sampleRate)
-    t.comment('bits', stream.codecParameters.bitsPerCodedSample)
-    t.comment('data', Buffer.concat(buffers))
+    result = {
+      hz: stream.codecParameters.sampleRate,
+      bits: stream.codecParameters.bitsPerCodedSample,
+      data: Buffer.concat(buffers)
+    }
   }
 
   format.destroy()
   io.destroy()
-})
+
+  return result
+}

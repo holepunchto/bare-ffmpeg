@@ -232,6 +232,10 @@ endif()
 
 set(depends)
 
+if("zlib" IN_LIST features)
+  list(APPEND args --enable-zlib)
+endif()
+
 if("dav1d" IN_LIST features)
   find_port(dav1d)
 
