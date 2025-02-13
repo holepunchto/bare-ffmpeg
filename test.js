@@ -71,6 +71,8 @@ test('decode .aiff', (t) => {
       while (decoder.receiveFrame(frame)) {
         buffers.push(frame.channel(0))
       }
+
+      packet.unref()
     }
 
     packet.destroy()
