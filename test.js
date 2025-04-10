@@ -51,7 +51,7 @@ test('decode .aiff', (t) => {
 
 function decodeImage(image) {
   const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.FormatContext(io)
+  const format = new ffmpeg.InputFormatContext(io)
 
   let result
 
@@ -96,7 +96,7 @@ function decodeImage(image) {
 
 function decodeAudio(audio) {
   const io = new ffmpeg.IOContext(audio)
-  const format = new ffmpeg.FormatContext(io)
+  const format = new ffmpeg.InputFormatContext(io)
 
   let result
 

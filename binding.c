@@ -14,6 +14,7 @@
 #include <libavutil/log.h>
 #include <libavutil/mem.h>
 #include <libavutil/pixfmt.h>
+#include <libavutil/rational.h>
 #include <libswscale/swscale.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -22,6 +23,10 @@
 typedef struct {
   AVIOContext *handle;
 } bare_ffmpeg_io_context_t;
+
+typedef struct {
+  const AVOutputFormat *handle;
+} bare_ffmpeg_output_format_t;
 
 typedef struct {
   AVFormatContext *handle;
@@ -125,7 +130,49 @@ bare_ffmpeg_io_context_destroy(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_format_context_init(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
+  assert(err == 0);
+
+  len += +1 /* NULL */;
+
+  utf8_t *name = malloc(len);
+  err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
+  assert(err == 0);
+
+  const AVOutputFormat *format = av_guess_format((const char *) name, NULL, NULL);
+
+  if (format == NULL) {
+    err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name);
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *handle;
+
+  bare_ffmpeg_output_format_t *context;
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_output_format_t), (void **) &context, &handle);
+  assert(err == 0);
+
+  context->handle = format;
+
+  return handle;
+}
+
+static js_value_t *
+bare_ffmpeg_format_context_open_input(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -177,7 +224,7 @@ bare_ffmpeg_format_context_init(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_format_context_destroy(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_format_context_close_input(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -193,6 +240,68 @@ bare_ffmpeg_format_context_destroy(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   avformat_close_input(&context->handle);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_format_context_open_output(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_output_format_t *format;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &format, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_io_context_t *io;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &io, NULL);
+  assert(err == 0);
+
+  js_value_t *handle;
+
+  bare_ffmpeg_format_context_t *context;
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_format_context_t), (void **) &context, &handle);
+  assert(err == 0);
+
+  err = avformat_alloc_output_context2(&context->handle, format->handle, NULL, NULL);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  context->handle->pb = io->handle;
+  context->handle->opaque = (void *) context;
+
+  return handle;
+}
+
+static js_value_t *
+bare_ffmpeg_format_context_close_output(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_format_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  avformat_free_context(context->handle);
 
   return NULL;
 }
@@ -233,6 +342,44 @@ bare_ffmpeg_format_context_get_streams(js_env_t *env, js_callback_info_t *info) 
   }
 
   return result;
+}
+
+static js_value_t *
+bare_ffmpeg_format_context_create_stream(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_format_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_codec_t *codec;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &codec, NULL);
+  assert(err == 0);
+
+  js_value_t *handle;
+
+  bare_ffmpeg_stream_t *stream;
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_stream_t), (void **) &stream, &handle);
+  assert(err == 0);
+
+  stream->handle = avformat_new_stream(context->handle, codec->handle);
+
+  if (stream->handle == NULL) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return handle;
 }
 
 static js_value_t *
@@ -397,20 +544,16 @@ static js_value_t *
 bare_ffmpeg_codec_context_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
+  size_t argc = 1;
+  js_value_t *argv[1];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 1);
 
   bare_ffmpeg_codec_t *codec;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &codec, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_codec_parameters_t *parameters;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &parameters, NULL);
   assert(err == 0);
 
   js_value_t *handle;
@@ -422,28 +565,6 @@ bare_ffmpeg_codec_context_init(js_env_t *env, js_callback_info_t *info) {
   context->handle = avcodec_alloc_context3(codec->handle);
 
   context->handle->opaque = (void *) context;
-
-  err = avcodec_parameters_to_context(context->handle, parameters->handle);
-
-  if (err < 0) {
-    avcodec_free_context(&context->handle);
-
-    err = js_throw_error(env, NULL, av_err2str(err));
-    assert(err == 0);
-
-    return NULL;
-  }
-
-  err = avcodec_open2(context->handle, codec->handle, NULL);
-
-  if (err < 0) {
-    avcodec_free_context(&context->handle);
-
-    err = js_throw_error(env, NULL, av_err2str(err));
-    assert(err == 0);
-
-    return NULL;
-  }
 
   return handle;
 }
@@ -465,6 +586,32 @@ bare_ffmpeg_codec_context_destroy(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   avcodec_free_context(&context->handle);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_context_open(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  err = avcodec_open2(context->handle, context->handle->codec, NULL);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+  }
 
   return NULL;
 }
@@ -493,6 +640,31 @@ bare_ffmpeg_codec_context_get_pixel_format(js_env_t *env, js_callback_info_t *in
 }
 
 static js_value_t *
+bare_ffmpeg_codec_context_set_pixel_format(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  int64_t value;
+  err = js_get_value_int64(env, argv[1], &value);
+  assert(err == 0);
+
+  context->handle->pix_fmt = value;
+
+  return NULL;
+}
+
+static js_value_t *
 bare_ffmpeg_codec_context_get_width(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -516,6 +688,31 @@ bare_ffmpeg_codec_context_get_width(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_ffmpeg_codec_context_set_width(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  int64_t value;
+  err = js_get_value_int64(env, argv[1], &value);
+  assert(err == 0);
+
+  context->handle->width = value;
+
+  return NULL;
+}
+
+static js_value_t *
 bare_ffmpeg_codec_context_get_height(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -536,6 +733,85 @@ bare_ffmpeg_codec_context_get_height(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_context_set_height(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  int64_t value;
+  err = js_get_value_int64(env, argv[1], &value);
+  assert(err == 0);
+
+  context->handle->height = value;
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_context_get_time_base(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2 * sizeof(int32_t), (void **) &data, &result);
+  assert(err == 0);
+
+  data[0] = context->handle->time_base.num;
+  data[1] = context->handle->time_base.den;
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_context_set_time_base(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  int32_t *value;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &value, NULL);
+  assert(err == 0);
+
+  context->handle->time_base.num = value[0];
+  context->handle->time_base.den = value[1];
+
+  return NULL;
 }
 
 static js_value_t *
@@ -593,6 +869,8 @@ bare_ffmpeg_codec_context_receive_frame(js_env_t *env, js_callback_info_t *info)
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
@@ -600,6 +878,70 @@ bare_ffmpeg_codec_context_receive_frame(js_env_t *env, js_callback_info_t *info)
   assert(err == 0);
 
   return result;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_parameters_from_context(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &context, NULL);
+  assert(err == 0);
+
+  err = avcodec_parameters_from_context(parameters->handle, context->handle);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_parameters_to_context(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &parameters, NULL);
+  assert(err == 0);
+
+  err = avcodec_parameters_to_context(context->handle, parameters->handle);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  return NULL;
 }
 
 static js_value_t *
@@ -1045,9 +1387,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initIOContext", bare_ffmpeg_io_context_init)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
-  V("initFormatContext", bare_ffmpeg_format_context_init)
-  V("destroyFormatContext", bare_ffmpeg_format_context_destroy)
+  V("initOutputFormat", bare_ffmpeg_output_format_init)
+
+  V("openInputFormatContext", bare_ffmpeg_format_context_open_input)
+  V("closeInputFormatContext", bare_ffmpeg_format_context_close_input)
+  V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
+  V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
+  V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
@@ -1058,12 +1405,20 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
+  V("openCodecContext", bare_ffmpeg_codec_context_open)
   V("getCodecContextPixelFormat", bare_ffmpeg_codec_context_get_pixel_format)
+  V("setCodecContextPixelFormat", bare_ffmpeg_codec_context_set_pixel_format)
   V("getCodecContextWidth", bare_ffmpeg_codec_context_get_width)
+  V("setCodecContextWidth", bare_ffmpeg_codec_context_set_width)
   V("getCodecContextHeight", bare_ffmpeg_codec_context_get_height)
+  V("setCodecContextHeight", bare_ffmpeg_codec_context_set_height)
+  V("getCodecContextTimeBase", bare_ffmpeg_codec_context_get_time_base)
+  V("setCodecContextTimeBase", bare_ffmpeg_codec_context_set_time_base)
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextFrame", bare_ffmpeg_codec_context_receive_frame)
 
+  V("codecParametersFromContext", bare_ffmpeg_codec_parameters_from_context)
+  V("codecParametersToContext", bare_ffmpeg_codec_parameters_to_context)
   V("getCodecParametersBitRate", bare_ffmpeg_codec_parameters_get_bit_rate)
   V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
   V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
@@ -1094,7 +1449,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
+  V(AV_CODEC_ID_MJPEG)
+
   V(AV_PIX_FMT_RGBA)
+  V(AV_PIX_FMT_YUVJ420P)
 #undef V
 
   return exports;
