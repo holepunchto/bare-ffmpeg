@@ -15,6 +15,7 @@ const Packet = require('./lib/packet')
 const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
+const Dictonary = require('./lib/dictionary.js')
 
 exports.Codec = Codec
 exports.CodecContext = CodecContext
@@ -31,5 +32,6 @@ exports.Packet = Packet
 exports.Scaler = Scaler
 exports.Stream = Stream
 exports.Rational = Rational
+exports.Dictionary = Dictionary
 
 exports.constants = require('./lib/constants')
