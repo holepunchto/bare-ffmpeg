@@ -1,6 +1,14 @@
 const test = require('brittle')
 const ffmpeg = require('.')
 
+test.solo('dictionary', (t) => {
+  const dict = new ffmpeg.Dictionary()
+
+  dict.set('foo', 'bar')
+
+  t.alike(dict.get('foo'), 'bar');
+})
+
 test('decode .heic', (t) => {
   const image = require('./test/fixtures/image/sample.heic', {
     with: { type: 'binary' }

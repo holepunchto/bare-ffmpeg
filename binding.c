@@ -1380,7 +1380,8 @@ bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
   js_value_t *handle;
 
   bare_ffmpeg_dictionary_t *dict;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_dictionary_t), (void **) dict, &handle);
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_dictionary_t), (void **) &dict, &handle);
+  assert(err == 0);
 
   dict->handle = NULL;
 
@@ -1399,7 +1400,7 @@ bare_ffmpeg_dictionary_destroy(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 1);
 
   bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) dict, NULL);
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
   assert(err == 0);
 
   av_dict_free(&dict->handle);
@@ -1419,7 +1420,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 3);
 
   bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) dict, NULL);
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
   assert(err == 0);
 
   size_t len;
@@ -1442,7 +1443,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   err = av_dict_set(&dict->handle, (const char *) key, (const char *) value, 0);
-  assert(err);
+  assert(err == 0);
   free(key);
   free(value);
 
@@ -1461,7 +1462,7 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   assert(argc == 2);
 
   bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) dict, NULL);
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
   assert(err == 0);
 
   size_t len;
@@ -1480,6 +1481,7 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
 
   js_value_t *result;
   err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
+  assert(err == 0);
 
   return result;
 }
