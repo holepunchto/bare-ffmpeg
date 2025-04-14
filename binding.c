@@ -1555,9 +1555,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("scaleScaler", bare_ffmpeg_scaler_scale)
 
   V("initDictionary", bare_ffmpeg_dictionary_init)
-  V("dictionarySet", bare_ffmpeg_dictionary_get_entry)
-  V("dictionaryGet", bare_ffmpeg_dictionary_set_entry)
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
+  V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
+  V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
 #undef V
 
 #define V(name) \
