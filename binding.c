@@ -1476,8 +1476,14 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   AVDictionaryEntry *entry = av_dict_get(dict->handle, (const char *) key, NULL, 0);
-  assert(entry != NULL);
   free(key);
+
+  if (entry == NULL) {
+    js_value_t *result;
+    err = js_get_null(env, &result);
+    assert(err == 0);
+    return result;
+  }
 
   js_value_t *result;
   err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
