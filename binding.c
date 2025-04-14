@@ -1459,7 +1459,7 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   free(key);
 
   js_value_t *result;
-  err = js_create_string_utf8(env, (const utf8_t *) entry->value, sizeof(entry->value), &result);
+  err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
 
   return result;
 }
