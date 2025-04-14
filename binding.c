@@ -1388,7 +1388,7 @@ bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_dictionary_set(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 3;
@@ -1428,7 +1428,7 @@ bare_ffmpeg_dictionary_set(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_dictionary_get(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 2;
@@ -1552,8 +1552,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("scaleScaler", bare_ffmpeg_scaler_scale)
 
   V("initDictionary", bare_ffmpeg_dictionary_init)
-  V("dictionarySet", bare_ffmpeg_dictionary_get)
-  V("dictionaryGet", bare_ffmpeg_dictionary_set)
+  V("dictionarySet", bare_ffmpeg_dictionary_get_entry)
+  V("dictionaryGet", bare_ffmpeg_dictionary_set_entry)
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
 #undef V
 
