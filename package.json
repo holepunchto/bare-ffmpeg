@@ -16,7 +16,7 @@
   ],
   "addon": true,
   "scripts": {
-    "test": "prettier . --check && bare test.js"
+    "test": "prettier . --check && bare test/index.js"
   },
   "repository": {
     "type": "git",

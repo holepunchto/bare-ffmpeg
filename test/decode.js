@@ -1,16 +1,8 @@
 const test = require('brittle')
-const ffmpeg = require('.')
-
-test('dictionary', (t) => {
-  const dict = new ffmpeg.Dictionary()
-
-  dict.set('foo', 'bar')
-
-  t.alike(dict.get('foo'), 'bar')
-})
+const ffmpeg = require('..')
 
 test('decode .heic', (t) => {
-  const image = require('./test/fixtures/image/sample.heic', {
+  const image = require('./fixtures/image/sample.heic', {
     with: { type: 'binary' }
   })
 
@@ -22,7 +14,7 @@ test('decode .heic', (t) => {
 })
 
 test('decode .avif', (t) => {
-  const image = require('./test/fixtures/image/sample.avif', {
+  const image = require('./fixtures/image/sample.avif', {
     with: { type: 'binary' }
   })
 
@@ -34,7 +26,7 @@ test('decode .avif', (t) => {
 })
 
 test('decode .jpeg', (t) => {
-  const image = require('./test/fixtures/image/sample.jpeg', {
+  const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
 
@@ -46,7 +38,7 @@ test('decode .jpeg', (t) => {
 })
 
 test('decode .aiff', (t) => {
-  const audio = require('./test/fixtures/audio/sample.aiff', {
+  const audio = require('./fixtures/audio/sample.aiff', {
     with: { type: 'binary' }
   })
 
