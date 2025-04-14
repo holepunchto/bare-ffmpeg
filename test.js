@@ -6,7 +6,7 @@ test('dictionary', (t) => {
 
   dict.set('foo', 'bar')
 
-  t.alike(dict.get('foo'), 'bar');
+  t.alike(dict.get('foo'), 'bar')
 })
 
 test('decode .heic', (t) => {
