@@ -8,6 +8,7 @@
 #include <libavcodec/packet.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/dict.h>
 #include <libavutil/error.h>
 #include <libavutil/frame.h>
 #include <libavutil/imgutils.h>
@@ -59,6 +60,10 @@ typedef struct {
 typedef struct {
   struct SwsContext *handle;
 } bare_ffmpeg_scaler_t;
+
+typedef struct {
+  struct AVDictionary *handle;
+} bare_ffmpeg_dictionary_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -1370,6 +1375,124 @@ bare_ffmpeg_scaler_scale(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
+  int err;
+  js_value_t *handle;
+
+  bare_ffmpeg_dictionary_t *dict;
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_dictionary_t), (void **) &dict, &handle);
+  assert(err == 0);
+
+  dict->handle = NULL;
+
+  return handle;
+}
+
+static js_value_t *
+bare_ffmpeg_dictionary_destroy(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  bare_ffmpeg_dictionary_t *dict;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
+  assert(err == 0);
+
+  av_dict_free(&dict->handle);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 3;
+  js_value_t *argv[3];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 3);
+
+  bare_ffmpeg_dictionary_t *dict;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
+  assert(err == 0);
+
+  len += +1 /* NULL */;
+
+  utf8_t *key = malloc(len);
+  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
+  assert(err == 0);
+
+  err = js_get_value_string_utf8(env, argv[2], NULL, 0, &len);
+  assert(err == 0);
+
+  len += +1 /* NULL */;
+
+  utf8_t *value = malloc(len);
+  err = js_get_value_string_utf8(env, argv[2], value, len, NULL);
+  assert(err == 0);
+
+  err = av_dict_set(&dict->handle, (const char *) key, (const char *) value, 0);
+  assert(err == 0);
+  free(key);
+  free(value);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 2);
+
+  bare_ffmpeg_dictionary_t *dict;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
+  assert(err == 0);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
+  assert(err == 0);
+
+  len += +1 /* NULL */;
+
+  utf8_t *key = malloc(len);
+  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
+  assert(err == 0);
+
+  AVDictionaryEntry *entry = av_dict_get(dict->handle, (const char *) key, NULL, 0);
+  free(key);
+
+  if (entry == NULL) {
+    js_value_t *result;
+    err = js_get_null(env, &result);
+    assert(err == 0);
+    return result;
+  }
+
+  js_value_t *result;
+  err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
 
@@ -1438,6 +1561,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
   V("scaleScaler", bare_ffmpeg_scaler_scale)
+
+  V("initDictionary", bare_ffmpeg_dictionary_init)
+  V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
+  V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
+  V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
 #undef V
 
 #define V(name) \
