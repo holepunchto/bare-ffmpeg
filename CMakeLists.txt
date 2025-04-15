@@ -19,6 +19,7 @@ target_link_libraries(
   ${bare_ffmpeg}
   PRIVATE
     avcodec
+    avdevice
     avformat
     avutil
     swscale

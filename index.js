@@ -10,6 +10,7 @@ const {
 const Frame = require('./lib/frame')
 const Image = require('./lib/image')
 const IOContext = require('./lib/io-context')
+const InputFormat = require('./lib/input-format')
 const OutputFormat = require('./lib/output-format')
 const Packet = require('./lib/packet')
 const Scaler = require('./lib/scaler')
@@ -25,6 +26,7 @@ exports.Encoder = Encoder
 exports.Frame = Frame
 exports.IOContext = IOContext
 exports.Image = Image
+exports.InputFormat = InputFormat
 exports.InputFormatContext = InputFormatContext
 exports.OutputFormat = OutputFormat
 exports.OutputFormatContext = OutputFormatContext

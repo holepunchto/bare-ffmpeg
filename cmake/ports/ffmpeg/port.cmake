@@ -71,7 +71,6 @@ if(APPLE)
     "--sysroot=${CMAKE_OSX_SYSROOT}"
 
     --enable-avfoundation
-    --enable-coreimage
     --enable-videotoolbox
   )
 
