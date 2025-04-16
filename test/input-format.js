@@ -2,17 +2,7 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('input format should instantiate', (t) => {
-  let inputFormat
-
-  if (Bare.platform == 'darwin') {
-    inputFormat = new ffmpeg.InputFormat('avfoundation')
-  } else if (Bare.platform == 'linux') {
-    inputFormat = new ffmpeg.InputFormat('v4l2')
-  } else {
-    inputFormat = new ffmpeg.InputFormat('dshow')
-  }
-
-  t.ok(inputFormat)
+  t.ok(new ffmpeg.InputFormat())
 })
 
 test('input format should throw if the name is wrong', (t) => {
