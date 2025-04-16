@@ -352,7 +352,17 @@ if(APPLE)
       "-framework CoreMedia"
       "-framework CoreVideo"
       "-framework CoreServices"
+  )
+
+  target_link_libraries(
+    avdevice
+    INTERFACE
       "-framework AVFoundation"
+      "-framework CoreAudio"
+      "-framework CoreGraphics"
+      "-framework CoreMedia"
+      "-framework CoreVideo"
+      "-framework Foundation"
   )
 
   target_link_libraries(
@@ -363,12 +373,17 @@ if(APPLE)
       "-framework CoreMedia"
       "-framework CoreVideo"
       "-framework CoreServices"
-      "-framework AVFoundation"
   )
 
   if(NOT IOS)
     target_link_libraries(
       avcodec
+      INTERFACE
+        "-framework AudioToolbox"
+    )
+
+    target_link_libraries(
+      avdevice
       INTERFACE
         "-framework AudioToolbox"
     )
