@@ -352,6 +352,7 @@ if(APPLE)
       "-framework CoreMedia"
       "-framework CoreVideo"
       "-framework CoreServices"
+      "-framework AVFoundation"
   )
 
   target_link_libraries(
@@ -362,6 +363,7 @@ if(APPLE)
       "-framework CoreMedia"
       "-framework CoreVideo"
       "-framework CoreServices"
+      "-framework AVFoundation"
   )
 
   if(NOT IOS)
