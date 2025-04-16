@@ -167,9 +167,11 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
   if (format == NULL) {
     err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name);
     assert(err == 0);
+    free(name);
 
     return NULL;
   }
+  free(name);
 
   js_value_t *handle;
 
