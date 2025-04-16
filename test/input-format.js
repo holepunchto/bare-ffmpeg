@@ -8,6 +8,8 @@ test('input format should wrap an array buffer', (t) => {
     inputFormat = new ffmpeg.InputFormat('avfoundation')
   } else if (Bare.platform == 'linux') {
     inputFormat = new ffmpeg.InputFormat('v4l2')
+  } else if (Bare.platform == 'win32') {
+    inputFormat = new ffmpeg.InputFormat('dshow')
   } else {
     t.pass()
   }
