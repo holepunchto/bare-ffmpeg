@@ -2,7 +2,15 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('input format should wrap an array buffer', (t) => {
-  const inputFormat = new ffmpeg.InputFormat('avfoundation')
+  let inputFormat
+
+  if (Bare.platform == 'darwin') {
+    inputFormat = new ffmpeg.InputFormat('avfoundation')
+  } else if (Bare.platform == 'linux') {
+    inputFormat = new ffmpeg.InputFormat('v4l2')
+  } else {
+    t.pass()
+  }
 
   t.ok(inputFormat._handle instanceof ArrayBuffer)
 })
