@@ -71,7 +71,6 @@ if(APPLE)
     "--sysroot=${CMAKE_OSX_SYSROOT}"
 
     --enable-avfoundation
-    --enable-coreimage
     --enable-videotoolbox
   )
 
@@ -356,6 +355,17 @@ if(APPLE)
   )
 
   target_link_libraries(
+    avdevice
+    INTERFACE
+      "-framework AVFoundation"
+      "-framework CoreAudio"
+      "-framework CoreGraphics"
+      "-framework CoreMedia"
+      "-framework CoreVideo"
+      "-framework Foundation"
+  )
+
+  target_link_libraries(
     avutil
     INTERFACE
       "-framework VideoToolbox"
@@ -368,6 +378,12 @@ if(APPLE)
   if(NOT IOS)
     target_link_libraries(
       avcodec
+      INTERFACE
+        "-framework AudioToolbox"
+    )
+
+    target_link_libraries(
+      avdevice
       INTERFACE
         "-framework AudioToolbox"
     )
