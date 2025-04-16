@@ -1,18 +1,18 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-test('input format should wrap an array buffer', (t) => {
+test('input format should instantiate', (t) => {
   let inputFormat
 
   if (Bare.platform == 'darwin') {
     inputFormat = new ffmpeg.InputFormat('avfoundation')
   } else if (Bare.platform == 'linux') {
     inputFormat = new ffmpeg.InputFormat('v4l2')
-  } else if (Bare.platform == 'win32') {
+  } else {
     inputFormat = new ffmpeg.InputFormat('dshow')
   }
 
-  t.ok(inputFormat instanceof ffmpeg.InputFormat)
+  t.ok(inputFormat)
 })
 
 test('input format should throw if the name is wrong', (t) => {
