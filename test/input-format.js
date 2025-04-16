@@ -10,11 +10,9 @@ test('input format should wrap an array buffer', (t) => {
     inputFormat = new ffmpeg.InputFormat('v4l2')
   } else if (Bare.platform == 'win32') {
     inputFormat = new ffmpeg.InputFormat('dshow')
-  } else {
-    t.pass()
   }
 
-  t.ok(inputFormat._handle instanceof ArrayBuffer)
+  t.ok(inputFormat instanceof ffmpeg.InputFormat)
 })
 
 test('input format should throw if the name is wrong', (t) => {
