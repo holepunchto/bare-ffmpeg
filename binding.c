@@ -75,6 +75,7 @@ static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 static void
 bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
+  avdevice_register_all();
 }
 
 static js_value_t *
@@ -183,8 +184,6 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
 
 static js_value_t *
 bare_ffmpeg_input_format_init(js_env_t *env, js_callback_info_t *info) {
-  avdevice_register_all();
-
   int err;
 
   size_t argc = 1;
