@@ -9,6 +9,7 @@
 #include <libavdevice/avdevice.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/avutil.h>
 #include <libavutil/dict.h>
 #include <libavutil/error.h>
 #include <libavutil/frame.h>
@@ -454,6 +455,37 @@ bare_ffmpeg_format_context_get_streams(js_env_t *env, js_callback_info_t *info) 
     err = js_set_element(env, result, i, handle);
     assert(err == 0);
   }
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  bare_ffmpeg_format_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  int stream_index = av_find_best_stream(context->handle, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+  if (stream_index < 0) {
+    err = js_throw_error(env, NULL, "Best stream not found");
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *result;
+  err = js_create_int32(env, stream_index, &result);
+  assert(err == 0);
 
   return result;
 }
@@ -1628,6 +1660,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
+  V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
+
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
