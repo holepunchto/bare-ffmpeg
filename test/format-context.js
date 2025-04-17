@@ -13,6 +13,10 @@ test('InputFormatContext should be instanciate with IOContext', (t) => {
 
 test('InputFormatContext should be instanciate with InputFormat', (t) => {
   const inputFormat = new ffmpeg.InputFormat()
-  const inputFormatContext = new ffmpeg.InputFormatContext(inputFormat)
+  const options = new ffmpeg.Dictionary()
+  options.set('framerate', '30')
+  options.set('video_size', '1280x720')
+  options.set('pixel_format', 'uyvy422')
+  const inputFormatContext = new ffmpeg.InputFormatContext(inputFormat, options)
   t.ok(inputFormatContext)
 })

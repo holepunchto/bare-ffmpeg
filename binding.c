@@ -232,13 +232,12 @@ static js_value_t *
 bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 2;
+  js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-
-  assert(argc == 1);
+  assert(argc == 2);
 
   bare_ffmpeg_input_format_t *format;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &format, NULL);
@@ -253,14 +252,12 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   context->handle = avformat_alloc_context();
   context->handle->opaque = (void *) context;
 
-  // TODO: offload this
-  AVDictionary *options = NULL;
-  av_dict_set(&options, "framerate", "30", 0);
-  av_dict_set(&options, "video_size", "1280x720", 0);
-  av_dict_set(&options, "pixel_format", "uyvy422", 0);
+  bare_ffmpeg_dictionary_t *options;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &options, NULL);
+  assert(err == 0);
 
   // TODO: handle url with params { audio, video }
-  err = avformat_open_input(&context->handle, "0", format->handle, &options);
+  err = avformat_open_input(&context->handle, "0", format->handle, &options->handle);
 
   if (err < 0) {
     avformat_free_context(context->handle);
