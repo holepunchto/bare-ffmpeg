@@ -14,4 +14,5 @@ test('InputFormatContext should be instanciate with IOContext', (t) => {
 test('InputFormatContext should be instanciate with InputFormat', (t) => {
   const inputFormat = new ffmpeg.InputFormat()
   const inputFormatContext = new ffmpeg.InputFormatContext(inputFormat)
+  t.ok(inputFormatContext)
 })
