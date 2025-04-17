@@ -253,11 +253,13 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   context->handle = avformat_alloc_context();
   context->handle->opaque = (void *) context;
 
+  // TODO: offload this
   AVDictionary *options = NULL;
   av_dict_set(&options, "framerate", "30", 0);
   av_dict_set(&options, "video_size", "1280x720", 0);
   av_dict_set(&options, "pixel_format", "uyvy422", 0);
 
+  // TODO: handle url with params { audio, video }
   err = avformat_open_input(&context->handle, "0", format->handle, &options);
 
   if (err < 0) {
