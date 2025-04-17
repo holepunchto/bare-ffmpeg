@@ -257,6 +257,7 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   assert(err == 0);
 
   // TODO: handle url with params { audio, video }
+  // and handle it for each platform
   err = avformat_open_input(&context->handle, "0", format->handle, &options->handle);
 
   if (err < 0) {
