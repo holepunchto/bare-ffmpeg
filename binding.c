@@ -1352,6 +1352,56 @@ bare_ffmpeg_frame_set_width(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_ffmpeg_frame_get_height(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  bare_ffmpeg_frame_t *frame;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+  err = js_create_int32(env, frame->handle->height, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
+bare_ffmpeg_frame_set_height(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 2);
+
+  bare_ffmpeg_frame_t *frame;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
+  assert(err == 0);
+
+  int32_t height;
+  err = js_get_value_int32(env, argv[1], &height);
+  assert(err == 0);
+
+  frame->handle->width = height;
+
+  js_value_t *result;
+  err = js_get_null(env, &result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_value_t *
 bare_ffmpeg_image_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1795,6 +1845,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameChannel", bare_ffmpeg_frame_get_channel)
   V("getFrameWidth", bare_ffmpeg_frame_get_width)
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
+  V("getFrameHeight", bare_ffmpeg_frame_get_height)
+  V("setFrameHeight", bare_ffmpeg_frame_set_height)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
