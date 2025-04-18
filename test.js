@@ -1,3 +1,6 @@
 require('./test/decode')
 require('./test/dictionary')
-require('./test/input-format.js')
+require('./test/input-format')
+require('./test/format-context')
+require('./test/codec')
+require('./test/frame')
