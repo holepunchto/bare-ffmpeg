@@ -19,6 +19,20 @@ rawDecoder.open()
 
 const packet = new ffmpeg.Packet()
 const rawFrame = new ffmpeg.Frame()
+const yuvFrame = new ffmpeg.Frame()
+yuvFrame.width = 1280
+yuvFrame.height = 720
+yuvFrame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+yuvFrame.alloc()
+
+const scaler = new ffmpeg.Scaler(
+  rawDecoder.pixelFormat,
+  rawDecoder.width,
+  rawDecoder.height,
+  ffmpeg.constants.pixelFormats.YUV420P,
+  rawDecoder.width,
+  rawDecoder.height
+)
 
 let ret = inputFormatContext.readFrame(packet)
 if (ret < 0) {
@@ -27,15 +41,14 @@ if (ret < 0) {
 }
 
 rawDecoder.sendPacket(packet)
-
 ret = rawDecoder.receiveFrame(rawFrame)
 if (ret) {
   console.log('Successfully decoded first frame!')
+
+  scaler.scale(rawFrame, yuvFrame)
+  console.log('Successfully converted frame to YUV420P!')
 } else {
   console.error('Failed to decode frame')
 }
 
 packet.unref()
-
-// const h264Codec = ffmpeg.Codec('libx264')
-// const h264Encoder = ffmpeg.Encoder(h264Codec);
