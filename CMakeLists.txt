@@ -5,7 +5,7 @@ find_package(cmake-ports REQUIRED PATHS node_modules/cmake-ports)
 
 project(bare_ffmpeg C)
 
-find_port(ffmpeg FEATURES dav1d)
+find_port(ffmpeg FEATURES dav1d x264)
 
 add_bare_module(bare_ffmpeg)
 

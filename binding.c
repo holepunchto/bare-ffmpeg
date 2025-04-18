@@ -697,13 +697,9 @@ bare_ffmpeg_find_encoder_by_name(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
   assert(argc == 1);
 
-  printf("get args");
-
   size_t len;
   err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
   assert(err == 0);
-
-  printf("len of codec name %d", (int) len);
 
   len += +1; /* Null */
 
@@ -711,9 +707,7 @@ bare_ffmpeg_find_encoder_by_name(js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
   assert(err == 0);
 
-  printf("codec name %s", name);
-
-  const AVCodec *encoder = avcodec_find_encoder_by_name((char *) &name);
+  const AVCodec *encoder = avcodec_find_encoder_by_name((char *) name);
   if (encoder == NULL) {
     err = js_throw_errorf(env, NULL, "No encoder found for codec '%s'", name);
     assert(err == 0);

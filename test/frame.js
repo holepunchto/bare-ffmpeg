@@ -46,7 +46,7 @@ test('frame expose a getter for pixelFormat', (t) => {
 test('frame expose an alloc method', (t) => {
   const fr = new ffmpeg.Frame()
 
-  fr.height = 200 
+  fr.height = 200
   fr.width = 200
   fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   t.execution(() => {
