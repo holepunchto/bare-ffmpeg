@@ -43,6 +43,20 @@ test('frame expose a getter for pixelFormat', (t) => {
   t.ok(fr.pixelFormat == ffmpeg.constants.pixelFormats.YUV420P)
 })
 
+test('frame expose a setter for pts', (t) => {
+  const fr = new ffmpeg.Frame()
+  t.execution(() => {
+    fr.pts = 1
+  })
+})
+
+test('frame expose a getter for pts', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.pts = 1
+
+  t.ok(fr.pts == 1)
+})
+
 test('frame expose an alloc method', (t) => {
   const fr = new ffmpeg.Frame()
 
