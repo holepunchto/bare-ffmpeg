@@ -11,6 +11,54 @@ test('codec context could be open without options', (t) => {
   })
 })
 
+test('codec context could not open wihtout timebase', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  codecCtx.width = 100
+  codecCtx.height = 100
+
+  t.exception(() => {
+    codecCtx.open()
+  })
+})
+
+test('codec context could not open wihtout pixelFormat', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  codecCtx.timeBase = new ffmpeg.Rational(1, 30)
+  codecCtx.width = 100
+  codecCtx.height = 100
+
+  t.exception(() => {
+    codecCtx.open()
+  })
+})
+
+test('codec context could not open wihtout width', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  codecCtx.timeBase = new ffmpeg.Rational(1, 30)
+  codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  codecCtx.height = 100
+
+  t.exception(() => {
+    codecCtx.open()
+  })
+})
+
+test('codec context could not open wihtout height', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  codecCtx.timeBase = new ffmpeg.Rational(1, 30)
+  codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  codecCtx.width = 100
+
+  t.exception(() => {
+    codecCtx.open()
+  })
+})
+
 test('codec context could be open with options', (t) => {
   const encoderOptions = new ffmpeg.Dictionary()
   encoderOptions.set('preset', 'ultrafast')
@@ -26,8 +74,8 @@ test('codec context could be open with options', (t) => {
 })
 
 function setDefaultOptions(ctx) {
-  ctx.timeBase = new ffmpeg.Rational(1, 30) // TODO: add test when this option is missing
-  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P // TODO: same as above
-  ctx.width = 100 // TODO: same as above
-  ctx.height = 100 // TODO: same as above
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.width = 100
+  ctx.height = 100
 }

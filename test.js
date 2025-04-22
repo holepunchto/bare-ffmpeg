@@ -1,3 +1,4 @@
+require('./test/codec-context')
 require('./test/codec')
 require('./test/decode')
 require('./test/dictionary')
