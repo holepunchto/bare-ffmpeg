@@ -63,7 +63,6 @@ while (true) {
 
     scaler.scale(rawFrame, yuvFrame)
     console.log('2 - scale frame to yuv')
-    yuvFrame.pts = pts++
 
     enc_ctx.sendFrame(yuvFrame)
     console.log('3 - send frame')
