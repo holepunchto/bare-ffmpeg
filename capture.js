@@ -69,6 +69,7 @@ while (true) {
 
     while (encoderContext.receivePacket(packet)) {
       console.log('4 - encoded packet')
+      // NOTE: for Mafintosh - send here
       packet.unref()
     }
   }
