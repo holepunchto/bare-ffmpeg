@@ -60,17 +60,37 @@ test('codec context could not open wihtout height', (t) => {
 })
 
 test('codec context could be open with options', (t) => {
-  const encoderOptions = new ffmpeg.Dictionary()
-  encoderOptions.set('preset', 'ultrafast')
-  encoderOptions.set('tune', 'zerolatency')
-
   const codec = new ffmpeg.Codec('h264')
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   setDefaultOptions(codecCtx)
 
   t.execution(() => {
-    codecCtx.open(encoderOptions)
+    codecCtx.open(getEncoderOptions())
   })
+})
+
+test('codec context should expose a sendFrame method', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open()
+  const frame = fakeFrame()
+
+  t.execution(() => {
+    codecCtx.sendFrame(frame)
+  })
+})
+
+test('codec context should expose a receivePacket method', (t) => {
+  const codec = new ffmpeg.Codec('h264')
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open(getEncoderOptions())
+  const frame = fakeFrame()
+  const packet = new ffmpeg.Packet()
+  codecCtx.sendFrame(frame)
+
+  t.ok(codecCtx.receivePacket(packet))
 })
 
 function setDefaultOptions(ctx) {
@@ -78,4 +98,21 @@ function setDefaultOptions(ctx) {
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   ctx.width = 100
   ctx.height = 100
+}
+
+function fakeFrame() {
+  const frame = new ffmpeg.Frame()
+  frame.width = 100
+  frame.height = 100
+  frame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  frame.alloc()
+
+  return frame
+}
+
+function getEncoderOptions() {
+  const encoderOptions = new ffmpeg.Dictionary()
+  encoderOptions.set('preset', 'ultrafast')
+  encoderOptions.set('tune', 'zerolatency')
+  return encoderOptions
 }
