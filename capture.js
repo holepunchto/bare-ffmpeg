@@ -7,7 +7,6 @@ options.set('video_size', '1280x720')
 options.set('pixel_format', 'uyvy422')
 
 const inputFormatContext = new ffmpeg.InputFormatContext(inputFormat, options)
-const videoStreamIndex = inputFormatContext.getBestStreamIndex()
 const bestStream = inputFormatContext.getBestStream()
 if (!bestStream) {
   console.error('Best stream not found')
