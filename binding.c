@@ -780,7 +780,7 @@ static js_value_t *
 bare_ffmpeg_codec_context_open(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
+  size_t argc = 2;
   js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
