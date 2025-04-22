@@ -47,7 +47,7 @@ enc_ctx.width = rawDecoder.width
 enc_ctx.height = rawDecoder.height
 enc_ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
 enc_ctx.timeBase = new ffmpeg.Rational(1, 30)
-enc_ctx.open()
+enc_ctx.open(encoderOptions)
 
 let pts = 0
 
