@@ -42,12 +42,12 @@ encoderOptions.set('preset', 'ultrafast')
 encoderOptions.set('tune', 'zerolatency')
 const codec = new ffmpeg.Codec('h264')
 const enc = codec.encoder
-const enc_ctx = new ffmpeg.CodecContext(enc)
-enc_ctx.width = rawDecoder.width
-enc_ctx.height = rawDecoder.height
-enc_ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
-enc_ctx.timeBase = new ffmpeg.Rational(1, 30)
-enc_ctx.open(encoderOptions)
+const encoderContext = new ffmpeg.CodecContext(enc)
+encoderContext.width = rawDecoder.width
+encoderContext.height = rawDecoder.height
+encoderContext.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+encoderContext.timeBase = new ffmpeg.Rational(1, 30)
+encoderContext.open(encoderOptions)
 
 let pts = 0
 
@@ -64,10 +64,10 @@ while (true) {
     scaler.scale(rawFrame, yuvFrame)
     console.log('2 - scale frame to yuv')
 
-    enc_ctx.sendFrame(yuvFrame)
+    encoderContext.sendFrame(yuvFrame)
     console.log('3 - send frame')
 
-    while (enc_ctx.receivePacket(packet)) {
+    while (encoderContext.receivePacket(packet)) {
       console.log('4 - encoded packet')
       packet.unref()
     }
