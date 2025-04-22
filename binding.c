@@ -1033,11 +1033,10 @@ bare_ffmpeg_codec_context_send_packet(js_env_t *env, js_callback_info_t *info) {
 
   err = avcodec_send_packet(context->handle, &packet->handle);
 
-  // TODO: re-enable this
-  // if (err < 0) {
-  //   err = js_throw_error(env, NULL, av_err2str(err));
-  //   assert(err == 0);
-  // }
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+  }
 
   return NULL;
 }
