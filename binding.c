@@ -258,9 +258,17 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   err = js_get_arraybuffer_info(env, argv[1], (void **) &options, NULL);
   assert(err == 0);
 
+  const char *url = NULL;
+
+#if defined(__APPLE__)
+  url = "0";
+#elif defined(__linux__)
+  url = "/dev/video0";
+#endif
+
   // TODO: handle url with params { audio, video }
   // and handle it for each platform
-  err = avformat_open_input(&context->handle, "0", format->handle, &options->handle);
+  err = avformat_open_input(&context->handle, url, format->handle, &options->handle);
 
   if (err < 0) {
     avformat_free_context(context->handle);
