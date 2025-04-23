@@ -263,7 +263,7 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
 #if defined(__APPLE__)
   url = "0";
 #elif defined(__linux__)
-  url = "/dev/video0";
+  url = "testsrc=size=640x480:rate=30";
 #endif
 
   // TODO: handle url with params { audio, video }
