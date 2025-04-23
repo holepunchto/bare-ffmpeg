@@ -8,6 +8,7 @@ declare_port(
     --enable-static
     --disable-cli
     --enable-strip
+    --enable-pic
   BYPRODUCTS lib/libx264.a
 )
 
