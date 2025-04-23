@@ -234,12 +234,12 @@ static js_value_t *
 bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
+  size_t argc = 3;
+  js_value_t *argv[3];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-  assert(argc == 2);
+  assert(argc == 3);
 
   bare_ffmpeg_input_format_t *format;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &format, NULL);
@@ -258,17 +258,17 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   err = js_get_arraybuffer_info(env, argv[1], (void **) &options, NULL);
   assert(err == 0);
 
-  const char *url = NULL;
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[2], NULL, 0, &len);
+  assert(err == 0);
 
-#if defined(__APPLE__)
-  url = "0";
-#elif defined(__linux__)
-  url = "testsrc=size=640x480:rate=30";
-#endif
+  len += +1 /* NULL */;
 
-  // TODO: handle url with params { audio, video }
-  // and handle it for each platform
-  err = avformat_open_input(&context->handle, url, format->handle, &options->handle);
+  utf8_t *url = malloc(len);
+  err = js_get_value_string_utf8(env, argv[2], url, len, NULL);
+  assert(err == 0);
+
+  err = avformat_open_input(&context->handle, (char *) url, format->handle, &options->handle);
 
   if (err < 0) {
     avformat_free_context(context->handle);
