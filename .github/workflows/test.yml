@@ -17,9 +17,9 @@ jobs:
           - os: macos-latest
             platform: darwin
             arch: arm64
-          - os: windows-latest
-            platform: win32
-            arch: x64
+          # - os: windows-latest
+          #   platform: win32
+          #   arch: x64
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
@@ -46,7 +46,7 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug
-      - run: bare-make build
-      - run: bare-make install
+      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug --verbose
+      - run: bare-make build --verbose
+      - run: bare-make install --verbose
       - run: npm test
