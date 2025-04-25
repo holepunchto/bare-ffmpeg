@@ -17,6 +17,7 @@ const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
 const Dictionary = require('./lib/dictionary')
+const Playback = require('./lib/playback')
 
 exports.Codec = Codec
 exports.CodecContext = CodecContext
@@ -35,5 +36,6 @@ exports.Scaler = Scaler
 exports.Stream = Stream
 exports.Rational = Rational
 exports.Dictionary = Dictionary
+exports.Playback = Playback // TODO: temporary, it should be removed
 
 exports.constants = require('./lib/constants')

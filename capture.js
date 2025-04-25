@@ -36,9 +36,27 @@ encoderContext.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
 encoderContext.timeBase = new ffmpeg.Rational(1, 30)
 encoderContext.open(encoderOptions)
 
+// Set up playback
+const playback = new ffmpeg.Playback(rawDecoder.height, rawDecoder.width)
+
+// Set up toRGB scaler
+const toRGB = new ffmpeg.Scaler(
+  ffmpeg.constants.pixelFormats.YUV420P,
+  rawDecoder.width,
+  rawDecoder.height,
+  ffmpeg.constants.pixelFormats.RGB24,
+  rawDecoder.width,
+  rawDecoder.height
+)
+
+const rgbaFrame = new ffmpeg.Frame()
+rgbaFrame.width = rawDecoder.width
+rgbaFrame.height = rawDecoder.height
+rgbaFrame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
+rgbaFrame.alloc()
+
 function record() {
   // Allocate frames and packet
-  const packet = new ffmpeg.Packet()
   const rawFrame = new ffmpeg.Frame()
   const yuvFrame = new ffmpeg.Frame()
   yuvFrame.width = rawDecoder.width
@@ -56,7 +74,8 @@ function record() {
     yuvFrame.height
   )
 
-  while (true) {
+  const packet = new ffmpeg.Packet()
+  while (playback.poll()) {
     const ret = inputFormatContext.readFrame(packet)
     if (!ret) continue
 
@@ -87,6 +106,9 @@ function decode(packet) {
   const decodedFrame = new ffmpeg.Frame()
   while (decoderContext.receiveFrame(decodedFrame)) {
     console.log('5 - decoded frame')
+    toRGB.scale(decodedFrame, rgbaFrame)
+    console.log('6 - scale frame to rgba')
+    playback.render(rgbaFrame)
   }
 }
 

@@ -15,6 +15,12 @@ target_sources(
     binding.c
 )
 
+set(CMAKE_PREFIX_PATH "/opt/homebrew") # So FindSDL2 can work
+find_package(SDL2 REQUIRED)
+
+target_include_directories(${bare_ffmpeg} PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(${bare_ffmpeg} PRIVATE ${SDL2_LIBRARIES})
+
 target_link_libraries(
   ${bare_ffmpeg}
   PRIVATE
@@ -23,4 +29,5 @@ target_link_libraries(
     avformat
     avutil
     swscale
+    sdl2
 )
