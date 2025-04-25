@@ -1,75 +1,93 @@
 const ffmpeg = require('.')
 
-const inputFormat = new ffmpeg.InputFormat()
+// Set up device
+// const inputFormat = new ffmpeg.InputFormat()
 const options = new ffmpeg.Dictionary()
 options.set('framerate', '30')
 options.set('video_size', '1280x720')
 options.set('pixel_format', 'uyvy422')
-
-const inputFormatContext = new ffmpeg.InputFormatContext(inputFormat, options)
+const inputFormatContext = new ffmpeg.InputFormatContext(
+  new ffmpeg.InputFormat(),
+  options
+)
 const bestStream = inputFormatContext.getBestStream()
 if (!bestStream) {
-  console.error('Best stream not found')
   process.exit(1)
 }
-console.log('Found best stream with codec:', bestStream.codec)
 
+// Setup rawDecoder
 const rawDecoder = bestStream.decoder()
 
-// Allocate frames and packet
-const packet = new ffmpeg.Packet()
-const rawFrame = new ffmpeg.Frame()
-const yuvFrame = new ffmpeg.Frame()
-yuvFrame.width = rawDecoder.width
-yuvFrame.height = rawDecoder.height
-yuvFrame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
-yuvFrame.alloc()
+// Set up codec
+const codec = new ffmpeg.Codec('h264')
 
-// Set up scaler
-const scaler = new ffmpeg.Scaler(
-  rawDecoder.pixelFormat,
-  rawDecoder.width,
-  rawDecoder.height,
-  ffmpeg.constants.pixelFormats.YUV420P,
-  yuvFrame.width,
-  yuvFrame.height
-)
+// Set up decoder
+const decoderContext = new ffmpeg.CodecContext(codec.decoder)
+decoderContext.open()
 
 // Set up encoder
 const encoderOptions = new ffmpeg.Dictionary()
 encoderOptions.set('preset', 'ultrafast')
 encoderOptions.set('tune', 'zerolatency')
-const codec = new ffmpeg.Codec('h264')
-const enc = codec.encoder
-const encoderContext = new ffmpeg.CodecContext(enc)
+const encoderContext = new ffmpeg.CodecContext(codec.encoder)
 encoderContext.width = rawDecoder.width
 encoderContext.height = rawDecoder.height
 encoderContext.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
 encoderContext.timeBase = new ffmpeg.Rational(1, 30)
 encoderContext.open(encoderOptions)
 
-let pts = 0
+function record() {
+  // Allocate frames and packet
+  const packet = new ffmpeg.Packet()
+  const rawFrame = new ffmpeg.Frame()
+  const yuvFrame = new ffmpeg.Frame()
+  yuvFrame.width = rawDecoder.width
+  yuvFrame.height = rawDecoder.height
+  yuvFrame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  yuvFrame.alloc()
 
-while (true) {
-  const ret = inputFormatContext.readFrame(packet)
-  if (!ret) continue
+  // Set up scaler
+  const scaler = new ffmpeg.Scaler(
+    rawDecoder.pixelFormat,
+    rawDecoder.width,
+    rawDecoder.height,
+    ffmpeg.constants.pixelFormats.YUV420P,
+    yuvFrame.width,
+    yuvFrame.height
+  )
 
-  rawDecoder.sendPacket(packet)
-  packet.unref()
+  while (true) {
+    const ret = inputFormatContext.readFrame(packet)
+    if (!ret) continue
 
-  while (rawDecoder.receiveFrame(rawFrame)) {
-    console.log('1 - decoded frame')
+    rawDecoder.sendPacket(packet)
+    packet.unref()
 
-    scaler.scale(rawFrame, yuvFrame)
-    console.log('2 - scale frame to yuv')
+    while (rawDecoder.receiveFrame(rawFrame)) {
+      console.log('1 - decoded frame')
 
-    encoderContext.sendFrame(yuvFrame)
-    console.log('3 - send frame')
+      scaler.scale(rawFrame, yuvFrame)
+      console.log('2 - scale frame to yuv')
 
-    while (encoderContext.receivePacket(packet)) {
-      console.log('4 - encoded packet')
-      // NOTE: for Mafintosh - send here
-      packet.unref()
+      encoderContext.sendFrame(yuvFrame)
+      console.log('3 - send frame')
+
+      while (encoderContext.receivePacket(packet)) {
+        console.log('4 - encoded packet')
+        decode(packet)
+      }
     }
   }
 }
+
+function decode(packet) {
+  decoderContext.sendPacket(packet)
+  packet.unref()
+
+  const decodedFrame = new ffmpeg.Frame()
+  while (decoderContext.receiveFrame(decodedFrame)) {
+    console.log('5 - decoded frame')
+  }
+}
+
+record()

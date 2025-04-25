@@ -240,7 +240,6 @@ if("dav1d" IN_LIST features)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
-  message(STATUS "--> ${dav1d_PREFIX}/lib/pkgconfig")
   list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
@@ -252,7 +251,6 @@ if("x264" IN_LIST features)
   list(APPEND depends x264)
   list(APPEND args --enable-gpl)
   list(APPEND args --enable-libx264)
-  message(STATUS "--> ${x264_PREFIX}/lib/pkgconfig")
   list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)

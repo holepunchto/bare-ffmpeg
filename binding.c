@@ -660,6 +660,45 @@ bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_ffmpeg_find_decoder_by_name(js_env_t *env, js_callback_info_t *info) {
+  int err;
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  size_t len;
+  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
+  assert(err == 0);
+
+  len += +1; /* Null */
+
+  utf8_t *name = malloc(len);
+  err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
+  assert(err == 0);
+
+  const AVCodec *decoder = avcodec_find_decoder_by_name((char *) name);
+  if (decoder == NULL) {
+    err = js_throw_errorf(env, NULL, "No decoder found for codec '%s'", name);
+    assert(err == 0);
+
+    return NULL;
+  }
+
+  js_value_t *handle;
+
+  bare_ffmpeg_codec_t *context;
+  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_codec_t), (void **) &context, &handle);
+  assert(err == 0);
+
+  context->handle = decoder;
+
+  return handle;
+}
+
+static js_value_t *
 bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -2033,6 +2072,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
+  V("findDecoderByName", bare_ffmpeg_find_decoder_by_name)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("findEncoderByName", bare_ffmpeg_find_encoder_by_name)
 
