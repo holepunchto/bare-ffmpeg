@@ -39,6 +39,29 @@ encoderContext.open(encoderOptions)
 // Set up playback
 const playback = new ffmpeg.Playback(rawDecoder.height, rawDecoder.width)
 
+// Allocate frames
+const rawFrame = new ffmpeg.Frame()
+const yuvFrame = new ffmpeg.Frame()
+yuvFrame.width = rawDecoder.width
+yuvFrame.height = rawDecoder.height
+yuvFrame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+yuvFrame.alloc()
+const rgbaFrame = new ffmpeg.Frame()
+rgbaFrame.width = rawDecoder.width
+rgbaFrame.height = rawDecoder.height
+rgbaFrame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
+rgbaFrame.alloc()
+
+// Set up toYUV  scaler
+const toYUV = new ffmpeg.Scaler(
+  rawDecoder.pixelFormat,
+  rawDecoder.width,
+  rawDecoder.height,
+  ffmpeg.constants.pixelFormats.YUV420P,
+  yuvFrame.width,
+  yuvFrame.height
+)
+
 // Set up toRGB scaler
 const toRGB = new ffmpeg.Scaler(
   ffmpeg.constants.pixelFormats.YUV420P,
@@ -49,52 +72,32 @@ const toRGB = new ffmpeg.Scaler(
   rawDecoder.height
 )
 
-const rgbaFrame = new ffmpeg.Frame()
-rgbaFrame.width = rawDecoder.width
-rgbaFrame.height = rawDecoder.height
-rgbaFrame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
-rgbaFrame.alloc()
-
-function record() {
-  // Allocate frames and packet
-  const rawFrame = new ffmpeg.Frame()
-  const yuvFrame = new ffmpeg.Frame()
-  yuvFrame.width = rawDecoder.width
-  yuvFrame.height = rawDecoder.height
-  yuvFrame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
-  yuvFrame.alloc()
-
-  // Set up scaler
-  const scaler = new ffmpeg.Scaler(
-    rawDecoder.pixelFormat,
-    rawDecoder.width,
-    rawDecoder.height,
-    ffmpeg.constants.pixelFormats.YUV420P,
-    yuvFrame.width,
-    yuvFrame.height
-  )
-
+function capture() {
   const packet = new ffmpeg.Packet()
   while (playback.poll()) {
-    const ret = inputFormatContext.readFrame(packet)
-    if (!ret) continue
+    encode(packet)
+  }
+}
 
-    rawDecoder.sendPacket(packet)
-    packet.unref()
+function encode(packet) {
+  const ret = inputFormatContext.readFrame(packet)
+  if (!ret) return
 
-    while (rawDecoder.receiveFrame(rawFrame)) {
-      console.log('1 - decoded frame')
+  rawDecoder.sendPacket(packet)
+  packet.unref()
 
-      scaler.scale(rawFrame, yuvFrame)
-      console.log('2 - scale frame to yuv')
+  while (rawDecoder.receiveFrame(rawFrame)) {
+    console.log('1 - decoded frame')
 
-      encoderContext.sendFrame(yuvFrame)
-      console.log('3 - send frame')
+    toYUV.scale(rawFrame, yuvFrame)
+    console.log('2 - scale frame to yuv')
 
-      while (encoderContext.receivePacket(packet)) {
-        console.log('4 - encoded packet')
-        decode(packet)
-      }
+    encoderContext.sendFrame(yuvFrame)
+    console.log('3 - send frame')
+
+    while (encoderContext.receivePacket(packet)) {
+      console.log('4 - encoded packet')
+      decode(packet)
     }
   }
 }
@@ -112,4 +115,4 @@ function decode(packet) {
   }
 }
 
-record()
+capture()
