@@ -97,14 +97,16 @@ function encode(packet) {
 
     while (encoderContext.receivePacket(packet)) {
       console.log('4 - encoded packet')
-      decode(packet)
+      decode(packet.buffer)
+      packet.unref()
     }
   }
 }
 
-function decode(packet) {
+function decode(buffer) {
+  const packet = new ffmpeg.Packet(buffer)
   decoderContext.sendPacket(packet)
-  packet.unref()
+  packet.destroy()
 
   const decodedFrame = new ffmpeg.Frame()
   while (decoderContext.receiveFrame(decodedFrame)) {
