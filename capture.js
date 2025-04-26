@@ -88,6 +88,9 @@ function encode(packet) {
 
   while (rawDecoder.receiveFrame(rawFrame)) {
     console.log('1 - decoded frame')
+    // NOTE: for Mafintosh
+    // This were you can playback for the sender
+    // playback.render(rawFrame)
 
     toYUV.scale(rawFrame, yuvFrame)
     console.log('2 - scale frame to yuv')
@@ -97,12 +100,16 @@ function encode(packet) {
 
     while (encoderContext.receivePacket(packet)) {
       console.log('4 - encoded packet')
+      // NOTE: for Mafintosh
+      // This where you push to the swarm!
       decode(packet.buffer)
       packet.unref()
     }
   }
 }
 
+// NOTE: for Mafintosh
+// This the function that you could use on the receiver side
 function decode(buffer) {
   const packet = new ffmpeg.Packet(buffer)
   decoderContext.sendPacket(packet)
