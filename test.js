@@ -1,3 +1,4 @@
+require('./test/codec')
 require('./test/decode')
 require('./test/dictionary')
 require('./test/frame')
