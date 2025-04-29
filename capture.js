@@ -19,7 +19,7 @@ if (!bestStream) {
 const rawDecoder = bestStream.decoder()
 
 // Set up codec
-const codec = new ffmpeg.Codec('h264')
+const codec = ffmpeg.Codec.H264
 
 // Set up decoder
 const decoderContext = new ffmpeg.CodecContext(codec.decoder)
