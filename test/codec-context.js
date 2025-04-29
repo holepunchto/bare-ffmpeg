@@ -2,7 +2,7 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('codec context could be open without options', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   setDefaultOptions(codecCtx)
 
@@ -12,7 +12,7 @@ test('codec context could be open without options', (t) => {
 })
 
 test('codec context could not open wihtout timebase', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   codecCtx.width = 100
@@ -24,7 +24,7 @@ test('codec context could not open wihtout timebase', (t) => {
 })
 
 test('codec context could not open wihtout pixelFormat', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.width = 100
@@ -36,7 +36,7 @@ test('codec context could not open wihtout pixelFormat', (t) => {
 })
 
 test('codec context could not open wihtout width', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -48,7 +48,7 @@ test('codec context could not open wihtout width', (t) => {
 })
 
 test('codec context could not open wihtout height', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -60,7 +60,7 @@ test('codec context could not open wihtout height', (t) => {
 })
 
 test('codec context could be open with options', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   setDefaultOptions(codecCtx)
 
@@ -70,7 +70,7 @@ test('codec context could be open with options', (t) => {
 })
 
 test('codec context should expose a sendFrame method', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open()
@@ -82,7 +82,7 @@ test('codec context should expose a sendFrame method', (t) => {
 })
 
 test('codec context should expose a receivePacket method', (t) => {
-  const codec = new ffmpeg.Codec('h264')
+  const codec = ffmpeg.Codec.H264
   const codecCtx = new ffmpeg.CodecContext(codec.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open(getEncoderOptions())

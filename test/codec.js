@@ -1,8 +1,14 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-test('encoder can be instanciate by name', (t) => {
-  const codec = new ffmpeg.Codec('h264')
-  codec.encoder
-  t.ok(codec)
+test('codec class should expose a static H264 builder', (t) => {
+  const codec = ffmpeg.Codec.H264
+  t.ok(codec.encoder)
+  t.ok(codec.decoder)
+})
+
+test('codec class should expose a static MJPEG builder', (t) => {
+  const codec = ffmpeg.Codec.MJPEG
+  t.ok(codec.encoder)
+  t.ok(codec.decoder)
 })
