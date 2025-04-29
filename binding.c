@@ -1209,11 +1209,7 @@ bare_ffmpeg_frame_set_width(js_env_t *env, js_callback_info_t *info) {
 
   frame->handle->width = width;
 
-  js_value_t *result;
-  err = js_get_null(env, &result);
-  assert(err == 0);
-
-  return result;
+  return NULL;
 }
 
 static js_value_t *
@@ -1259,11 +1255,7 @@ bare_ffmpeg_frame_set_height(js_env_t *env, js_callback_info_t *info) {
 
   frame->handle->height = height;
 
-  js_value_t *result;
-  err = js_get_null(env, &result);
-  assert(err == 0);
-
-  return result;
+  return NULL;
 }
 
 static js_value_t *
@@ -1309,11 +1301,7 @@ bare_ffmpeg_frame_set_pixel_format(js_env_t *env, js_callback_info_t *info) {
 
   frame->handle->format = (enum AVPixelFormat) pixel_format;
 
-  js_value_t *result;
-  err = js_get_null(env, &result);
-  assert(err == 0);
-
-  return result;
+  return NULL;
 }
 
 static js_value_t *
@@ -1344,11 +1332,7 @@ bare_ffmpeg_frame_alloc(js_env_t *env, js_callback_info_t *info) {
     return NULL;
   }
 
-  js_value_t *result;
-  err = js_get_null(env, &result);
-  assert(err == 0);
-
-  return result;
+  return NULL;
 }
 
 static js_value_t *
