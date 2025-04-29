@@ -59,7 +59,7 @@ jobs:
             platform: win32
             arch: arm64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,9 +68,9 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y meson nasm
-        if: ${{ matrix.platform == 'linux' }}
+        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: brew install meson nasm
-        if: ${{ matrix.platform == 'darwin' }}
+        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: |
           choco install meson nasm msys2
           "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
@@ -84,7 +84,7 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug
+      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
       - run: bare-make build
       - run: bare-make install
       - run: npm test
