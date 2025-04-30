@@ -1,15 +1,32 @@
 include_guard(GLOBAL)
 
+set(args)
+
+list(APPEND args
+  --enable-static
+  --enable-strip
+  --enable-pic
+  --disable-cli
+)
+
+if(IOS)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    list(APPEND args --host=x86_64-apple-darwin)
+  else()
+    list(APPEND args --host=arm-apple-darwin)
+  endif()
+
+  list(APPEND args --disable-asm)
+  list(APPEND args "--extra-cflags=-arch ${CMAKE_SYSTEM_PROCESSOR} -isysroot ${CMAKE_OSX_SYSROOT}")
+  list(APPEND args "--extra-ldflags=-arch ${CMAKE_SYSTEM_PROCESSOR} -isysroot ${CMAKE_OSX_SYSROOT}")
+endif()
+
 declare_port(
   "git:code.videolan.org/videolan/x264#stable"
   x264
   AUTOTOOLS
-  ARGS
-    --enable-static
-    --disable-cli
-    --enable-strip
-    --enable-pic
   BYPRODUCTS lib/libx264.a
+  ARGS ${args}
 )
 
 add_library(x264 STATIC IMPORTED GLOBAL)
