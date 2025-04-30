@@ -17,18 +17,18 @@ jobs:
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
-          # - os: ubuntu-22.04
-          #   platform: android
-          #   arch: x64
-          #   flags: -D ANDROID_STL=c++_shared
+          - os: ubuntu-22.04
+            platform: android
+            arch: x64
+            flags: -D ANDROID_STL=c++_shared
           # - os: ubuntu-22.04
           #   platform: android
           #   arch: ia32
           #   flags: -D ANDROID_STL=c++_shared
-          # - os: ubuntu-22.04
-          #   platform: android
-          #   arch: arm64
-          #   flags: -D ANDROID_STL=c++_shared
+          - os: ubuntu-22.04
+            platform: android
+            arch: arm64
+            flags: -D ANDROID_STL=c++_shared
           # - os: ubuntu-22.04
           #   platform: android
           #   arch: arm
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          architecture: ${{ matrix.arch }}
+          architecture: ${{ (matrix.os != 'ubuntu-22.04') && matrix.arch || '' }}
           node-version: lts/*
       - run: |
           sudo apt update
