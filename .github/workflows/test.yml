@@ -21,10 +21,10 @@ jobs:
             platform: android
             arch: x64
             flags: -D ANDROID_STL=c++_shared
-          # - os: ubuntu-22.04
-          #   platform: android
-          #   arch: ia32
-          #   flags: -D ANDROID_STL=c++_shared
+          - os: ubuntu-22.04
+            platform: android
+            arch: ia32
+            flags: -D ANDROID_STL=c++_shared
           - os: ubuntu-22.04
             platform: android
             arch: arm64
