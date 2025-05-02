@@ -55,16 +55,16 @@ jobs:
           # - os: windows-2022
           #   platform: win32
           #   arch: x64
-          # - os: windows-2022
-          #   platform: win32
-          #   arch: arm64
+          - os: windows-2022
+            platform: win32
+            arch: arm64
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          architecture: ${{ (matrix.os != 'ubuntu-22.04') && matrix.arch || '' }}
+          architecture: ${{ (matrix.os != 'ubuntu-22.04' && matrix.os != 'windows-2022') && matrix.arch || '' }}
           node-version: lts/*
       - run: |
           sudo apt update
