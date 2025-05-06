@@ -242,18 +242,10 @@ if("dav1d" IN_LIST features)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
+  # list(APPEND pkg_config_paths "${dav1d_PREFIX}/lib/pkgconfig")
   # list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
-
-  # execute_process(
-  #   COMMAND ${CMAKE_COMMAND} -E env ${env} powershell -Command "[Environment]::GetEnvironmentVariable('PKG_CONFIG_PATH')"
-  #   OUTPUT_VARIABLE pc_path
-  # )
-  # message(STATUS "PKG_CONFIG_PATH after modification: ${pc_path}")
-  #
-  # string(LENGTH "${pc_path}" my_string_length)
-  # message(STATUS "The string length is: ${my_string_length}")
 endif()
 
 if("x264" IN_LIST features)
@@ -262,21 +254,15 @@ if("x264" IN_LIST features)
   list(APPEND depends x264)
   list(APPEND args --enable-gpl)
   list(APPEND args --enable-libx264)
+  # list(APPEND pkg_config_paths "${x264_PREFIX}/lib/pkgconfig")
   # list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)
-
-  # execute_process(
-  #   COMMAND ${CMAKE_COMMAND} -E env ${env} powershell -Command "[Environment]::GetEnvironmentVariable('PKG_CONFIG_PATH')"
-  #   OUTPUT_VARIABLE pc_path2
-  # )
-  # message(STATUS "PKG_CONFIG_PATH after modification: ${pc_path2}")
-  #
-  # string(LENGTH "${pc_path2}" my_string_length)
-  # message(STATUS "The string length is: ${my_string_length}")
 endif()
 
-list(APPEND env "PKG_CONFIG_PATH=${dav1d_PREFIX}/lib/pkgconfig:${x264_PREFIX}/lib/pkgconfig")
+list(APPEND env "PKG_CONFIG_PATH=/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+x264/lib/pkgconfig:/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+dav1d/lib/pkgconfig")
+# list(JOIN pkg_config_paths ":" joined_pkg_config_paths)
+# list(APPEND env "PKG_CONFIG_PATH=${joined_pkg_config_paths}")
 
 if(CMAKE_HOST_WIN32)
   find_path(
