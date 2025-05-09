@@ -235,15 +235,41 @@ if("zlib" IN_LIST features)
   list(APPEND args --enable-zlib)
 endif()
 
+set(pkg_config_paths)
+
 if("dav1d" IN_LIST features)
   find_port(dav1d)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
-  list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_paths "${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
 endif()
+
+if("x264" IN_LIST features)
+  find_port(x264)
+
+  list(APPEND depends x264)
+  list(APPEND args --enable-gpl)
+  list(APPEND args --enable-libx264)
+  list(APPEND pkg_config_paths "${x264_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE x264)
+endif()
+
+if(CMAKE_HOST_WIN32)
+  set(path_separator ";")
+else()
+  set(path_separator ":")
+endif()
+
+# Join the list into a single string
+string(JOIN "${path_separator}" PKG_CONFIG_PATH ${pkg_config_paths})
+
+# Now PKG_CONFIG_PATH is ready to inject into the script
+message(STATUS "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}")
+
 
 if(CMAKE_HOST_WIN32)
   find_path(
@@ -272,10 +298,22 @@ list(APPEND args
   "--pkg-config-flags=--static"
 )
 
+get_filename_component(script_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(entrypoint_in "${script_dir}/entrypoint.sh.in")
+set(entrypoint "${script_dir}/entry.sh")
+
+# Set the configure script path
+set(CONFIGURE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg/configure")
+
+# Configure the entrypoint script
+configure_file("${script_dir}/entrypoint.sh.in" "${entrypoint}" @ONLY)
+execute_process(COMMAND chmod +x "${entrypoint}")
+
 declare_port(
   "git:git.ffmpeg.org/ffmpeg#n7.1"
   ffmpeg
   AUTOTOOLS
+  ENTRYPOINT ${entrypoint}
   DEPENDS ${depends}
   BYPRODUCTS ${byproducts}
   ARGS ${args}

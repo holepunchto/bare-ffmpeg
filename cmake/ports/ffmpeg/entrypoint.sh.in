@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Set PKG_CONFIG_PATH from CMake
+export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
+
+echo "Running: @CONFIGURE_SCRIPT@ $@"
+
+# Execute the command with all arguments
+exec "@CONFIGURE_SCRIPT@" "$@"
