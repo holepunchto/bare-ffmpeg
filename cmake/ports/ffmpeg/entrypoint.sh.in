@@ -3,7 +3,7 @@
 # Set PKG_CONFIG_PATH from CMake
 export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
 
-echo "Running: @FFMPEG_CONFIGURE@ $@"
+echo "Running: @CONFIGURE_SCRIPT@ $@"
 
 # Execute the command with all arguments
-exec @FFMPEG_CONFIGURE@ "$@"
+exec "@CONFIGURE_SCRIPT@" "$@"

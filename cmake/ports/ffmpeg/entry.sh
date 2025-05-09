@@ -6,4 +6,4 @@ export PKG_CONFIG_PATH="/Users/tonygo/bare/bare-ffmpeg/build/_ports/git+code.vid
 echo "Running: /Users/tonygo/bare/bare-ffmpeg/build/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg/configure $@"
 
 # Execute the command with all arguments
-exec /Users/tonygo/bare/bare-ffmpeg/build/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg/configure "$@"
+exec "/Users/tonygo/bare/bare-ffmpeg/build/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg/configure" "$@"

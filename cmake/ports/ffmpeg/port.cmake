@@ -301,11 +301,13 @@ list(APPEND args
 get_filename_component(script_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set(entrypoint_in "${script_dir}/entrypoint.sh.in")
 set(entrypoint "${script_dir}/entry.sh")
-set(FFMPEG_CONFIGURE "${ffmpeg_PREFIX}/src/git+git.ffmpeg.org+ffmpeg/configure")
-message(STATUS "FFMPEG_CONFIGURE ${FFMPEG_CONFIGURE}")
 
-configure_file("${entrypoint_in}" "${entrypoint}" @ONLY)
-file(CHMOD "${entrypoint}" PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+# Set the configure script path
+set(CONFIGURE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/_ports/git+git.ffmpeg.org+ffmpeg/src/git+git.ffmpeg.org+ffmpeg/configure")
+
+# Configure the entrypoint script
+configure_file("${script_dir}/entrypoint.sh.in" "${entrypoint}" @ONLY)
+execute_process(COMMAND chmod +x "${entrypoint}")
 
 declare_port(
   "git:git.ffmpeg.org/ffmpeg#n7.1"
