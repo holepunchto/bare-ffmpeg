@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Set PKG_CONFIG_PATH from CMake
+export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
+
+echo "Running: @FFMPEG_CONFIGURE@ $@"
+
+# Execute the command with all arguments
+exec @FFMPEG_CONFIGURE@ "$@"

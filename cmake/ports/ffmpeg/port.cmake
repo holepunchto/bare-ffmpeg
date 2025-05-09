@@ -242,8 +242,7 @@ if("dav1d" IN_LIST features)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
-  # list(APPEND pkg_config_paths "${dav1d_PREFIX}/lib/pkgconfig")
-  # list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_paths "${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
 endif()
@@ -254,15 +253,23 @@ if("x264" IN_LIST features)
   list(APPEND depends x264)
   list(APPEND args --enable-gpl)
   list(APPEND args --enable-libx264)
-  # list(APPEND pkg_config_paths "${x264_PREFIX}/lib/pkgconfig")
-  # list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${x264_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_paths "${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)
 endif()
 
-list(APPEND env "PKG_CONFIG_PATH=/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+x264/lib/pkgconfig:/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+dav1d/lib/pkgconfig")
-# list(JOIN pkg_config_paths ":" joined_pkg_config_paths)
-# list(APPEND env "PKG_CONFIG_PATH=${joined_pkg_config_paths}")
+if(CMAKE_HOST_WIN32)
+  set(path_separator ";")
+else()
+  set(path_separator ":")
+endif()
+
+# Join the list into a single string
+string(JOIN "${path_separator}" PKG_CONFIG_PATH ${pkg_config_paths})
+
+# Now PKG_CONFIG_PATH is ready to inject into the script
+message(STATUS "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}")
+
 
 if(CMAKE_HOST_WIN32)
   find_path(
@@ -291,10 +298,20 @@ list(APPEND args
   "--pkg-config-flags=--static"
 )
 
+get_filename_component(script_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(entrypoint_in "${script_dir}/entrypoint.sh.in")
+set(entrypoint "${script_dir}/entry.sh")
+set(FFMPEG_CONFIGURE "${ffmpeg_PREFIX}/src/git+git.ffmpeg.org+ffmpeg/configure")
+message(STATUS "FFMPEG_CONFIGURE ${FFMPEG_CONFIGURE}")
+
+configure_file("${entrypoint_in}" "${entrypoint}" @ONLY)
+file(CHMOD "${entrypoint}" PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+
 declare_port(
   "git:git.ffmpeg.org/ffmpeg#n7.1"
   ffmpeg
   AUTOTOOLS
+  ENTRYPOINT ${entrypoint}
   DEPENDS ${depends}
   BYPRODUCTS ${byproducts}
   ARGS ${args}
