@@ -245,6 +245,17 @@ if("dav1d" IN_LIST features)
   target_link_libraries(avcodec INTERFACE dav1d)
 endif()
 
+if("x264" IN_LIST features)
+  find_port(x264)
+
+  list(APPEND depends x264)
+  list(APPEND args --enable-gpl)
+  list(APPEND args --enable-libx264)
+  list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${x264_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE x264)
+endif()
+
 if(CMAKE_HOST_WIN32)
   find_path(
     msys2
