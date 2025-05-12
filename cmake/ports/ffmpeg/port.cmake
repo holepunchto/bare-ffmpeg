@@ -235,14 +235,11 @@ if("zlib" IN_LIST features)
   list(APPEND args --enable-zlib)
 endif()
 
-set(pkg_config_paths)
-
 if("dav1d" IN_LIST features)
   find_port(dav1d)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
-  list(APPEND pkg_config_paths "${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
 endif()
@@ -253,23 +250,9 @@ if("x264" IN_LIST features)
   list(APPEND depends x264)
   list(APPEND args --enable-gpl)
   list(APPEND args --enable-libx264)
-  list(APPEND pkg_config_paths "${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)
 endif()
-
-if(CMAKE_HOST_WIN32)
-  set(path_separator ";")
-else()
-  set(path_separator ":")
-endif()
-
-# Join the list into a single string
-string(JOIN "${path_separator}" PKG_CONFIG_PATH ${pkg_config_paths})
-
-# Now PKG_CONFIG_PATH is ready to inject into the script
-message(STATUS "PKG_CONFIG_PATH = ${PKG_CONFIG_PATH}")
-
 
 if(CMAKE_HOST_WIN32)
   find_path(

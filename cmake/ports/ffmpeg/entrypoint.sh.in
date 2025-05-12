@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set PKG_CONFIG_PATH from CMake
-export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
+export PKG_CONFIG_PATH="/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+x264/lib/pkgconfig:/c/bare-ffmpeg/build/_ports/git+code.videolan.org+videolan+dav1d/lib/pkgconfig"
 
 echo "Running: @CONFIGURE_SCRIPT@ $@"
 

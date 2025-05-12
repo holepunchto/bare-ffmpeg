@@ -34,8 +34,10 @@ if(ANDROID)
 endif()
 
 if(WIN32)
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     list(APPEND args --host=aarch64-w64-mingw32)
+  else()
+    list(APPEND args --host=x86_64-w64-mingw32)
   endif()
 
   list(APPEND args --disable-asm)
