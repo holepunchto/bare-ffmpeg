@@ -1,5 +1,11 @@
 include_guard(GLOBAL)
 
+if(WIN32)
+  set(lib x264.lib)
+else()
+  set(lib libx264.a)
+endif()
+
 set(env)
 
 set(args
@@ -124,7 +130,7 @@ declare_port(
   "git:code.videolan.org/videolan/x264#stable"
   x264
   AUTOTOOLS
-  BYPRODUCTS lib/libx264.a
+  BYPRODUCTS lib/${lib}
   ARGS ${args}
   ENV ${env}
   PATCHES
@@ -138,7 +144,7 @@ add_dependencies(x264 ${x264})
 set_target_properties(
   x264
   PROPERTIES
-  IMPORTED_LOCATION "${x264_PREFIX}/lib/libx264.a"
+  IMPORTED_LOCATION "${x264_PREFIX}/lib/${lib}"
 )
 
 file(MAKE_DIRECTORY "${x264_PREFIX}/include")
