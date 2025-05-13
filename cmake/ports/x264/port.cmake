@@ -70,10 +70,6 @@ if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
   cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
 
-  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
-    set(CC_filename "clang.exe")
-  endif()
-
   list(APPEND env "CC=${CC_filename}")
 
   list(APPEND args
@@ -98,10 +94,6 @@ if(CMAKE_ASM_NASM_COMPILER)
 elseif(CMAKE_ASM_COMPILER)
   cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
-
-  if(WIN32 AND AS_filename MATCHES "clang-cl.exe")
-    set(AS_filename "clang.exe")
-  endif()
 
   list(APPEND env "AS=${AS_filename}")
 
