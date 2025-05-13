@@ -6,6 +6,7 @@ set(libraries
   avfilter
   avformat
   avutil
+  postproc
   swresample
   swscale
 )
@@ -341,6 +342,7 @@ target_link_libraries(
     avfilter
     avformat
     avutil
+    postproc
     swresample
     swscale
 )
@@ -351,6 +353,7 @@ target_link_libraries(
     avcodec
     avformat
     avutil
+    postproc
     swresample
     swscale
 )
@@ -361,6 +364,24 @@ target_link_libraries(
     avcodec
     avutil
     swresample
+)
+
+target_link_libraries(
+  postproc
+  INTERFACE
+    avutil
+)
+
+target_link_libraries(
+  swresample
+  INTERFACE
+    avutil
+)
+
+target_link_libraries(
+  swscale
+  INTERFACE
+    avutil
 )
 
 if(APPLE)
