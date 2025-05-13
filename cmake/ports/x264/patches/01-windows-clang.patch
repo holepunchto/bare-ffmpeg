@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index e242e73..f07f804 100755
+--- a/configure
++++ b/configure
+@@ -621,6 +621,8 @@ if [[ $host_os = mingw* || $host_os = msys* || $host_os = cygwin* ]]; then
+         elif cpp_check '' '' 'defined(_M_ARM)' ; then
+             host_cpu=arm
+         fi
++    elif [[ "$cc_base" == clang ]]; then
++        compiler=CLANG
+     else
+         # MinGW uses broken pre-VS2015 Microsoft printf functions unless it's told to use the POSIX ones.
+         CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=200112L"

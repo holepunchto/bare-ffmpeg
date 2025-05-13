@@ -126,6 +126,8 @@ declare_port(
   BYPRODUCTS lib/libx264.a
   ARGS ${args}
   ENV ${env}
+  PATCHES
+    patches/01-windows-clang.patch
 )
 
 add_library(x264 STATIC IMPORTED GLOBAL)
