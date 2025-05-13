@@ -10,6 +10,10 @@ set(args
   --enable-pic
 )
 
+if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
+  list(APPEND args --enable-debug)
+endif()
+
 if(CMAKE_SYSTEM_NAME)
   set(platform ${CMAKE_SYSTEM_NAME})
 else()
