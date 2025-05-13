@@ -76,7 +76,12 @@ if(CMAKE_C_COMPILER)
   endif()
 endif()
 
-if(CMAKE_ASM_COMPILER)
+if(CMAKE_ASM_NASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH AS_path)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER FILENAME AS_filename)
+
+  list(APPEND env "AS=${AS_path}/${AS_filename}")
+elseif(CMAKE_ASM_COMPILER)
   cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
 
