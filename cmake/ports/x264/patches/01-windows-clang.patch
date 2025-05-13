@@ -1,5 +1,5 @@
 diff --git a/configure b/configure
-index e242e73..b8c9b0c 100755
+index e242e73..28b4bfe 100755
 --- a/configure
 +++ b/configure
 @@ -606,7 +606,7 @@ if [[ $host_os = mingw* || $host_os = msys* || $host_os = cygwin* ]]; then
@@ -11,3 +11,23 @@ index e242e73..b8c9b0c 100755
          # Standard Microsoft Visual Studio
          compiler=CL
          compiler_style=MS
+@@ -1458,8 +1458,8 @@ fi
+ DEPMM="${QPRE}MM"
+ DEPMT="${QPRE}MT"
+ if [ $compiler_style = MS ]; then
+-    AR="lib.exe -nologo -out:"
+-    LD="link.exe -out:"
++    AR="${AR-lib.exe} -nologo -out:"
++    LD="${LD-link.exe} -out:"
+     if [ $compiler = ICL ]; then
+         AR="xi$AR"
+         LD="xi$LD"
+@@ -1470,7 +1470,7 @@ if [ $compiler_style = MS ]; then
+     HAVE_GETOPT_LONG=0
+     LDFLAGS="-nologo -incremental:no $(cl_ldflags $LDFLAGS)"
+     LDFLAGSCLI="$(cl_ldflags $LDFLAGSCLI)"
+-    LIBX264=libx264.lib
++    LIBX264=x264.lib
+     RANLIB=
+     [ -n "$RC" ] && RCFLAGS="$RCFLAGS -nologo -I. -I\$(SRCPATH)/extras -fo"
+     STRIP=

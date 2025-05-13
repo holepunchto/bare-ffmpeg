@@ -111,6 +111,15 @@ if(CMAKE_RC_COMPILER)
   list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
 endif()
 
+if(CMAKE_AR)
+  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
+  cmake_path(GET CMAKE_AR FILENAME AR_filename)
+
+  list(APPEND env "AR=${AR_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+endif()
+
 declare_port(
   "git:code.videolan.org/videolan/x264#stable"
   x264
