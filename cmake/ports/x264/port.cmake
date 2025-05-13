@@ -56,6 +56,12 @@ endif()
 
 list(APPEND args --host=${arch}-${platform})
 
+if(APPLE)
+  list(APPEND args --sysroot=${CMAKE_OSX_SYSROOT})
+elseif(ANDROID)
+  list(APPEND args --sysroot=${CMAKE_SYSROOT} --disable-asm)
+endif()
+
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
   cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
@@ -64,7 +70,7 @@ if(CMAKE_C_COMPILER)
     set(CC_filename "clang.exe")
   endif()
 
-  list(APPEND env "CC=${CC_path}/${CC_filename}")
+  list(APPEND env "CC=${CC_filename}")
 
   list(APPEND args
     --extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}
@@ -74,13 +80,17 @@ if(CMAKE_C_COMPILER)
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND args --extra-ldflags=-fuse-ld=lld)
   endif()
+
+  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
 endif()
 
 if(CMAKE_ASM_NASM_COMPILER)
   cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_NASM_COMPILER FILENAME AS_filename)
 
-  list(APPEND env "AS=${AS_path}/${AS_filename}")
+  list(APPEND env "AS=${AS_filename}")
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AS_path}")
 elseif(CMAKE_ASM_COMPILER)
   cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
@@ -89,24 +99,20 @@ elseif(CMAKE_ASM_COMPILER)
     set(AS_filename "clang.exe")
   endif()
 
-  list(APPEND env "AS=${AS_path}/${AS_filename}")
+  list(APPEND env "AS=${AS_filename}")
 
   list(APPEND args --extra-asflags=--target=${CMAKE_ASM_COMPILER_TARGET})
+
+  list(APPEND env --modify "PATH=path_list_prepend:${AS_path}")
 endif()
 
 if(CMAKE_RC_COMPILER)
   cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
   cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
 
-  list(APPEND env "RC=${RC_path}/${RC_filename}")
-endif()
+  list(APPEND env "RC=${RC_filename}")
 
-if(APPLE)
-  list(APPEND args --sysroot=${CMAKE_OSX_SYSROOT})
-endif()
-
-if(ANDROID)
-  list(APPEND args --sysroot=${CMAKE_SYSROOT} --disable-asm)
+  list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
 endif()
 
 declare_port(
