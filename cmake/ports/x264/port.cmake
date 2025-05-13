@@ -107,6 +107,10 @@ endif()
 
 if(ANDROID)
   list(APPEND args --sysroot=${CMAKE_SYSROOT})
+
+  if(arch MATCHES "x86_64|i686")
+    list(APPEND args --disable-asm)
+  endif()
 endif()
 
 declare_port(
