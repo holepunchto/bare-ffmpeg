@@ -293,7 +293,7 @@ list(JOIN paths ":" paths)
 list(APPEND env "PKG_CONFIG_PATH=${paths}")
 
 declare_port(
-  "git:git.ffmpeg.org/ffmpeg#n7.1"
+  "github:FFmpeg/FFmpeg#n7.1.1"
   ffmpeg
   AUTOTOOLS
   DEPENDS ${depends}

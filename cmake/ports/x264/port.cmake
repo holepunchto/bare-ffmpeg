@@ -1,72 +1,107 @@
 include_guard(GLOBAL)
 
-set(args)
+set(env)
 
-list(APPEND args
+set(args
+  --disable-cli
+
   --enable-static
   --enable-strip
   --enable-pic
-  --disable-cli
 )
 
-if(IOS)
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    list(APPEND args --host=x86_64-apple-darwin)
-  else()
-    list(APPEND args --host=arm-apple-darwin)
-  endif()
-
-  list(APPEND args --disable-asm)
-  list(APPEND args "--extra-cflags=-arch ${CMAKE_SYSTEM_PROCESSOR} -isysroot ${CMAKE_OSX_SYSROOT}")
-  list(APPEND args "--extra-ldflags=-arch ${CMAKE_SYSTEM_PROCESSOR} -isysroot ${CMAKE_OSX_SYSROOT}")
+if(CMAKE_SYSTEM_NAME)
+  set(platform ${CMAKE_SYSTEM_NAME})
+else()
+  set(platform ${CMAKE_HOST_SYSTEM_NAME})
 endif()
 
-if(ANDROID)
-  message(STATUS "TEST -- ANDROID_NDK ${ANDROID_NDK}")
-  set(ndk_triple "${CMAKE_SYSTEM_PROCESSOR}-linux-android")
+string(TOLOWER "${platform}" platform)
 
-  list(APPEND args --host=${ndk_triple})
-  list(APPEND args
-    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET} -isysroot ${CMAKE_SYSROOT}"
-    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET} -isysroot ${CMAKE_SYSROOT}"
-  )
-  list(APPEND args --disable-asm)
+if(platform MATCHES "darwin|ios")
+  set(platform "darwin")
+elseif(platform MATCHES "linux|android")
+  set(platform "linux")
+elseif(platform MATCHES "windows")
+  set(platform "msys")
+else()
+  message(FATAL_ERROR "Unsupported platform '${platform}'")
 endif()
 
-if(WIN32)
-   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-    list(APPEND args --host=aarch64-w64-mingw32)
-  else()
-    list(APPEND args --host=x86_64-w64-mingw32)
-  endif()
-
-  list(APPEND args --disable-asm)
-  list(APPEND args
-    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
-  )
+if(APPLE AND CMAKE_OSX_ARCHITECTURES)
+  set(arch ${CMAKE_OSX_ARCHITECTURES})
+elseif(MSVC AND CMAKE_GENERATOR_PLATFORM)
+  set(arch ${CMAKE_GENERATOR_PLATFORM})
+elseif(ANDROID AND CMAKE_ANDROID_ARCH_ABI)
+  set(arch ${CMAKE_ANDROID_ARCH_ABI})
+elseif(CMAKE_SYSTEM_PROCESSOR)
+  set(arch ${CMAKE_SYSTEM_PROCESSOR})
+else()
+  set(arch ${CMAKE_HOST_SYSTEM_PROCESSOR})
 endif()
 
-set(env)
+string(TOLOWER "${arch}" arch)
 
-if(ANDROID)
-  message(STATUS "TEST -- CMAKE_C_COMPILER ${CMAKE_C_COMPILER}")
-  if(CMAKE_C_COMPILER)
-
-    list(APPEND env "CC=${CMAKE_C_COMPILER}")
-  endif()
+if(arch MATCHES "arm64|aarch64")
+  set(arch "aarch64")
+elseif(arch MATCHES "armv7-a|armeabi-v7a")
+  set(arch "arm")
+elseif(arch MATCHES "x64|x86_64|amd64")
+  set(arch "x86_64")
+elseif(arch MATCHES "x86|i386|i486|i586|i686")
+  set(arch "i686")
+else()
+  message(FATAL_ERROR "Unsupported architecture '${arch}'")
 endif()
 
-if(WIN32)
+list(APPEND args --host=${arch}-${platform})
+
+if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
   cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
 
-  if(CC_filename MATCHES "clang-cl.exe")
+  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
     set(CC_filename "clang.exe")
   endif()
 
-  list(APPEND env "CC=${CC_filename}")
-  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
+  list(APPEND env "CC=${CC_path}/${CC_filename}")
+
+  list(APPEND args
+    --extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}
+    --extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}
+  )
+
+  if(CMAKE_LINKER_TYPE MATCHES "LLD")
+    list(APPEND args --extra-ldflags=-fuse-ld=lld)
+  endif()
+endif()
+
+if(CMAKE_ASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
+  cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
+
+  if(WIN32 AND AS_filename MATCHES "clang-cl.exe")
+    set(AS_filename "clang.exe")
+  endif()
+
+  list(APPEND env "AS=${AS_path}/${AS_filename}")
+
+  list(APPEND args --extra-asflags=--target=${CMAKE_ASM_COMPILER_TARGET})
+endif()
+
+if(CMAKE_RC_COMPILER)
+  cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
+  cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
+
+  list(APPEND env "RC=${RC_path}/${RC_filename}")
+endif()
+
+if(APPLE)
+  list(APPEND args --sysroot=${CMAKE_OSX_SYSROOT})
+endif()
+
+if(ANDROID)
+  list(APPEND args --sysroot=${CMAKE_SYSROOT})
 endif()
 
 declare_port(
