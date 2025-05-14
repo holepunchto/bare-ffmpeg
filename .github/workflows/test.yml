@@ -77,8 +77,6 @@ jobs:
           "C:\Program Files\Meson" | Out-File -FilePath "$env:GITHUB_PATH" -Append
           "C:\tools\msys64" | Out-File -FilePath "$env:GITHUB_PATH" -Append
         if: ${{ matrix.platform == 'win32' }}
-      - run: choco upgrade llvm
-        if: ${{ matrix.platform == 'win32' }}
       - run: pacman --noconfirm -S git make ninja pkgconf
         shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
         env:
