@@ -1,33 +1,13 @@
 diff --git a/configure b/configure
-index e242e73..28b4bfe 100755
+index e242e73..73ac65c 100755
 --- a/configure
 +++ b/configure
-@@ -606,7 +606,7 @@ if [[ $host_os = mingw* || $host_os = msys* || $host_os = cygwin* ]]; then
-         if cc_check '' -Qdiag-error:10006,10157 ; then
-             CHECK_CFLAGS="$CHECK_CFLAGS -Qdiag-error:10006,10157"
+@@ -621,6 +621,8 @@ if [[ $host_os = mingw* || $host_os = msys* || $host_os = cygwin* ]]; then
+         elif cpp_check '' '' 'defined(_M_ARM)' ; then
+             host_cpu=arm
          fi
--    elif [[ "$cc_base" = cl || "$cc_base" = cl[\ .]* ]]; then
-+    elif [[ "$cc_base" = cl || "$cc_base" = cl[\ .]* || "$cc_base" = clang-cl || "$cc_base" = clang-cl[\ .]* ]]; then
-         # Standard Microsoft Visual Studio
-         compiler=CL
-         compiler_style=MS
-@@ -1458,8 +1458,8 @@ fi
- DEPMM="${QPRE}MM"
- DEPMT="${QPRE}MT"
- if [ $compiler_style = MS ]; then
--    AR="lib.exe -nologo -out:"
--    LD="link.exe -out:"
-+    AR="${AR-lib.exe} -nologo -out:"
-+    LD="${LD-link.exe} -out:"
-     if [ $compiler = ICL ]; then
-         AR="xi$AR"
-         LD="xi$LD"
-@@ -1470,7 +1470,7 @@ if [ $compiler_style = MS ]; then
-     HAVE_GETOPT_LONG=0
-     LDFLAGS="-nologo -incremental:no $(cl_ldflags $LDFLAGS)"
-     LDFLAGSCLI="$(cl_ldflags $LDFLAGSCLI)"
--    LIBX264=libx264.lib
-+    LIBX264=x264.lib
-     RANLIB=
-     [ -n "$RC" ] && RCFLAGS="$RCFLAGS -nologo -I. -I\$(SRCPATH)/extras -fo"
-     STRIP=
++    elif [[ "$cc_base" = clang || "$cc_base" = clang[\ .]* ]]; then
++        compiler=CLANG
+     else
+         # MinGW uses broken pre-VS2015 Microsoft printf functions unless it's told to use the POSIX ones.
+         CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=200112L"

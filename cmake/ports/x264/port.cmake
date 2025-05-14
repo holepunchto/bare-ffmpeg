@@ -1,11 +1,5 @@
 include_guard(GLOBAL)
 
-if(WIN32)
-  set(lib x264.lib)
-else()
-  set(lib libx264.a)
-endif()
-
 set(env)
 
 set(args
@@ -76,6 +70,10 @@ if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
   cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
 
+  if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
+    set(CC_filename "clang.exe")
+  endif()
+
   list(APPEND env "CC=${CC_filename}")
 
   list(APPEND args
@@ -101,6 +99,10 @@ elseif(CMAKE_ASM_COMPILER)
   cmake_path(GET CMAKE_ASM_COMPILER PARENT_PATH AS_path)
   cmake_path(GET CMAKE_ASM_COMPILER FILENAME AS_filename)
 
+  if(WIN32 AND AS_filename MATCHES "clang-cl.exe")
+    set(AS_filename "clang.exe")
+  endif()
+
   list(APPEND env "AS=${AS_filename}")
 
   list(APPEND args --extra-asflags=--target=${CMAKE_ASM_COMPILER_TARGET})
@@ -117,20 +119,11 @@ if(CMAKE_RC_COMPILER)
   list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
 endif()
 
-if(CMAKE_AR)
-  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
-  cmake_path(GET CMAKE_AR FILENAME AR_filename)
-
-  list(APPEND env "AR=${AR_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
-endif()
-
 declare_port(
   "git:code.videolan.org/videolan/x264#stable"
   x264
   AUTOTOOLS
-  BYPRODUCTS lib/${lib}
+  BYPRODUCTS lib/libx264.a
   ARGS ${args}
   ENV ${env}
   PATCHES
@@ -144,7 +137,7 @@ add_dependencies(x264 ${x264})
 set_target_properties(
   x264
   PROPERTIES
-  IMPORTED_LOCATION "${x264_PREFIX}/lib/${lib}"
+  IMPORTED_LOCATION "${x264_PREFIX}/lib/libx264.a"
 )
 
 file(MAKE_DIRECTORY "${x264_PREFIX}/include")
