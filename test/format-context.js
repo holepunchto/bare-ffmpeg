@@ -4,8 +4,7 @@ const ffmpeg = require('..')
 let fallbackName
 let fallbackURL
 
-// TODO: win32?
-if (Bare.platform == 'linux') {
+if (Bare.platform == 'linux' || Bare.platform == 'win32') {
   fallbackName = 'lavfi'
   fallbackURL = 'testsrc=size=640x480:rate=30'
 }
