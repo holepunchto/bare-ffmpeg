@@ -6,6 +6,7 @@ set(libraries
   avfilter
   avformat
   avutil
+  postproc
   swresample
   swscale
 )
@@ -26,6 +27,7 @@ set(args
 
   --enable-pic
   --enable-cross-compile
+  --enable-gpl
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -230,6 +232,7 @@ if(CMAKE_STRIP)
 endif()
 
 set(depends)
+set(paths)
 
 if("zlib" IN_LIST features)
   list(APPEND args --enable-zlib)
@@ -240,9 +243,19 @@ if("dav1d" IN_LIST features)
 
   list(APPEND depends dav1d)
   list(APPEND args --enable-libdav1d)
-  list(APPEND env --modify "PKG_CONFIG_PATH=path_list_prepend:${dav1d_PREFIX}/lib/pkgconfig")
+  list(APPEND paths "${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
+endif()
+
+if("x264" IN_LIST features)
+  find_port(x264)
+
+  list(APPEND depends x264)
+  list(APPEND args --enable-libx264)
+  list(APPEND paths "${x264_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE x264)
 endif()
 
 if(CMAKE_HOST_WIN32)
@@ -272,8 +285,16 @@ list(APPEND args
   "--pkg-config-flags=--static"
 )
 
+if(CMAKE_HOST_WIN32)
+  list(TRANSFORM paths REPLACE "([A-Z]):" "/\\1")
+endif()
+
+list(JOIN paths ":" paths)
+
+list(APPEND env "PKG_CONFIG_PATH=${paths}")
+
 declare_port(
-  "git:git.ffmpeg.org/ffmpeg#n7.1"
+  "github:FFmpeg/FFmpeg#n7.1.1"
   ffmpeg
   AUTOTOOLS
   DEPENDS ${depends}
@@ -321,6 +342,7 @@ target_link_libraries(
     avfilter
     avformat
     avutil
+    postproc
     swresample
     swscale
 )
@@ -331,6 +353,7 @@ target_link_libraries(
     avcodec
     avformat
     avutil
+    postproc
     swresample
     swscale
 )
@@ -341,6 +364,24 @@ target_link_libraries(
     avcodec
     avutil
     swresample
+)
+
+target_link_libraries(
+  postproc
+  INTERFACE
+    avutil
+)
+
+target_link_libraries(
+  swresample
+  INTERFACE
+    avutil
+)
+
+target_link_libraries(
+  swscale
+  INTERFACE
+    avutil
 )
 
 if(APPLE)
