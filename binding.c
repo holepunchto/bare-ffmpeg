@@ -486,10 +486,7 @@ bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_callback_info
 
   int stream_index = av_find_best_stream(context->handle, type, -1, -1, NULL, 0);
   if (stream_index < 0) {
-    err = js_throw_error(env, NULL, "Best stream not found");
-    assert(err == 0);
-
-    return NULL;
+    stream_index = -1;
   }
 
   js_value_t *result;

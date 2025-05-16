@@ -24,15 +24,9 @@ test('InputFormatContext should be instanciate with IOContext', (t) => {
 })
 
 test('InputFormatContext should be instanciate with InputFormat', (t) => {
-  const inputFormat = new ffmpeg.InputFormat(fallbackName)
-  const options = new ffmpeg.Dictionary()
-  options.set('framerate', '30')
-  options.set('video_size', '1280x720')
-  options.set('pixel_format', 'uyvy422')
-
   const inputFormatContext = new ffmpeg.InputFormatContext(
-    inputFormat,
-    options,
+    new ffmpeg.InputFormat(fallbackName),
+    getOptions(),
     fallbackURL
   )
   t.teardown(() => {
@@ -43,14 +37,22 @@ test('InputFormatContext should be instanciate with InputFormat', (t) => {
 })
 
 test('InputFormatContext should be instanciate with InputFormat', (t) => {
-  const inputFormat = new ffmpeg.InputFormat(fallbackName)
-  const options = new ffmpeg.Dictionary()
-  options.set('framerate', '30')
-  options.set('video_size', '1280x720')
-  options.set('pixel_format', 'uyvy422')
   const inputFormatContext = new ffmpeg.InputFormatContext(
-    inputFormat,
-    options,
+    new ffmpeg.InputFormat(fallbackName),
+    getOptions(),
+    fallbackURL
+  )
+  t.teardown(() => {
+    inputFormatContext.destroy()
+  })
+
+  t.ok(inputFormatContext)
+})
+
+test('InputFormatContext.getBestStream should return a stream', (t) => {
+  const inputFormatContext = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat(fallbackName),
+    getOptions(),
     fallbackURL
   )
   t.teardown(() => {
@@ -63,3 +65,28 @@ test('InputFormatContext should be instanciate with InputFormat', (t) => {
 
   t.ok(bestStream instanceof ffmpeg.Stream)
 })
+
+test('InputFormatContext.getBestStream should return a null if no stream is found', (t) => {
+  const inputFormatContext = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat(fallbackName),
+    getOptions(),
+    fallbackURL
+  )
+  t.teardown(() => {
+    inputFormatContext.destroy()
+  })
+
+  const bestStream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaType.SUBTITLE
+  )
+
+  t.is(bestStream, null)
+})
+
+function getOptions () {
+  const options = new ffmpeg.Dictionary()
+  options.set('framerate', '30')
+  options.set('video_size', '1280x720')
+  options.set('pixel_format', 'uyvy422')
+  return options
+}
