@@ -16,6 +16,9 @@ test('InputFormatContext should be instanciate with IOContext', (t) => {
   const io = new ffmpeg.IOContext(image)
 
   const inputFormatContext = new ffmpeg.InputFormatContext(io)
+  t.teardown(() => {
+    inputFormatContext.destroy()
+  })
 
   t.ok(inputFormatContext)
 })
@@ -32,6 +35,9 @@ test('InputFormatContext should be instanciate with InputFormat', (t) => {
     options,
     fallbackURL
   )
+  t.teardown(() => {
+    inputFormatContext.destroy()
+  })
 
   t.ok(inputFormatContext)
 })
@@ -47,6 +53,9 @@ test('InputFormatContext should be instanciate with InputFormat', (t) => {
     options,
     fallbackURL
   )
+  t.teardown(() => {
+    inputFormatContext.destroy()
+  })
 
   const bestStream = inputFormatContext.getBestStream()
 
