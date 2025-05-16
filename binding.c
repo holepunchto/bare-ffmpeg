@@ -468,19 +468,23 @@ static js_value_t *
 bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 2;
+  js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 1);
+  assert(argc == 2);
 
   bare_ffmpeg_format_context_t *context;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
   assert(err == 0);
 
-  int stream_index = av_find_best_stream(context->handle, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+  int type;
+  err = js_get_value_int32(env, argv[1], &type);
+  assert(err == 0);
+
+  int stream_index = av_find_best_stream(context->handle, type, -1, -1, NULL, 0);
   if (stream_index < 0) {
     err = js_throw_error(env, NULL, "Best stream not found");
     assert(err == 0);
@@ -1908,6 +1912,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_YUVJ420P)
   V(AV_PIX_FMT_YUV420P)
+
+  V(AVMEDIA_TYPE_UNKNOWN)
+  V(AVMEDIA_TYPE_VIDEO)
+  V(AVMEDIA_TYPE_AUDIO)
+  V(AVMEDIA_TYPE_DATA)
+  V(AVMEDIA_TYPE_SUBTITLE)
+  V(AVMEDIA_TYPE_ATTACHMENT)
+  V(AVMEDIA_TYPE_NB)
 #undef V
 
   return exports;
