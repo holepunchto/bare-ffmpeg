@@ -83,7 +83,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
   t.is(bestStream, null)
 })
 
-function getOptions () {
+function getOptions() {
   const options = new ffmpeg.Dictionary()
   options.set('framerate', '30')
   options.set('video_size', '1280x720')
