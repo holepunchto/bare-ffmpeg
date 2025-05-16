@@ -57,7 +57,9 @@ test('InputFormatContext should be instanciate with InputFormat', (t) => {
     inputFormatContext.destroy()
   })
 
-  const bestStream = inputFormatContext.getBestStream(ffmpeg.constants.mediaType.VIDEO)
+  const bestStream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaType.VIDEO
+  )
 
   t.ok(bestStream instanceof ffmpeg.Stream)
 })
