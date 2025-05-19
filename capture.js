@@ -104,7 +104,7 @@ function encode(packet) {
       console.log('4 - encoded packet')
       // NOTE: for Mafintosh
       // This where you push to the swarm!
-      decode(packet.buffer)
+      decode(packet.data)
       packet.unref()
     }
   }
