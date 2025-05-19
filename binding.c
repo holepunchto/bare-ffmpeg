@@ -1527,16 +1527,24 @@ static js_value_t *
 bare_ffmpeg_packet_init_from_buffer(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 3;
+  js_value_t *argv[3];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-  assert(argc == 1);
+  assert(argc == 3);
 
-  size_t len;
   uint8_t *data;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &data, &len);
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &data, NULL);
+  assert(err == 0);
+
+  uint32_t offset;
+  err = js_get_value_uint32(env, argv[1], &offset);
+  assert(err == 0);
+
+  uint32_t len;
+  err = js_get_value_uint32(env, argv[2], &len);
+  assert(err == 0);
 
   AVPacket *pkt = av_packet_alloc();
   assert(pkt != NULL);
@@ -1544,7 +1552,7 @@ bare_ffmpeg_packet_init_from_buffer(js_env_t *env, js_callback_info_t *info) {
   err = av_new_packet(pkt, len);
   assert(err == 0);
 
-  memcpy(pkt->data, data, len);
+  memcpy(pkt->data, &data[offset], len);
 
   js_value_t *handle;
   bare_ffmpeg_packet_t *packet;
