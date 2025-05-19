@@ -1518,7 +1518,6 @@ bare_ffmpeg_packet_init(js_env_t *env, js_callback_info_t *info) {
   err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_packet_t), (void **) &packet, &handle);
   assert(err == 0);
 
-  // TODO: double check that
   packet->handle = av_packet_alloc();
 
   return handle;
