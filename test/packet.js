@@ -16,18 +16,22 @@ test('packet should expose a streamIndex getter', (t) => {
   t.ok(typeof packet.streamIndex == 'number')
 })
 
-test('packet should be instantiate from an ArrayBuffer', (t) => {
-  const buf = new ArrayBuffer()
+test('packet should be instantiate from an Buffer', (t) => {
+  const buf = Buffer.from([0x41, 0x42, 0x43, 0x44])
   const packet = new ffmpeg.Packet(buf)
   t.ok(packet)
 })
 
-test('packet should copy and expose its data', (t) => {
-  const buf = new ArrayBuffer(4)
-  const view = new Uint8Array(buf)
-  view.set([0x41, 0x42, 0x43, 0x44])
+test('packet should throw a type error if input is not Buffer', (t) => {
+  t.exception.all(() => {
+    const packet = new ffmpeg.Packet({})
+  })
+})
 
-  const packet = new ffmpeg.Packet(buf)
+test('packet should copy and expose its data', (t) => {
+  const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
+  const packet = new ffmpeg.Packet(inputBuffer)
+
   const buffer = packet.buffer
 
   t.ok(buffer[0] == 0x41)
