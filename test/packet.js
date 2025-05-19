@@ -5,8 +5,8 @@ test('packet should expose a buffer getter', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
 
-  t.ok(packet.buffer instanceof Buffer)
-  t.ok(packet.buffer.byteLength > 0)
+  t.ok(packet.data instanceof Buffer)
+  t.ok(packet.data.byteLength > 0)
 })
 
 test('packet should expose a streamIndex getter', (t) => {
@@ -32,7 +32,7 @@ test('packet should copy and expose its data', (t) => {
   const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
   const packet = new ffmpeg.Packet(inputBuffer)
 
-  const buffer = packet.buffer
+  const buffer = packet.data
 
   t.ok(buffer[0] == 0x41)
   t.ok(buffer[1] == 0x42)
