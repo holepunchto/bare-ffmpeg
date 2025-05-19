@@ -10,7 +10,9 @@ const inputFormatContext = new ffmpeg.InputFormatContext(
   new ffmpeg.InputFormat(),
   options
 )
-const bestStream = inputFormatContext.getBestStream()
+const bestStream = inputFormatContext.getBestStream(
+  ffmpeg.constants.mediaType.VIDEO
+)
 if (!bestStream) {
   process.exit(1)
 }
