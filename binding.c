@@ -319,6 +319,8 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   assert(err == 0);
 
   err = avformat_open_input(&context->handle, (char *) url, format->handle, &options->handle);
+  assert(err == 0);
+  free(url);
 
   if (err < 0) {
     avformat_free_context(context->handle);
