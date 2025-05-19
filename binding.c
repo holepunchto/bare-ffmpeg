@@ -1622,7 +1622,7 @@ bare_ffmpeg_packet_get_stream_index(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_packet_get_data_as_array_buffer(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_packet_get_data(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -1970,7 +1970,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyPacket", bare_ffmpeg_packet_destroy)
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
-  V("getPacketDataAsArrayBuffer", bare_ffmpeg_packet_get_data_as_array_buffer)
+  V("getPacketData", bare_ffmpeg_packet_get_data)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
