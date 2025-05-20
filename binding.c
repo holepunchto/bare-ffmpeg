@@ -763,27 +763,41 @@ bare_ffmpeg_codec_context_open(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-  assert(argc == 1 || argc == 2);
+  assert(argc == 1);
 
   bare_ffmpeg_codec_context_t *context;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
   assert(err == 0);
 
-  if (argc == 2) {
-    bare_ffmpeg_dictionary_t *options;
-    err = js_get_arraybuffer_info(env, argv[1], (void **) &options, NULL);
+  err = avcodec_open2(context->handle, context->handle->codec, NULL);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-
-    err = avcodec_open2(context->handle, context->handle->codec, &options->handle);
-    if (err < 0) {
-      err = js_throw_error(env, NULL, av_err2str(err));
-      assert(err == 0);
-    }
-
-    return NULL;
   }
 
-  err = avcodec_open2(context->handle, context->handle->codec, NULL);
+  return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_codec_context_open_with_options(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 2);
+
+  bare_ffmpeg_codec_context_t *context;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_dictionary_t *options;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &options, NULL);
+  assert(err == 0);
+
+  err = avcodec_open2(context->handle, context->handle->codec, &options->handle);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -2175,6 +2189,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
   V("openCodecContext", bare_ffmpeg_codec_context_open)
+  V("openCodecContextWithOptions", bare_ffmpeg_codec_context_open_with_options)
   V("getCodecContextPixelFormat", bare_ffmpeg_codec_context_get_pixel_format)
   V("setCodecContextPixelFormat", bare_ffmpeg_codec_context_set_pixel_format)
   V("getCodecContextWidth", bare_ffmpeg_codec_context_get_width)
