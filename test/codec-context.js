@@ -69,6 +69,18 @@ test('codec context could be open with options', (t) => {
   })
 })
 
+test('codec context should expose a sendFrame method', (t) => {
+  const codec = ffmpeg.Codec.H264
+  const codecCtx = new ffmpeg.CodecContext(codec.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open()
+  const frame = fakeFrame()
+
+  t.execution(() => {
+    codecCtx.sendFrame(frame)
+  })
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -81,4 +93,14 @@ function getEncoderOptions() {
   encoderOptions.set('preset', 'ultrafast')
   encoderOptions.set('tune', 'zerolatency')
   return encoderOptions
+}
+
+function fakeFrame() {
+  const frame = new ffmpeg.Frame()
+  frame.width = 100
+  frame.height = 100
+  frame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  frame.alloc()
+
+  return frame
 }
