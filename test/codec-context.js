@@ -95,6 +95,18 @@ test('codec context should return false when buffer is full', (t) => {
   t.ok(true)
 })
 
+test('codec context should expose a receivePacket method', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open(getEncoderOptions())
+  const frame = fakeFrame()
+  codecCtx.sendFrame(frame)
+
+  const packet = new ffmpeg.Packet()
+  t.ok(codecCtx.receivePacket(packet))
+  t.ok(packet.data.length > 0)
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
