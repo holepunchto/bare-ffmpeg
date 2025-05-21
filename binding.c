@@ -1,3 +1,4 @@
+#include "utf.h"
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
@@ -9,6 +10,7 @@
 #include <libavdevice/avdevice.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/avutil.h>
 #include <libavutil/dict.h>
 #include <libavutil/error.h>
 #include <libavutil/frame.h>
@@ -21,6 +23,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <SDL2/SDL.h>
 
 typedef struct {
   AVIOContext *handle;
@@ -70,12 +74,19 @@ typedef struct {
   struct AVDictionary *handle;
 } bare_ffmpeg_dictionary_t;
 
+typedef struct {
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+  SDL_Texture *texture;
+} bare_sdl2_playback_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static void
 bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
   avdevice_register_all();
+  SDL_Init(SDL_INIT_VIDEO);
 }
 
 static js_value_t *
@@ -759,7 +770,6 @@ bare_ffmpeg_codec_context_open(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   err = avcodec_open2(context->handle, context->handle->codec, NULL);
-
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1776,6 +1786,7 @@ bare_ffmpeg_scaler_init(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   int32_t source_width;
+  ;
   err = js_get_value_int32(env, argv[1], &source_width);
   assert(err == 0);
 
@@ -2006,6 +2017,143 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_sdl2_init_playback(js_env_t *env, js_callback_info_t *info) {
+  int err;
+  js_value_t *handle;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 2);
+
+  int64_t height;
+  err = js_get_value_int64(env, argv[0], &height);
+  assert(err == 0);
+
+  int64_t width;
+  err = js_get_value_int64(env, argv[1], &width);
+  assert(err == 0);
+
+  bare_sdl2_playback_t *playback;
+  err = js_create_arraybuffer(env, sizeof(bare_sdl2_playback_t), (void **) &playback, &handle);
+  assert(err == 0);
+
+  playback->window = SDL_CreateWindow("Live Loopback", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
+  assert(playback->window != NULL);
+  playback->renderer = SDL_CreateRenderer(playback->window, -1, SDL_RENDERER_ACCELERATED);
+  assert(playback->renderer != NULL);
+  playback->texture = SDL_CreateTexture(playback->renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height);
+  assert(playback->texture != NULL);
+
+  return handle;
+}
+
+static js_value_t *
+bare_sdl2_destroy_playback(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  bare_sdl2_playback_t *playback;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &playback, NULL);
+  assert(err == 0);
+
+  SDL_DestroyTexture(playback->texture);
+  SDL_DestroyRenderer(playback->renderer);
+  SDL_DestroyWindow(playback->window);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_sdl2_playback_render_from_frame(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 2);
+
+  bare_sdl2_playback_t *playback;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &playback, NULL);
+  assert(err == 0);
+
+  bare_ffmpeg_frame_t *frame;
+  err = js_get_arraybuffer_info(env, argv[1], (void **) &frame, NULL);
+  assert(err == 0);
+
+  if (frame == NULL || frame->handle == NULL) {
+    err = js_throw_error(env, NULL, "Frame is null");
+    assert(err == 0);
+    return NULL;
+  }
+
+  if (frame->handle->data[0] == NULL) {
+    err = js_throw_error(env, NULL, "Frame data is null");
+    assert(err == 0);
+    return NULL;
+  }
+
+  if (playback == NULL || playback->renderer == NULL || playback->texture == NULL) {
+    err = js_throw_error(env, NULL, "Playback context is invalid");
+    assert(err == 0);
+    return NULL;
+  }
+
+  int sdl_err = SDL_UpdateTexture(playback->texture, NULL, frame->handle->data[0], frame->handle->linesize[0]);
+  if (sdl_err != 0) {
+    err = js_throw_errorf(env, NULL, "SDL_UpdateTexture failed: %s", SDL_GetError());
+    assert(err == 0);
+    return NULL;
+  }
+
+  SDL_RenderClear(playback->renderer);
+  SDL_RenderCopy(playback->renderer, playback->texture, NULL, NULL);
+  SDL_RenderPresent(playback->renderer);
+
+  return NULL;
+}
+
+static js_value_t *
+bare_sdl2_playback_poll_events(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  bare_sdl2_playback_t *playback;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &playback, NULL);
+  assert(err == 0);
+
+  js_value_t *result;
+
+  SDL_Event e;
+  err = SDL_PollEvent(&e);
+  if (e.type == SDL_QUIT) {
+    err = js_get_boolean(env, false, &result);
+    assert(err == 0);
+    return result;
+  }
+
+  err = js_get_boolean(env, true, &result);
+  assert(err == 0);
+  return result;
+}
+
+static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
 
@@ -2058,6 +2206,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
   V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
   V("receiveCodecContextFrame", bare_ffmpeg_codec_context_receive_frame)
+  V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
 
   V("codecParametersFromContext", bare_ffmpeg_codec_parameters_from_context)
   V("codecParametersToContext", bare_ffmpeg_codec_parameters_to_context)
@@ -2095,6 +2244,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
+
+  V("initPlayback", bare_sdl2_init_playback)
+  V("destroyPlayback", bare_sdl2_destroy_playback)
+  V("playbackRenderFromFrame", bare_sdl2_playback_render_from_frame)
+  V("pollPlaybackEvents", bare_sdl2_playback_poll_events)
 #undef V
 
 #define V(name) \
@@ -2110,7 +2264,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_H264)
 
   V(AV_PIX_FMT_RGBA)
+  V(AV_PIX_FMT_RGB24)
   V(AV_PIX_FMT_YUVJ420P)
+  V(AV_PIX_FMT_UYVY422)
   V(AV_PIX_FMT_YUV420P)
 
   V(AVMEDIA_TYPE_UNKNOWN)
