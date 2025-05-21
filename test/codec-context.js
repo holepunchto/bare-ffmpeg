@@ -134,16 +134,6 @@ function setDefaultOptions(ctx) {
   ctx.height = 100
 }
 
-function fakeFrame() {
-  const frame = new ffmpeg.Frame()
-  frame.width = 100
-  frame.height = 100
-  frame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
-  frame.alloc()
-
-  return frame
-}
-
 function getEncoderOptions() {
   const encoderOptions = new ffmpeg.Dictionary()
   encoderOptions.set('preset', 'ultrafast')
