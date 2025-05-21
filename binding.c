@@ -1043,7 +1043,6 @@ bare_ffmpeg_codec_context_receive_packet(js_env_t *env, js_callback_info_t *info
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-
   assert(argc == 2);
 
   bare_ffmpeg_codec_context_t *context;
@@ -1056,16 +1055,11 @@ bare_ffmpeg_codec_context_receive_packet(js_env_t *env, js_callback_info_t *info
 
   err = avcodec_receive_packet(context->handle, packet->handle);
 
-  if (err == AVERROR(EAGAIN) || err == AVERROR_EOF) {
-    js_value_t *result;
-    err = js_get_boolean(env, false, &result);
-    assert(err == 0);
-    return result;
-  }
-
-  if (err < 0) {
+  if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    return NULL;
   }
 
   js_value_t *result;
