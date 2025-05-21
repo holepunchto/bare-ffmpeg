@@ -107,6 +107,26 @@ test('codec context should expose a receivePacket method', (t) => {
   t.ok(packet.data.length > 0)
 })
 
+test('receivePacket should return false when options are not set', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open()
+  const frame = fakeFrame()
+  codecCtx.sendFrame(frame)
+
+  const packet = new ffmpeg.Packet()
+  t.absent(codecCtx.receivePacket(packet))
+})
+
+test('receivePacket should return false when no frame has been sent', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open(getEncoderOptions())
+
+  const packet = new ffmpeg.Packet()
+  t.absent(codecCtx.receivePacket(packet))
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
