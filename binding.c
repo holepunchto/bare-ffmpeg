@@ -1508,18 +1508,23 @@ static js_value_t *
 bare_ffmpeg_frame_get_pixel_linesize(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+  size_t argc = 2;
+  js_value_t *argv[2];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
-  assert(argc == 1);
+  assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
   assert(err == 0);
 
-  int32_t linesize = frame->handle->linesize[0];
+  uint32_t channel;
+  err = js_get_value_uint32(env, argv[1], &channel);
+  assert(err == 0);
+  assert(channel < AV_NUM_DATA_POINTERS);
+
+  int32_t linesize = frame->handle->linesize[channel];
 
   js_value_t *result;
   err = js_create_int32(env, linesize, &result);
