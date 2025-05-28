@@ -1536,6 +1536,42 @@ bare_ffmpeg_frame_alloc(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_ffmpeg_frame_get_data(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+  assert(argc == 1);
+
+  bare_ffmpeg_frame_t *frame;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
+  assert(err == 0);
+
+  int linesize = frame->handle->linesize[0];
+  int height = frame->handle->height;
+  int size = linesize * height;
+
+  js_value_t *result;
+  uint8_t *data;
+  err = js_create_arraybuffer(env, size, (void **) &data, &result);
+  assert(err == 0);
+
+  for (int y = 0; y < height; y++) {
+    int32_t offset = y * linesize;
+    memcpy(
+      data + offset,
+      frame->handle->data[0] + offset,
+      linesize
+    );
+  }
+
+  return result;
+}
+
+static js_value_t *
 bare_ffmpeg_image_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -2076,6 +2112,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
   V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
   V("allocFrame", bare_ffmpeg_frame_alloc)
+  V("getFrameData", bare_ffmpeg_frame_get_data)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)

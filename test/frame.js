@@ -53,3 +53,12 @@ test('frame expose an alloc method', (t) => {
     fr.alloc()
   })
 })
+
+test('frame expose an data getter', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.height = 200
+  fr.width = 200
+  fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+
+  t.ok(fr.data instanceof Buffer)
+})
