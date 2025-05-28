@@ -1505,7 +1505,7 @@ bare_ffmpeg_frame_set_pixel_format(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_frame_get_pixel_linesize(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_frame_get_linesize(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 2;
@@ -2104,7 +2104,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameHeight", bare_ffmpeg_frame_set_height)
   V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
   V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
-  V("getFrameLineSize", bare_ffmpeg_frame_get_pixel_linesize)
+  V("getFrameLineSize", bare_ffmpeg_frame_get_linesize)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
