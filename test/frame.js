@@ -53,3 +53,12 @@ test('frame expose an alloc method', (t) => {
     fr.alloc()
   })
 })
+
+test('frame expose a lineSize getter', (t) => {
+  const fr = new ffmpeg.Frame()
+
+  fr.height = 200
+  fr.width = 200
+  fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
+  t.ok(typeof fr.lineSize == 'number')
+})
