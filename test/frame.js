@@ -78,7 +78,7 @@ test('data getter should throw for non RGBA and RGB24', (t) => {
   fr.width = 200
   fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
 
-  t.exception(()=> {
+  t.exception(() => {
     fr.data
   })
 })
