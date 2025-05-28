@@ -54,11 +54,31 @@ test('frame expose an alloc method', (t) => {
   })
 })
 
-test('frame expose an data getter', (t) => {
+test('frame expose an data getter for RGB24', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.height = 200
+  fr.width = 200
+  fr.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
+
+  t.ok(fr.data instanceof Buffer)
+})
+
+test('frame expose an data getter for RGBA', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.height = 200
+  fr.width = 200
+  fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
+
+  t.ok(fr.data instanceof Buffer)
+})
+
+test('data getter should throw for non RGBA and RGB24', (t) => {
   const fr = new ffmpeg.Frame()
   fr.height = 200
   fr.width = 200
   fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
 
-  t.ok(fr.data instanceof Buffer)
+  t.exception(()=> {
+    fr.data
+  })
 })

@@ -1550,6 +1550,13 @@ bare_ffmpeg_frame_get_data(js_env_t *env, js_callback_info_t *info) {
   err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
   assert(err == 0);
 
+  if (frame->handle->format != AV_PIX_FMT_RGBA &&
+      frame->handle->format != AV_PIX_FMT_RGB24) {
+    err = js_throw_error(env, NULL, "Unsupported pixel format");
+    assert(err == 0);
+    return NULL;
+  }
+
   int linesize = frame->handle->linesize[0];
   int height = frame->handle->height;
   int size = linesize * height;
@@ -2147,6 +2154,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_H264)
 
   V(AV_PIX_FMT_RGBA)
+  V(AV_PIX_FMT_RGB24)
   V(AV_PIX_FMT_YUVJ420P)
   V(AV_PIX_FMT_YUV420P)
 
