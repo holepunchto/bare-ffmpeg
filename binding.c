@@ -1550,30 +1550,30 @@ bare_ffmpeg_frame_get_data(js_env_t *env, js_callback_info_t *info) {
   err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
   assert(err == 0);
 
-  if (frame->handle->format != AV_PIX_FMT_RGBA &&
-      frame->handle->format != AV_PIX_FMT_RGB24) {
-    err = js_throw_error(env, NULL, "Unsupported pixel format");
-    assert(err == 0);
-    return NULL;
-  }
-
-  int linesize = frame->handle->linesize[0];
-  int height = frame->handle->height;
-  int size = linesize * height;
+  int size = av_image_get_buffer_size(
+    frame->handle->format,
+    frame->handle->width,
+    frame->handle->height,
+    1
+  );
+  assert(size > 0);
 
   js_value_t *result;
-  uint8_t *data;
-  err = js_create_arraybuffer(env, size, (void **) &data, &result);
+  uint8_t *buffer;
+  err = js_create_arraybuffer(env, size, (void **) &buffer, &result);
   assert(err == 0);
 
-  for (int y = 0; y < height; y++) {
-    int32_t offset = y * linesize;
-    memcpy(
-      data + offset,
-      frame->handle->data[0] + offset,
-      linesize
-    );
-  }
+  err = av_image_copy_to_buffer(
+    buffer,
+    size,
+    (const uint8_t *const *) frame->handle->data,
+    frame->handle->linesize,
+    frame->handle->format,
+    frame->handle->width,
+    frame->handle->height,
+    1
+  );
+  assert(err >= 0);
 
   return result;
 }
