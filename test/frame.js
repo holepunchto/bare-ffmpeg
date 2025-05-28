@@ -61,5 +61,5 @@ test('frame expose a lineSize method', (t) => {
   fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
   const channel = 0
 
-  t.ok(typeof fr.getLineSize(channel) == 'number')
+  t.ok(typeof fr.lineSize(channel) == 'number')
 })
