@@ -54,12 +54,23 @@ test('frame expose an alloc method', (t) => {
   })
 })
 
-test('frame expose a lineSize method', (t) => {
+test('frame expose an data getter', (t) => {
   const fr = new ffmpeg.Frame()
   fr.height = 200
   fr.width = 200
   fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
+  fr.alloc()
+
+  t.ok(fr.data instanceof Buffer)
+})
+
+test('frame expose a lineSize method', (t) => {
+  const fr = new ffmpeg.Frame()
   const channel = 0
+  fr.height = 200
+  fr.width = 200
+  fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
+  fr.alloc()
 
   t.ok(typeof fr.lineSize(channel) == 'number')
 })
