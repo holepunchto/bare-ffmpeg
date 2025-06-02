@@ -1374,51 +1374,6 @@ bare_ffmpeg_frame_get_audio_channel(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_frame_get_image_data(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  int size = av_image_get_buffer_size(
-    frame->handle->format,
-    frame->handle->width,
-    frame->handle->height,
-    1
-  );
-  assert(size > 0);
-
-  js_value_t *result;
-
-  uint8_t *buffer;
-  err = js_create_arraybuffer(env, size, (void **) &buffer, &result);
-  assert(err == 0);
-
-  err = av_image_copy_to_buffer(
-    buffer,
-    size,
-    (const uint8_t *const *) frame->handle->data,
-    frame->handle->linesize,
-    frame->handle->format,
-    frame->handle->width,
-    frame->handle->height,
-    1
-  );
-  assert(err >= 0);
-
-  return result;
-}
-
-static js_value_t *
 bare_ffmpeg_frame_get_width(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1563,37 +1518,6 @@ bare_ffmpeg_frame_set_pixel_format(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_frame_get_linesize(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  uint32_t channel;
-  err = js_get_value_uint32(env, argv[1], &channel);
-  assert(err == 0);
-
-  assert(channel < AV_NUM_DATA_POINTERS);
-
-  int32_t linesize = frame->handle->linesize[channel];
-
-  js_value_t *result;
-  err = js_create_int32(env, linesize, &result);
-  assert(err == 0);
-
-  return result;
-}
-
-static js_value_t *
 bare_ffmpeg_frame_alloc(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1698,6 +1622,39 @@ bare_ffmpeg_image_fill(js_env_t *env, js_callback_info_t *info) {
   assert(err >= 0);
 
   return NULL;
+}
+
+static js_value_t *
+bare_ffmpeg_image_get_linesize(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 3;
+  js_value_t *argv[3];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 3);
+
+  int64_t pixel_format;
+  err = js_get_value_int64(env, argv[0], &pixel_format);
+  assert(err == 0);
+
+  int32_t width;
+  err = js_get_value_int32(env, argv[1], &width);
+  assert(err == 0);
+
+  int32_t plane;
+  err = js_get_value_int32(env, argv[2], &plane);
+  assert(err == 0);
+
+  int32_t linesize = av_image_get_linesize((enum AVPixelFormat) pixel_format, width, plane);
+
+  js_value_t *result;
+  err = js_create_int32(env, linesize, &result);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_value_t *
@@ -2166,18 +2123,17 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
   V("getFrameAudioChannel", bare_ffmpeg_frame_get_audio_channel)
-  V("getFrameImageData", bare_ffmpeg_frame_get_image_data)
   V("getFrameWidth", bare_ffmpeg_frame_get_width)
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
   V("getFrameHeight", bare_ffmpeg_frame_get_height)
   V("setFrameHeight", bare_ffmpeg_frame_set_height)
   V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
   V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
-  V("getFrameLineSize", bare_ffmpeg_frame_get_linesize)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
+  V("getImageLineSize", bare_ffmpeg_image_get_linesize)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
