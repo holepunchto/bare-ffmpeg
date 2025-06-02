@@ -306,6 +306,7 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   assert(err == 0);
 
   context->handle = avformat_alloc_context();
+
   context->handle->opaque = (void *) context;
 
   bare_ffmpeg_dictionary_t *options;
