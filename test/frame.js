@@ -32,7 +32,7 @@ test('frame expose a getter for height', (t) => {
 test('frame expose a setter for pixelFormat', (t) => {
   const fr = new ffmpeg.Frame()
   t.execution(() => {
-    fr.pixelFormat = ffmpeg.constants.YUV420P
+    fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   })
 })
 
