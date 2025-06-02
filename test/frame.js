@@ -54,14 +54,14 @@ test('frame expose an alloc method', (t) => {
   })
 })
 
-test('frame expose an data getter', (t) => {
+test('frame expose an imageData method', (t) => {
   const fr = new ffmpeg.Frame()
   fr.height = 200
   fr.width = 200
   fr.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
   fr.alloc()
 
-  t.ok(fr.data instanceof Buffer)
+  t.ok(fr.imageData() instanceof Buffer)
 })
 
 test('frame expose a lineSize method', (t) => {

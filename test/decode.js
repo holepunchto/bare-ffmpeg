@@ -112,7 +112,7 @@ function decodeAudio(audio) {
       decoder.sendPacket(packet)
 
       while (decoder.receiveFrame(frame)) {
-        buffers.push(frame.channel(0))
+        buffers.push(frame.audioChannel(0))
       }
 
       packet.unref()
