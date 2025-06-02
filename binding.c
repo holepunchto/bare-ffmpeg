@@ -1625,7 +1625,7 @@ bare_ffmpeg_image_fill(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_ffmpeg_image_get_linesize(js_env_t *env, js_callback_info_t *info) {
+bare_ffmpeg_image_get_line_size(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 3;
@@ -2133,7 +2133,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
-  V("getImageLineSize", bare_ffmpeg_image_get_linesize)
+  V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
