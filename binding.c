@@ -167,10 +167,12 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
   if (format == NULL) {
     err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name);
     assert(err == 0);
+
     free(name);
 
     return NULL;
   }
+
   free(name);
 
   js_value_t *handle;
@@ -211,10 +213,12 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_callback_info_t *info) {
   if (format == NULL) {
     err = js_throw_errorf(env, NULL, "No input format found for name '%s'", name);
     assert(err == 0);
+
     free(name);
 
     return NULL;
   }
+
   free(name);
 
   js_value_t *handle;
@@ -319,6 +323,7 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
   assert(err == 0);
 
   err = avformat_open_input(&context->handle, (char *) url, format->handle, &options->handle);
+
   free(url);
 
   if (err < 0) {
@@ -485,13 +490,12 @@ bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_callback_info
   err = js_get_value_int32(env, argv[1], &type);
   assert(err == 0);
 
-  int stream_index = av_find_best_stream(context->handle, type, -1, -1, NULL, 0);
-  if (stream_index < 0) {
-    stream_index = -1;
-  }
+  int i = av_find_best_stream(context->handle, type, -1, -1, NULL, 0);
+
+  if (i < 0) i = -1;
 
   js_value_t *result;
-  err = js_create_int32(env, stream_index, &result);
+  err = js_create_int32(env, i, &result);
   assert(err == 0);
 
   return result;
@@ -752,6 +756,7 @@ bare_ffmpeg_codec_context_open(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_codec_context_t *context;
@@ -777,6 +782,7 @@ bare_ffmpeg_codec_context_open_with_options(js_env_t *env, js_callback_info_t *i
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_codec_context_t *context;
@@ -788,6 +794,7 @@ bare_ffmpeg_codec_context_open_with_options(js_env_t *env, js_callback_info_t *i
   assert(err == 0);
 
   err = avcodec_open2(context->handle, context->handle->codec, &options->handle);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1033,6 +1040,7 @@ bare_ffmpeg_codec_context_receive_packet(js_env_t *env, js_callback_info_t *info
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_codec_context_t *context;
@@ -1068,6 +1076,7 @@ bare_ffmpeg_codec_context_send_frame(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_codec_context_t *context;
@@ -1084,6 +1093,7 @@ bare_ffmpeg_codec_context_send_frame(js_env_t *env, js_callback_info_t *info) {
     js_value_t *result;
     err = js_get_boolean(env, false, &result);
     assert(err == 0);
+
     return result;
   }
 
@@ -1162,8 +1172,6 @@ bare_ffmpeg_codec_parameters_from_context(js_env_t *env, js_callback_info_t *inf
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-
-    return NULL;
   }
 
   return NULL;
@@ -1194,8 +1202,6 @@ bare_ffmpeg_codec_parameters_to_context(js_env_t *env, js_callback_info_t *info)
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-
-    return NULL;
   }
 
   return NULL;
@@ -1375,6 +1381,7 @@ bare_ffmpeg_frame_get_width(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_frame_t *frame;
@@ -1397,6 +1404,7 @@ bare_ffmpeg_frame_set_width(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
@@ -1421,6 +1429,7 @@ bare_ffmpeg_frame_get_height(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_frame_t *frame;
@@ -1443,6 +1452,7 @@ bare_ffmpeg_frame_set_height(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
@@ -1467,6 +1477,7 @@ bare_ffmpeg_frame_get_pixel_format(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_frame_t *frame;
@@ -1489,6 +1500,7 @@ bare_ffmpeg_frame_set_pixel_format(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
@@ -1513,6 +1525,7 @@ bare_ffmpeg_frame_get_linesize(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
@@ -1522,6 +1535,7 @@ bare_ffmpeg_frame_get_linesize(js_env_t *env, js_callback_info_t *info) {
   uint32_t channel;
   err = js_get_value_uint32(env, argv[1], &channel);
   assert(err == 0);
+
   assert(channel < AV_NUM_DATA_POINTERS);
 
   int32_t linesize = frame->handle->linesize[channel];
@@ -1542,23 +1556,22 @@ bare_ffmpeg_frame_alloc(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_frame_t *frame;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
   assert(err == 0);
-  assert(frame->handle != NULL);
 
   int align;
   err = js_get_value_int32(env, argv[1], &align);
   assert(err == 0);
-  assert(frame->handle != NULL);
 
   err = av_frame_get_buffer(frame->handle, align);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-    return NULL;
   }
 
   return NULL;
@@ -1573,6 +1586,7 @@ bare_ffmpeg_frame_get_data(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_frame_t *frame;
@@ -1588,6 +1602,7 @@ bare_ffmpeg_frame_get_data(js_env_t *env, js_callback_info_t *info) {
   assert(size > 0);
 
   js_value_t *result;
+
   uint8_t *buffer;
   err = js_create_arraybuffer(env, size, (void **) &buffer, &result);
   assert(err == 0);
@@ -1708,6 +1723,7 @@ bare_ffmpeg_packet_init_from_buffer(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 3);
 
   uint8_t *data;
@@ -1731,6 +1747,7 @@ bare_ffmpeg_packet_init_from_buffer(js_env_t *env, js_callback_info_t *info) {
   memcpy(pkt->data, &data[offset], len);
 
   js_value_t *handle;
+
   bare_ffmpeg_packet_t *packet;
   err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_packet_t), (void **) &packet, &handle);
   assert(err == 0);
@@ -1821,14 +1838,15 @@ bare_ffmpeg_packet_get_data(js_env_t *env, js_callback_info_t *info) {
   err = js_get_arraybuffer_info(env, argv[0], (void **) &packet, NULL);
   assert(err == 0);
 
-  js_value_t *result;
+  js_value_t *handle;
+
   uint8_t *data;
-  err = js_create_arraybuffer(env, packet->handle->size, (void **) &data, &result);
+  err = js_create_arraybuffer(env, packet->handle->size, (void **) &data, &handle);
   assert(err == 0);
 
   memcpy(data, packet->handle->data, packet->handle->size);
 
-  return result;
+  return handle;
 }
 
 static js_value_t *
@@ -1982,6 +2000,7 @@ bare_ffmpeg_dictionary_destroy(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 1);
 
   bare_ffmpeg_dictionary_t *dict;
@@ -2002,6 +2021,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 3);
 
   bare_ffmpeg_dictionary_t *dict;
@@ -2029,6 +2049,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
 
   err = av_dict_set(&dict->handle, (const char *) key, (const char *) value, 0);
   assert(err == 0);
+
   free(key);
   free(value);
 
@@ -2044,6 +2065,7 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
+
   assert(argc == 2);
 
   bare_ffmpeg_dictionary_t *dict;
@@ -2061,12 +2083,14 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   assert(err == 0);
 
   AVDictionaryEntry *entry = av_dict_get(dict->handle, (const char *) key, NULL, 0);
+
   free(key);
 
   if (entry == NULL) {
     js_value_t *result;
     err = js_get_null(env, &result);
     assert(err == 0);
+
     return result;
   }
 
