@@ -9,42 +9,36 @@ if (Bare.platform == 'linux' || Bare.platform == 'win32') {
   fallbackURL = 'testsrc=size=640x480:rate=30'
 }
 
-test('InputFormatContext should be instanciate with IOContext', (t) => {
+test('InputFormatContext should be instantiate with IOContext', (t) => {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
   const io = new ffmpeg.IOContext(image)
 
   const inputFormatContext = new ffmpeg.InputFormatContext(io)
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
+  t.teardown(() => inputFormatContext.destroy())
 
   t.ok(inputFormatContext)
 })
 
-test('InputFormatContext should be instanciate with InputFormat', (t) => {
+test('InputFormatContext should be instantiate with InputFormat', (t) => {
   const inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
+  t.teardown(() => inputFormatContext.destroy())
 
   t.ok(inputFormatContext)
 })
 
-test('InputFormatContext should be instanciate with InputFormat', (t) => {
+test('InputFormatContext should be instantiate with InputFormat', (t) => {
   const inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
+  t.teardown(() => inputFormatContext.destroy())
 
   t.ok(inputFormatContext)
 })
@@ -55,9 +49,7 @@ test('InputFormatContext.getBestStream should return a stream', (t) => {
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
+  t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
     ffmpeg.constants.mediaType.VIDEO
@@ -72,9 +64,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
+  t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
     ffmpeg.constants.mediaType.SUBTITLE
