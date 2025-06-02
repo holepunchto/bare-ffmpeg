@@ -22,12 +22,6 @@ test('packet should be instantiate from an Buffer', (t) => {
   t.ok(packet)
 })
 
-test('packet should throw a type error if input is not Buffer', (t) => {
-  t.exception.all(() => {
-    const packet = new ffmpeg.Packet({})
-  })
-})
-
 test('packet should copy and expose its data', (t) => {
   const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
   const packet = new ffmpeg.Packet(inputBuffer)

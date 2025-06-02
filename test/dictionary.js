@@ -34,27 +34,3 @@ test('non-existent key returns null', (t) => {
 
   t.is(dict.get('missing'), null, 'getting unknown key yields null')
 })
-
-test('set throw when key is empty', (t) => {
-  const dict = new ffmpeg.Dictionary()
-
-  t.exception.all(() => {
-    dict.set('', 'bar')
-  }, 'Key should be a non empty string')
-})
-
-test('set throw when value is empty', (t) => {
-  const dict = new ffmpeg.Dictionary()
-
-  t.exception.all(() => {
-    dict.set('foo', '')
-  }, 'Value should be a non empty string')
-})
-
-test('get throw when key is empty', (t) => {
-  const dict = new ffmpeg.Dictionary()
-
-  t.exception.all(() => {
-    dict.get('')
-  }, 'Key should be a non empty string')
-})

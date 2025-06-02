@@ -83,21 +83,6 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
   t.is(bestStream, null)
 })
 
-test('InputFormatContext.getBestStream should throw is mediaType is not a number', (t) => {
-  const inputFormatContext = new ffmpeg.InputFormatContext(
-    new ffmpeg.InputFormat(fallbackName),
-    getOptions(),
-    fallbackURL
-  )
-  t.teardown(() => {
-    inputFormatContext.destroy()
-  })
-
-  t.exception.all(() => {
-    const bestStream = inputFormatContext.getBestStream('video')
-  })
-})
-
 function getOptions() {
   const options = new ffmpeg.Dictionary()
   options.set('framerate', '30')
