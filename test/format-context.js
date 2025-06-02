@@ -52,7 +52,7 @@ test('InputFormatContext.getBestStream should return a stream', (t) => {
   t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaType.VIDEO
+    ffmpeg.constants.mediaTypes.VIDEO
   )
 
   t.ok(bestStream instanceof ffmpeg.Stream)
@@ -67,7 +67,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
   t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaType.SUBTITLE
+    ffmpeg.constants.mediaTypes.SUBTITLE
   )
 
   t.is(bestStream, null)
