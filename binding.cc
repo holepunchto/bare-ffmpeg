@@ -105,7 +105,7 @@ bare_ffmpeg_io_context_init(js_env_t *env, js_callback_info_t *info) {
 
   if (len == 0) io = NULL;
   else {
-    io = av_malloc(len);
+    io = (uint8_t *) av_malloc(len);
 
     memcpy(io, data, len);
   }
@@ -158,7 +158,7 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
 
   len += +1 /* NULL */;
 
-  utf8_t *name = malloc(len);
+  utf8_t *name = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
   assert(err == 0);
 
@@ -204,7 +204,7 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_callback_info_t *info) {
 
   len += +1 /* NULL */;
 
-  utf8_t *name = malloc(len);
+  utf8_t *name = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
   assert(err == 0);
 
@@ -319,7 +319,7 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_callback_inf
 
   len += +1 /* NULL */;
 
-  utf8_t *url = malloc(len);
+  utf8_t *url = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[2], url, len, NULL);
   assert(err == 0);
 
@@ -491,7 +491,7 @@ bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_callback_info
   err = js_get_value_int32(env, argv[1], &type);
   assert(err == 0);
 
-  int i = av_find_best_stream(context->handle, type, -1, -1, NULL, 0);
+  int i = av_find_best_stream(context->handle, (AVMediaType) type, -1, -1, NULL, 0);
 
   if (i < 0) i = -1;
 
@@ -847,7 +847,7 @@ bare_ffmpeg_codec_context_set_pixel_format(js_env_t *env, js_callback_info_t *in
   err = js_get_value_int64(env, argv[1], &value);
   assert(err == 0);
 
-  context->handle->pix_fmt = value;
+  context->handle->pix_fmt = (AVPixelFormat) value;
 
   return NULL;
 }
@@ -1992,7 +1992,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
 
   len += +1 /* NULL */;
 
-  utf8_t *key = malloc(len);
+  utf8_t *key = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
   assert(err == 0);
 
@@ -2001,7 +2001,7 @@ bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
 
   len += +1 /* NULL */;
 
-  utf8_t *value = malloc(len);
+  utf8_t *value = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[2], value, len, NULL);
   assert(err == 0);
 
@@ -2036,7 +2036,7 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
 
   len += +1 /* NULL */;
 
-  utf8_t *key = malloc(len);
+  utf8_t *key = (utf8_t *) malloc(len);
   err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
   assert(err == 0);
 
