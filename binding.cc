@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
+
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavcodec/codec.h>
 #include <libavcodec/codec_id.h>
@@ -18,6 +20,8 @@
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libswscale/swscale.h>
+}
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
