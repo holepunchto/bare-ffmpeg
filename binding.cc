@@ -1,7 +1,10 @@
 #include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+
 #include <bare.h>
 #include <js.h>
-#include <utf.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -22,10 +25,6 @@ extern "C" {
 #include <libavutil/rational.h>
 #include <libswscale/swscale.h>
 }
-
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 
 typedef struct {
   AVIOContext *handle;
