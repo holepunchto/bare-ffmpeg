@@ -1,7 +1,7 @@
-#include "utf.h"
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
+#include <utf.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
