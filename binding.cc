@@ -300,30 +300,13 @@ bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_receiver_t, j
   return best_stream;
 }
 
-static js_value_t *
-bare_ffmpeg_format_context_create_stream(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_format_context_create_stream(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context, js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec) {
   int err;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_format_context_t *context;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_codec_t *codec;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &codec, NULL);
-  assert(err == 0);
-
-  js_value_t *handle;
-
+  js_arraybuffer_t handle;
   bare_ffmpeg_stream_t *stream;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_stream_t), (void **) &stream, &handle);
+  err = js_create_arraybuffer(env, stream, handle);
   assert(err == 0);
 
   stream->handle = avformat_new_stream(context->handle, codec->handle);
@@ -332,7 +315,7 @@ bare_ffmpeg_format_context_create_stream(js_env_t *env, js_callback_info_t *info
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    return NULL;
+    throw err;
   }
 
   return handle;
@@ -1880,6 +1863,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
+  V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
 #undef V
 
 #define V(name, fn) \
@@ -1891,7 +1875,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
