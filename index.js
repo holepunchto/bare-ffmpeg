@@ -17,6 +17,7 @@ const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
 const Dictionary = require('./lib/dictionary')
+const Resampler = require('./lib/resampler')
 
 exports.Codec = Codec
 exports.CodecContext = CodecContext
@@ -35,5 +36,6 @@ exports.Scaler = Scaler
 exports.Stream = Stream
 exports.Rational = Rational
 exports.Dictionary = Dictionary
+exports.Resampler = Resampler
 
 exports.constants = require('./lib/constants')
