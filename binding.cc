@@ -1372,6 +1372,8 @@ bare_ffmpeg_frame_get_audio_channel(js_env_t *env, js_callback_info_t *info) {
   err = js_create_unsafe_arraybuffer(env, len, &data, &result);
   assert(err == 0);
 
+  memcpy(data, frame->handle->data[0], len);
+
   return result;
 }
 
