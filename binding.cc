@@ -115,45 +115,23 @@ bare_ffmpeg_io_context_destroy(js_env_t *env, js_receiver_t, js_arraybuffer_span
   avio_context_free(&context->handle);
 }
 
-static js_value_t *
-bare_ffmpeg_output_format_init(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[0], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *name = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[0], name, len, NULL);
-  assert(err == 0);
-
-  const AVOutputFormat *format = av_guess_format((const char *) name, NULL, NULL);
+  const AVOutputFormat *format = av_guess_format(name.c_str(), NULL, NULL);
 
   if (format == NULL) {
-    err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name);
+    err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name.c_str());
     assert(err == 0);
 
-    free(name);
-
-    return NULL;
+    throw err;
   }
 
-  free(name);
-
-  js_value_t *handle;
+  js_arraybuffer_t handle;
 
   bare_ffmpeg_output_format_t *context;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_output_format_t), (void **) &context, &handle);
+  err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
   context->handle = format;
@@ -2047,6 +2025,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initIOContext", bare_ffmpeg_io_context_init)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
+  V("initOutputFormat", bare_ffmpeg_output_format_init)
 #undef V
 
 #define V(name, fn) \
@@ -2058,7 +2037,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
