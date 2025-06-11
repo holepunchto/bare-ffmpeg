@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -85,7 +84,7 @@ bare_ffmpeg__on_init(void) {
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t buf, uint32_t buf_offset, uint32_t buf_len) {
+bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t data, uint32_t offset, uint32_t len) {
   int err;
 
   js_arraybuffer_t handle;
@@ -96,14 +95,14 @@ bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t 
 
   uint8_t *io;
 
-  if (buf_len == 0) io = NULL;
+  if (len == 0) io = NULL;
   else {
-    io = reinterpret_cast<uint8_t *>(av_malloc(buf_len));
+    io = reinterpret_cast<uint8_t *>(av_malloc(len));
 
-    memcpy(io, &buf[buf_offset], buf_len);
+    memcpy(io, &data[offset], len);
   }
 
-  context->handle = avio_alloc_context(io, buf_len, 0, NULL, NULL, NULL, NULL);
+  context->handle = avio_alloc_context(io, len, 0, NULL, NULL, NULL, NULL);
 
   context->handle->opaque = (void *) context;
 
