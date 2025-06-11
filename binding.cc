@@ -110,27 +110,10 @@ bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t 
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_io_context_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_io_context_t *context;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_io_context_destroy(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> context) {
   av_free(context->handle->buffer);
-
   avio_context_free(&context->handle);
-
-  return NULL;
 }
 
 static js_value_t *
@@ -2063,6 +2046,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   assert(err == 0);
 
   V("initIOContext", bare_ffmpeg_io_context_init)
+  V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
 #undef V
 
@@ -2074,8 +2058,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
-
-  V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
