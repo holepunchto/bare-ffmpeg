@@ -84,7 +84,7 @@ bare_ffmpeg__on_init(void) {
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t data, uint32_t offset, uint32_t len) {
+bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t data, int64_t offset, int64_t len) {
   int err;
 
   js_arraybuffer_t handle;
