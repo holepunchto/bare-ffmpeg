@@ -321,40 +321,17 @@ bare_ffmpeg_format_context_create_stream(js_env_t *env, js_receiver_t, js_arrayb
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_format_context_read_frame(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_format_context_t *context;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &context, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_packet_t *packet;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &packet, NULL);
-  assert(err == 0);
-
+static bool
+bare_ffmpeg_format_context_read_frame(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context, js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet) {
   av_packet_unref(packet->handle);
 
-  err = av_read_frame(context->handle, packet->handle);
-
+  int err = av_read_frame(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
   }
 
-  js_value_t *result;
-  err = js_get_boolean(env, err == 0, &result);
-  assert(err == 0);
-
-  return result;
+  return err == 0;
 }
 
 static js_value_t *
@@ -1864,6 +1841,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
+  V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 #undef V
 
 #define V(name, fn) \
@@ -1874,8 +1852,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
-
-  V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
