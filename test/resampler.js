@@ -4,23 +4,23 @@ const ffmpeg = require('..')
 test('resampler converts frames', (t) => {
   const resampler = new ffmpeg.Resampler(
     44100,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
     48000,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const inputFrame = createAudioFrame(
     1024,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const outputSamples = Math.ceil((1024 * 48000) / 44100)
   const outputFrame = createAudioFrame(
     outputSamples,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
@@ -31,7 +31,6 @@ test('resampler converts frames', (t) => {
   })
 
   const converted = resampler.convert(inputFrame, outputFrame)
-  console.log('converted', converted, outputSamples)
   t.ok(converted >= 0, 'conversion returns non-negative sample count')
   t.ok(converted <= outputSamples, 'conversion fits in output buffer')
 })
@@ -39,22 +38,22 @@ test('resampler converts frames', (t) => {
 test('resampler modifies audio data', (t) => {
   const resampler = new ffmpeg.Resampler(
     44100,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
     48000,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const inputFrame = createAudioFrame(
     1024,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const outputFrame = createAudioFrame(
     1200,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
@@ -64,7 +63,7 @@ test('resampler modifies audio data', (t) => {
     resampler.destroy()
   })
 
-  const inputData = inputFrame.audioChannel(0)
+  const inputData = inputFrame.audioChannel()
   for (let i = 0; i < inputData.length; i += 2) {
     inputData.writeInt16LE(1000, i)
   }
@@ -72,7 +71,7 @@ test('resampler modifies audio data', (t) => {
   const converted = resampler.convert(inputFrame, outputFrame)
   t.ok(converted > 1000, 'converted a reasonable number of samples')
 
-  const outputData = outputFrame.audioChannel(0)
+  const outputData = outputFrame.audioChannel()
   let foundNonZero = false
 
   for (let i = 0; i < converted * 4; i += 2) {
@@ -89,22 +88,22 @@ test('resampler modifies audio data', (t) => {
 test('resampler can flush remaining samples', (t) => {
   const resampler = new ffmpeg.Resampler(
     44100,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
     48000,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const inputFrame = createAudioFrame(
     1024,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const outputFrame = createAudioFrame(
     2048,
-    2,
+    ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
@@ -124,7 +123,6 @@ test('resampler with audio from aiff file', (t) => {
   const audio = require('./fixtures/audio/sample.aiff', {
     with: { type: 'binary' }
   })
-
   const io = new ffmpeg.IOContext(audio)
   const format = new ffmpeg.InputFormatContext(io)
 
@@ -135,16 +133,16 @@ test('resampler with audio from aiff file', (t) => {
 
     const resampler = new ffmpeg.Resampler(
       stream.codecParameters.sampleRate,
-      1,
+      ffmpeg.constants.channelLayouts.MONO,
       ffmpeg.constants.sampleFormats.S16,
       48000,
-      2,
+      ffmpeg.constants.channelLayouts.STEREO,
       ffmpeg.constants.sampleFormats.FLTP
     )
 
     const outputFrame = createAudioFrame(
       2048,
-      2,
+      ffmpeg.constants.channelLayouts.STEREO,
       ffmpeg.constants.sampleFormats.FLTP
     )
 
@@ -179,18 +177,17 @@ test('resampler converts between different sample formats', (t) => {
 
   const resampler = new ffmpeg.Resampler(
     stream.codecParameters.sampleRate,
-    1,
+    ffmpeg.constants.channelLayouts.MONO,
     ffmpeg.constants.sampleFormats.S16,
     stream.codecParameters.sampleRate,
-    1,
+    ffmpeg.constants.channelLayouts.MONO,
     ffmpeg.constants.sampleFormats.FLTP
   )
 
   t.teardown(() => {
-    const io = new ffmpeg.IOContext(audio)
-    const format = new ffmpeg.InputFormatContext(io)
-    const stream = format.streams[0]
-    const decoder = stream.decoder()
+    stream.destroy()
+    decoder.destroy()
+    resampler.destroy()
   })
 
   const packet = new ffmpeg.Packet()
@@ -210,7 +207,7 @@ test('resampler converts between different sample formats', (t) => {
       const converted = resampler.convert(inputFrame, outputFrame)
       t.is(converted, inputFrame.nbSamples, 'converted all samples')
 
-      const leftChannel = outputFrame.audioChannel(0)
+      const leftChannel = outputFrame.audioChannel()
       t.ok(leftChannel.length > 0, 'output channel has data')
 
       outputFrame.destroy()
@@ -218,7 +215,7 @@ test('resampler converts between different sample formats', (t) => {
   }
 })
 
-function createAudioFrame(samples, channels, format, autosize = null) {
+function createAudioFrame(samples, channelLayout, format, autosize = null) {
   const frame = new ffmpeg.Frame()
 
   if (autosize) {
@@ -227,10 +224,7 @@ function createAudioFrame(samples, channels, format, autosize = null) {
 
   frame.nbSamples = samples
   frame.format = format
-  frame.channelLayout =
-    channels === 1
-      ? ffmpeg.constants.channelLayouts.MONO
-      : ffmpeg.constants.channelLayouts.STEREO
+  frame.channelLayout = channelLayout
   frame.alloc()
   return frame
 }

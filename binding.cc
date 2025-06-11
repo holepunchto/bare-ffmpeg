@@ -1352,23 +1352,17 @@ static js_value_t *
 bare_ffmpeg_frame_get_audio_channel(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
+  size_t argc = 1;
+  js_value_t *argv[1];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 2);
+  assert(argc == 1);
 
   bare_ffmpeg_frame_t *frame;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
   assert(err == 0);
-
-  uint32_t i;
-  err = js_get_value_uint32(env, argv[1], &i);
-  assert(err == 0);
-
-  assert(i < AV_NUM_DATA_POINTERS);
 
   js_value_t *result;
 
@@ -1377,8 +1371,6 @@ bare_ffmpeg_frame_get_audio_channel(js_env_t *env, js_callback_info_t *info) {
   void *data;
   err = js_create_unsafe_arraybuffer(env, len, &data, &result);
   assert(err == 0);
-
-  memcpy(data, frame->handle->data[i], len);
 
   return result;
 }
@@ -2530,9 +2522,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_MJPEG)
   V(AV_CODEC_ID_H264)
   V(AV_CODEC_ID_AAC)
-  V(AV_CODEC_ID_MP3)
-  V(AV_CODEC_ID_OPUS)
-  V(AV_CODEC_ID_FLAC)
 
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_RGB24)
