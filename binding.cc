@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -162,7 +161,11 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_format_context_open_input_with_io(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> io) {
+bare_ffmpeg_format_context_open_input_with_io(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> io
+) {
   int err;
 
   js_arraybuffer_t handle;
@@ -199,7 +202,13 @@ bare_ffmpeg_format_context_open_input_with_io(js_env_t *env, js_receiver_t, js_a
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format, js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> options, std::string url) {
+bare_ffmpeg_format_context_open_input_with_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> options,
+  std::string url
+) {
   int err;
 
   js_arraybuffer_t handle;
@@ -235,12 +244,21 @@ bare_ffmpeg_format_context_open_input_with_format(js_env_t *env, js_receiver_t, 
 }
 
 static void
-bare_ffmpeg_format_context_close_input(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context) {
+bare_ffmpeg_format_context_close_input(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
   avformat_close_input(&context->handle);
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_format_context_open_output(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format, js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> io) {
+bare_ffmpeg_format_context_open_output(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format,
+  js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> io
+) {
   int err;
 
   js_arraybuffer_t handle;
@@ -263,12 +281,20 @@ bare_ffmpeg_format_context_open_output(js_env_t *env, js_receiver_t, js_arraybuf
 }
 
 static void
-bare_ffmpeg_format_context_close_output(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context) {
+bare_ffmpeg_format_context_close_output(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
   avformat_free_context(context->handle);
 }
 
 static js_array_t
-bare_ffmpeg_format_context_get_streams(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context) {
+bare_ffmpeg_format_context_get_streams(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
   int err;
 
   js_array_t result;
@@ -292,7 +318,12 @@ bare_ffmpeg_format_context_get_streams(js_env_t *env, js_receiver_t, js_arraybuf
 }
 
 static int
-bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context, int32_t type) {
+bare_ffmpeg_format_context_get_best_stream_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int32_t type
+) {
   int best_stream = av_find_best_stream(context->handle, static_cast<AVMediaType>(type), -1, -1, NULL, 0);
 
   if (best_stream < 0) best_stream = -1;
@@ -301,7 +332,12 @@ bare_ffmpeg_format_context_get_best_stream_index(js_env_t *env, js_receiver_t, j
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_format_context_create_stream(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context, js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec) {
+bare_ffmpeg_format_context_create_stream(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+) {
   int err;
 
   js_arraybuffer_t handle;
@@ -322,7 +358,12 @@ bare_ffmpeg_format_context_create_stream(js_env_t *env, js_receiver_t, js_arrayb
 }
 
 static bool
-bare_ffmpeg_format_context_read_frame(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context, js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet) {
+bare_ffmpeg_format_context_read_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
   av_packet_unref(packet->handle);
 
   int err = av_read_frame(context->handle, packet->handle);
