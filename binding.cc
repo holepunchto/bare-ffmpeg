@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <bare.h>
 #include <js.h>
+#include <jstl.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -82,39 +84,26 @@ bare_ffmpeg__on_init(void) {
   avdevice_register_all();
 }
 
-static js_value_t *
-bare_ffmpeg_io_context_init(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t buf, uint32_t buf_offset, uint32_t buf_len) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *data;
-  size_t len;
-  err = js_get_typedarray_info(env, argv[0], NULL, &data, &len, NULL, NULL);
-  assert(err == 0);
-
-  js_value_t *handle;
+  js_arraybuffer_t handle;
 
   bare_ffmpeg_io_context_t *context;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_io_context_t), (void **) &context, &handle);
+  err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
   uint8_t *io;
 
-  if (len == 0) io = NULL;
+  if (buf_len == 0) io = NULL;
   else {
-    io = reinterpret_cast<uint8_t *>(av_malloc(len));
+    io = reinterpret_cast<uint8_t *>(av_malloc(buf_len));
 
-    memcpy(io, data, len);
+    memcpy(io, &buf[buf_offset], buf_len);
   }
 
-  context->handle = avio_alloc_context(io, len, 0, NULL, NULL, NULL, NULL);
+  context->handle = avio_alloc_context(io, buf_len, 0, NULL, NULL, NULL, NULL);
 
   context->handle->opaque = (void *) context;
 
@@ -2070,6 +2059,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   int err;
 
 #define V(name, fn) \
+  err = js_set_property<fn>(env, exports, name); \
+  assert(err == 0);
+
+  V("initIOContext", bare_ffmpeg_io_context_init)
+
+#undef V
+
+#define V(name, fn) \
   { \
     js_value_t *val; \
     err = js_create_function(env, name, -1, fn, NULL, &val); \
@@ -2078,7 +2075,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  V("initIOContext", bare_ffmpeg_io_context_init)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
