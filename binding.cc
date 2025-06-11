@@ -160,53 +160,38 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_format_context_open_input_with_io(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_format_context_open_input_with_io(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> io) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_io_context_t *io;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &io, NULL);
-  assert(err == 0);
-
-  js_value_t *handle;
+  js_arraybuffer_t handle;
 
   bare_ffmpeg_format_context_t *context;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_format_context_t), (void **) &context, &handle);
+  err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
   context->handle = avformat_alloc_context();
-
   context->handle->pb = io->handle;
   context->handle->opaque = (void *) context;
 
   err = avformat_open_input(&context->handle, NULL, NULL, NULL);
-
   if (err < 0) {
     avformat_free_context(context->handle);
 
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    return NULL;
+    throw err;
   }
 
   err = avformat_find_stream_info(context->handle, NULL);
-
   if (err < 0) {
     avformat_close_input(&context->handle);
 
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    return NULL;
+    throw err;
   }
 
   return handle;
@@ -2002,6 +1987,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
+
+  V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
 #undef V
 
 #define V(name, fn) \
@@ -2013,7 +2000,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
-  V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
   V("openInputFormatContextWithFormat", bare_ffmpeg_format_context_open_input_with_format)
   V("closeInputFormatContext", bare_ffmpeg_format_context_close_input)
   V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
