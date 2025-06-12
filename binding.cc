@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -298,10 +299,11 @@ bare_ffmpeg_format_context_get_streams(
   int err;
 
   js_array_t result;
-  err = js_create_array(env, result);
+  uint32_t len = context->handle->nb_streams;
+  err = js_create_array(env, len, result);
   assert(err == 0);
 
-  for (uint32_t i = 0; i < context->handle->nb_streams; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     js_arraybuffer_t handle;
 
     bare_ffmpeg_stream_t *stream;
