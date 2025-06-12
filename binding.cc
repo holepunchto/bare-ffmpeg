@@ -300,6 +300,7 @@ bare_ffmpeg_format_context_get_streams(
 
   js_array_t result;
   uint32_t len = context->handle->nb_streams;
+
   err = js_create_array(env, len, result);
   assert(err == 0);
 
