@@ -379,49 +379,27 @@ bare_ffmpeg_format_context_read_frame(
   return err == 0;
 }
 
-static js_value_t *
-bare_ffmpeg_stream_get_codec(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_stream_t *stream;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &stream, NULL);
-  assert(err == 0);
-
-  js_value_t *id;
-  err = js_create_uint32(env, stream->handle->codecpar->codec_id, &id);
-  assert(err == 0);
-
-  return id;
+static int32_t
+bare_ffmpeg_stream_get_codec(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->codecpar->codec_id;
 }
 
-static js_value_t *
-bare_ffmpeg_stream_get_codec_parameters(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_stream_get_codec_parameters(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
   int err;
 
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_stream_t *stream;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &stream, NULL);
-  assert(err == 0);
-
-  js_value_t *handle;
+  js_arraybuffer_t handle;
 
   bare_ffmpeg_codec_parameters_t *parameters;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_codec_parameters_t), (void **) &parameters, &handle);
+  err = js_create_arraybuffer(env, parameters, handle);
   assert(err == 0);
 
   parameters->handle = stream->handle->codecpar;
@@ -429,21 +407,9 @@ bare_ffmpeg_stream_get_codec_parameters(js_env_t *env, js_callback_info_t *info)
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  uint32_t id;
-  err = js_get_value_uint32(env, argv[0], &id);
-  assert(err == 0);
 
   const AVCodec *decoder = avcodec_find_decoder((enum AVCodecID) id);
 
@@ -451,13 +417,12 @@ bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_callback_info_t *info) {
     err = js_throw_errorf(env, NULL, "No decoder found for codec '%d'", id);
     assert(err == 0);
 
-    return NULL;
+    throw js_pending_exception;
   }
 
-  js_value_t *handle;
-
+  js_arraybuffer_t handle;
   bare_ffmpeg_codec_t *context;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_codec_t), (void **) &context, &handle);
+  err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
   context->handle = decoder;
@@ -465,21 +430,9 @@ bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_callback_info_t *info) {
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  uint32_t id;
-  err = js_get_value_uint32(env, argv[0], &id);
-  assert(err == 0);
 
   const AVCodec *encoder = avcodec_find_encoder((enum AVCodecID) id);
 
@@ -487,13 +440,12 @@ bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_callback_info_t *info) {
     err = js_throw_errorf(env, NULL, "No encoder found for codec '%d'", id);
     assert(err == 0);
 
-    return NULL;
+    throw js_pending_exception;
   }
 
-  js_value_t *handle;
-
+  js_arraybuffer_t handle;
   bare_ffmpeg_codec_t *context;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_codec_t), (void **) &context, &handle);
+  err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
   context->handle = encoder;
@@ -1887,6 +1839,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
+
+  V("getStreamCodec", bare_ffmpeg_stream_get_codec)
+  V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
+
+  V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
+  V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
 #undef V
 
 #define V(name, fn) \
@@ -1897,12 +1855,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
-
-  V("getStreamCodec", bare_ffmpeg_stream_get_codec)
-  V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
-
-  V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
-  V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
