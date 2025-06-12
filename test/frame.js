@@ -53,3 +53,17 @@ test('frame expose an alloc method', (t) => {
     fr.alloc()
   })
 })
+
+test('frame expose a setter for nbSamples', (t) => {
+  const fr = new ffmpeg.Frame()
+  t.execution(() => {
+    fr.nbSamples = 1024
+  })
+})
+
+test('frame expose a getter for nbSamples', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.nbSamples = 1024
+
+  t.ok(fr.nbSamples == 1024)
+})
