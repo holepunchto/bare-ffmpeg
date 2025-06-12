@@ -125,7 +125,7 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
     err = js_throw_errorf(env, NULL, "No output format found for name '%s'", name.c_str());
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   js_arraybuffer_t handle;
@@ -147,7 +147,7 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
     err = js_throw_errorf(env, NULL, "No input format found for name '%s'", name.c_str());
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   js_arraybuffer_t handle;
@@ -185,7 +185,7 @@ bare_ffmpeg_format_context_open_input_with_io(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   err = avformat_find_stream_info(context->handle, NULL);
@@ -195,7 +195,7 @@ bare_ffmpeg_format_context_open_input_with_io(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   return handle;
@@ -227,7 +227,7 @@ bare_ffmpeg_format_context_open_input_with_format(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   err = avformat_find_stream_info(context->handle, NULL);
@@ -237,7 +237,7 @@ bare_ffmpeg_format_context_open_input_with_format(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   return handle;
@@ -271,7 +271,7 @@ bare_ffmpeg_format_context_open_output(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   context->handle->pb = io->handle;
@@ -351,7 +351,7 @@ bare_ffmpeg_format_context_create_stream(
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
-    throw err;
+    throw js_pending_exception;
   }
 
   return handle;
@@ -370,6 +370,8 @@ bare_ffmpeg_format_context_read_frame(
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    throw js_pending_exception;
   }
 
   return err == 0;
