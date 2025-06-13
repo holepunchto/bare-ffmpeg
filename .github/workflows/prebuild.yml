@@ -66,11 +66,7 @@ jobs:
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: brew install meson nasm
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
-      - run: |
-          choco install --ignore-package-exit-codes meson nasm msys2
-          "C:\Program Files\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
-          "C:\Program Files\Meson" | Out-File -FilePath "$env:GITHUB_PATH" -Append
-          "C:\tools\msys64" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+      - run: choco install --ignore-package-exit-codes meson nasm msys2
         if: ${{ matrix.platform == 'win32' }}
       - run: pacman --noconfirm -S git make ninja pkgconf
         shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
