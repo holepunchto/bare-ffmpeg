@@ -514,6 +514,8 @@ bare_ffmpeg_codec_context_open_with_options(
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    throw js_pending_exception;
   }
 
   return err == 0;
@@ -619,6 +621,8 @@ bare_ffmpeg_codec_context_send_packet(
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    throw js_pending_exception;
   }
 }
 
