@@ -883,114 +883,61 @@ bare_ffmpeg_frame_alloc(
   }
 }
 
-static js_value_t *
-bare_ffmpeg_image_init(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 4;
-  js_value_t *argv[4];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 4);
-
-  int64_t format;
-  err = js_get_value_int64(env, argv[0], &format);
-  assert(err == 0);
-
-  int32_t width;
-  err = js_get_value_int32(env, argv[1], &width);
-  assert(err == 0);
-
-  int32_t height;
-  err = js_get_value_int32(env, argv[2], &height);
-  assert(err == 0);
-
-  int32_t align;
-  err = js_get_value_int32(env, argv[3], &align);
-  assert(err == 0);
-
+static js_arraybuffer_t
+bare_ffmpeg_image_init(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t format,
+  int32_t width,
+  int32_t height,
+  int32_t align
+) {
   size_t len = av_image_get_buffer_size((enum AVPixelFormat) format, width, height, align);
 
-  js_value_t *handle;
-
+  js_arraybuffer_t handle;
   uint8_t *data;
-  err = js_create_arraybuffer(env, len, (void **) &data, &handle);
+  int err = js_create_arraybuffer(env, len, data, handle);
   assert(err == 0);
 
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_image_fill(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 5;
-  js_value_t *argv[5];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 5);
-
-  int64_t pixel_format;
-  err = js_get_value_int64(env, argv[0], &pixel_format);
-  assert(err == 0);
-
-  int32_t width;
-  err = js_get_value_int32(env, argv[1], &width);
-  assert(err == 0);
-
-  int32_t height;
-  err = js_get_value_int32(env, argv[2], &height);
-  assert(err == 0);
-
-  uint8_t *data;
-  err = js_get_arraybuffer_info(env, argv[3], (void **) &data, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[4], (void **) &frame, NULL);
-  assert(err == 0);
-
-  err = av_image_fill_arrays(frame->handle->data, frame->handle->linesize, data, (enum AVPixelFormat) pixel_format, width, height, 1);
+static void
+bare_ffmpeg_image_fill(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t pixel_format,
+  int32_t width,
+  int32_t height,
+  js_arraybuffer_span_t data,
+  int64_t offset,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err = av_image_fill_arrays(
+    frame->handle->data,
+    frame->handle->linesize,
+    &data[offset],
+    (enum AVPixelFormat) pixel_format,
+    width,
+    height,
+    1
+  );
   assert(err >= 0);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_image_get_line_size(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 3);
-
-  int64_t pixel_format;
-  err = js_get_value_int64(env, argv[0], &pixel_format);
-  assert(err == 0);
-
-  int32_t width;
-  err = js_get_value_int32(env, argv[1], &width);
-  assert(err == 0);
-
-  int32_t plane;
-  err = js_get_value_int32(env, argv[2], &plane);
-  assert(err == 0);
-
-  int32_t linesize = av_image_get_linesize((enum AVPixelFormat) pixel_format, width, plane);
-
-  js_value_t *result;
-  err = js_create_int32(env, linesize, &result);
-  assert(err == 0);
-
-  return result;
+static int
+bare_ffmpeg_image_get_line_size(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t pixel_format,
+  int32_t width,
+  int32_t plane
+) {
+  return av_image_get_linesize(
+    (enum AVPixelFormat) pixel_format,
+    width,
+    plane
+  );
 }
 
 static js_value_t *
@@ -1461,6 +1408,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
   V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
   V("allocFrame", bare_ffmpeg_frame_alloc)
+
+  V("initImage", bare_ffmpeg_image_init)
+  V("fillImage", bare_ffmpeg_image_fill)
+  V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 #undef V
 
 #define V(name, fn) \
@@ -1471,10 +1422,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
-
-  V("initImage", bare_ffmpeg_image_init)
-  V("fillImage", bare_ffmpeg_image_fill)
-  V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
