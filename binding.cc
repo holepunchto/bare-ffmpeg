@@ -1080,13 +1080,14 @@ bare_ffmpeg_scaler_scale(
   );
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
-  int err;
-  js_value_t *handle;
-
+static js_arraybuffer_t
+bare_ffmpeg_dictionary_init(
+  js_env_t *env,
+  js_receiver_t
+) {
+  js_arraybuffer_t handle;
   bare_ffmpeg_dictionary_t *dict;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_dictionary_t), (void **) &dict, &handle);
+  int err = js_create_arraybuffer(env, dict, handle);
   assert(err == 0);
 
   dict->handle = NULL;
@@ -1094,114 +1095,41 @@ bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_dictionary_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
+) {
   av_dict_free(&dict->handle);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+static void
+bare_ffmpeg_dictionary_set_entry(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
+  std::string key,
+  std::string value
+) {
+  int err = av_dict_set(&dict->handle, key.c_str(), value.c_str(), 0);
   assert(err == 0);
-
-  assert(argc == 3);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *key = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
-  assert(err == 0);
-
-  err = js_get_value_string_utf8(env, argv[2], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *value = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[2], value, len, NULL);
-  assert(err == 0);
-
-  err = av_dict_set(&dict->handle, (const char *) key, (const char *) value, 0);
-  assert(err == 0);
-
-  free(key);
-  free(value);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *key = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
-  assert(err == 0);
-
-  AVDictionaryEntry *entry = av_dict_get(dict->handle, (const char *) key, NULL, 0);
-
-  free(key);
+static std::string
+bare_ffmpeg_dictionary_get_entry(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
+  std::string key
+) {
+  AVDictionaryEntry *entry = av_dict_get(dict->handle, key.c_str(), NULL, 0);
 
   if (entry == NULL) {
-    js_value_t *result;
-    err = js_get_null(env, &result);
-    assert(err == 0);
-
-    return result;
+    return "";
   }
 
-  js_value_t *result;
-  err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
-  assert(err == 0);
-
-  return result;
+  return std::string{entry->value};
 }
 
 static js_value_t *
@@ -1284,16 +1212,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
   V("scaleScaler", bare_ffmpeg_scaler_scale)
-#undef V
-
-#define V(name, fn) \
-  { \
-    js_value_t *val; \
-    err = js_create_function(env, name, -1, fn, NULL, &val); \
-    assert(err == 0); \
-    err = js_set_named_property(env, exports, name, val); \
-    assert(err == 0); \
-  }
 
   V("initDictionary", bare_ffmpeg_dictionary_init)
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
