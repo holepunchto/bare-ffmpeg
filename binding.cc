@@ -862,7 +862,7 @@ bare_ffmpeg_frame_set_pixel_format(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
   int64_t format
 ) {
-  frame->handle->format = format;
+  frame->handle->format = static_cast<AVPixelFormat>(format);
 }
 
 static void
