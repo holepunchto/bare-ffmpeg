@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -1116,7 +1117,7 @@ bare_ffmpeg_dictionary_set_entry(
   assert(err == 0);
 }
 
-static std::string
+static std::optional<std::string>
 bare_ffmpeg_dictionary_get_entry(
   js_env_t *env,
   js_receiver_t,
@@ -1126,7 +1127,7 @@ bare_ffmpeg_dictionary_get_entry(
   AVDictionaryEntry *entry = av_dict_get(dict->handle, key.c_str(), NULL, 0);
 
   if (entry == NULL) {
-    return "";
+    return std::nullopt;
   }
 
   return std::string{entry->value};
