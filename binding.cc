@@ -917,7 +917,7 @@ bare_ffmpeg_image_fill(
     frame->handle->data,
     frame->handle->linesize,
     &data[offset],
-    (enum AVPixelFormat) pixel_format,
+    static_cast<AVPixelFormat>(pixel_format),
     width,
     height,
     1
@@ -934,7 +934,7 @@ bare_ffmpeg_image_get_line_size(
   int32_t plane
 ) {
   return av_image_get_linesize(
-    (enum AVPixelFormat) pixel_format,
+    static_cast<AVPixelFormat>(pixel_format),
     width,
     plane
   );
