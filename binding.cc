@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -942,14 +941,10 @@ bare_ffmpeg_image_get_line_size(
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_packet_init(
-  js_env_t *env,
-  js_receiver_t
-) {
+bare_ffmpeg_packet_init(js_env_t *env, js_receiver_t) {
   int err;
 
   js_arraybuffer_t handle;
-
   bare_ffmpeg_packet_t *packet;
   err = js_create_arraybuffer(env, packet, handle);
   assert(err == 0);
