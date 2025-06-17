@@ -24,6 +24,7 @@ target_link_libraries(
     avdevice
     avformat
     avutil
+    swresample
     swscale
     jstl
 )
