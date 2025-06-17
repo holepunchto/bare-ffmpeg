@@ -531,7 +531,7 @@ bare_ffmpeg_frame_set_format(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
   int64_t format
 ) {
-  frame->handle->format = format;
+  frame->handle->format = static_cast<int>(format);
 }
 
 static uint64_t
@@ -864,7 +864,7 @@ bare_ffmpeg_frame_get_audio_channel(
 ) {
   int err;
 
-  const int bytes = av_samples_get_buffer_size(
+  av_samples_get_buffer_size(
     NULL,
     frame->handle->ch_layout.nb_channels,
     frame->handle->nb_samples,
@@ -1216,10 +1216,10 @@ bare_ffmpeg_resampler_init(
   js_receiver_t,
   int32_t in_rate,
   int64_t in_fmt,
-  int64_t in_layout,
+  uint64_t in_layout,
   int32_t out_rate,
   int64_t out_fmt,
-  int64_t out_layout
+  uint64_t out_layout
 ) {
   int err;
   js_arraybuffer_t handle;
