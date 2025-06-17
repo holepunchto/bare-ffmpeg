@@ -258,6 +258,10 @@ if("x264" IN_LIST features)
   target_link_libraries(avcodec INTERFACE x264)
 endif()
 
+if("libopus" IN_LIST features)
+  list(APPEND args --enable-libopus)
+endif()
+
 if(CMAKE_HOST_WIN32)
   find_path(
     msys2
