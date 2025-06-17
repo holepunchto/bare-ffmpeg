@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -1080,46 +1081,20 @@ bare_ffmpeg_packet_get_data(
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_scaler_init(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 6;
-  js_value_t *argv[6];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 6);
-
-  int64_t source_format;
-  err = js_get_value_int64(env, argv[0], &source_format);
-  assert(err == 0);
-
-  int32_t source_width;
-  err = js_get_value_int32(env, argv[1], &source_width);
-  assert(err == 0);
-
-  int32_t source_height;
-  err = js_get_value_int32(env, argv[2], &source_height);
-  assert(err == 0);
-
-  int64_t target_format;
-  err = js_get_value_int64(env, argv[3], &target_format);
-  assert(err == 0);
-
-  int32_t target_width;
-  err = js_get_value_int32(env, argv[4], &target_width);
-  assert(err == 0);
-
-  int32_t target_height;
-  err = js_get_value_int32(env, argv[5], &target_height);
-  assert(err == 0);
-
-  js_value_t *handle;
-
+static js_arraybuffer_t
+bare_ffmpeg_scaler_init(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t source_format,
+  int32_t source_width,
+  int32_t source_height,
+  int64_t target_format,
+  int32_t target_width,
+  int32_t target_height
+) {
+  js_arraybuffer_t handle;
   bare_ffmpeg_scaler_t *scaler;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_scaler_t), (void **) &scaler, &handle);
+  int err = js_create_arraybuffer(env, scaler, handle);
   assert(err == 0);
 
   scaler->handle = sws_getContext(
@@ -1138,60 +1113,26 @@ bare_ffmpeg_scaler_init(js_env_t *env, js_callback_info_t *info) {
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_scaler_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_scaler_t *scaler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &scaler, NULL);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_scaler_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_scaler_t, 1> scaler
+) {
   sws_freeContext(scaler->handle);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_scaler_scale(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 5;
-  js_value_t *argv[5];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 5);
-
-  bare_ffmpeg_scaler_t *scaler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &scaler, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *source;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &source, NULL);
-  assert(err == 0);
-
-  int64_t y;
-  err = js_get_value_int64(env, argv[2], &y);
-  assert(err == 0);
-
-  int64_t height;
-  err = js_get_value_int64(env, argv[3], &height);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *target;
-  err = js_get_arraybuffer_info(env, argv[4], (void **) &target, NULL);
-  assert(err == 0);
-
-  height = sws_scale(
+static int
+bare_ffmpeg_scaler_scale(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_scaler_t, 1> scaler,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> source,
+  int64_t y,
+  int64_t height,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
+) {
+  return sws_scale(
     scaler->handle,
     (const uint8_t *const *) source->handle->data,
     source->handle->linesize,
@@ -1200,21 +1141,16 @@ bare_ffmpeg_scaler_scale(js_env_t *env, js_callback_info_t *info) {
     target->handle->data,
     target->handle->linesize
   );
-
-  js_value_t *result;
-  err = js_create_int64(env, height, &result);
-  assert(err == 0);
-
-  return result;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
-  int err;
-  js_value_t *handle;
-
+static js_arraybuffer_t
+bare_ffmpeg_dictionary_init(
+  js_env_t *env,
+  js_receiver_t
+) {
+  js_arraybuffer_t handle;
   bare_ffmpeg_dictionary_t *dict;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_dictionary_t), (void **) &dict, &handle);
+  int err = js_create_arraybuffer(env, dict, handle);
   assert(err == 0);
 
   dict->handle = NULL;
@@ -1222,114 +1158,41 @@ bare_ffmpeg_dictionary_init(js_env_t *env, js_callback_info_t *info) {
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_dictionary_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
+) {
   av_dict_free(&dict->handle);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_set_entry(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+static void
+bare_ffmpeg_dictionary_set_entry(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
+  std::string key,
+  std::string value
+) {
+  int err = av_dict_set(&dict->handle, key.c_str(), value.c_str(), 0);
   assert(err == 0);
-
-  assert(argc == 3);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *key = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
-  assert(err == 0);
-
-  err = js_get_value_string_utf8(env, argv[2], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *value = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[2], value, len, NULL);
-  assert(err == 0);
-
-  err = av_dict_set(&dict->handle, (const char *) key, (const char *) value, 0);
-  assert(err == 0);
-
-  free(key);
-  free(value);
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_dictionary_t *dict;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &dict, NULL);
-  assert(err == 0);
-
-  size_t len;
-  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &len);
-  assert(err == 0);
-
-  len += +1 /* NULL */;
-
-  utf8_t *key = reinterpret_cast<utf8_t *>(malloc(len));
-  err = js_get_value_string_utf8(env, argv[1], key, len, NULL);
-  assert(err == 0);
-
-  AVDictionaryEntry *entry = av_dict_get(dict->handle, (const char *) key, NULL, 0);
-
-  free(key);
+static std::optional<std::string>
+bare_ffmpeg_dictionary_get_entry(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
+  std::string key
+) {
+  AVDictionaryEntry *entry = av_dict_get(dict->handle, key.c_str(), NULL, 0);
 
   if (entry == NULL) {
-    js_value_t *result;
-    err = js_get_null(env, &result);
-    assert(err == 0);
-
-    return result;
+    return std::nullopt;
   }
 
-  js_value_t *result;
-  err = js_create_string_utf8(env, (const utf8_t *) entry->value, -1, &result);
-  assert(err == 0);
-
-  return result;
+  return std::string{entry->value};
 }
 
 static js_arraybuffer_t
@@ -1538,6 +1401,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
+<<<<<<< audio
 
   V("initResampler", bare_ffmpeg_resampler_init)
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
@@ -1554,6 +1418,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, name, val); \
     assert(err == 0); \
   }
+=======
+>>>>>>> main
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
