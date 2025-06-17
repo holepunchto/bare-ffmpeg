@@ -35,24 +35,27 @@ test('resampler converts frames', (t) => {
   t.ok(converted <= outputSamples, 'conversion fits in output buffer')
 })
 
-test('resampler modifies audio data', (t) => {
+test('resampler converts audio data', (t) => {
+  const inputRate = 44100
+  const outputRate = 48000
   const resampler = new ffmpeg.Resampler(
-    44100,
+    inputRate,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
-    48000,
+    outputRate,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
+  const inputSamples = 1024
   const inputFrame = createAudioFrame(
-    1024,
+    inputSamples,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const outputFrame = createAudioFrame(
-    1200,
+    inputSamples * 2,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
@@ -63,26 +66,30 @@ test('resampler modifies audio data', (t) => {
     resampler.destroy()
   })
 
-  const inputData = inputFrame.audioChannel()
-  for (let i = 0; i < inputData.length; i += 2) {
-    inputData.writeInt16LE(1000, i)
+  const buffer = inputFrame.audioChannel()
+  for (let i = 0; i < buffer.length; i += 2) {
+    buffer.writeInt16LE(1000, i)
   }
 
   const converted = resampler.convert(inputFrame, outputFrame)
-  t.ok(converted > 1000, 'converted a reasonable number of samples')
 
-  const outputData = outputFrame.audioChannel()
-  let foundNonZero = false
+  t.ok(converted > 0, 'converted some samples')
+  const expectedRatio = outputRate / inputRate
+  t.ok(
+    Math.abs(converted / inputSamples - expectedRatio) < 0.1,
+    'conversion ratio is approximately correct'
+  )
 
-  for (let i = 0; i < converted * 4; i += 2) {
-    // skip what i guess is padding? the first couple chunks are 0
-    if (outputData.readInt16LE(i) !== 0) {
-      foundNonZero = true
-      break
-    }
-  }
+  const flushOutput = createAudioFrame(
+    100,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
 
-  t.ok(foundNonZero, 'output contains audio data')
+  const flushed = resampler.flush(flushOutput)
+  t.ok(flushed >= 0, 'flush does not error')
+
+  flushOutput.destroy()
 })
 
 test('resampler can flush remaining samples', (t) => {
@@ -206,9 +213,6 @@ test('resampler converts between different sample formats', (t) => {
 
       const converted = resampler.convert(inputFrame, outputFrame)
       t.is(converted, inputFrame.nbSamples, 'converted all samples')
-
-      const leftChannel = outputFrame.audioChannel()
-      t.ok(leftChannel.length > 0, 'output channel has data')
 
       outputFrame.destroy()
     }

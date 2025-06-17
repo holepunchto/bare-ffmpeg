@@ -856,16 +856,18 @@ bare_ffmpeg_frame_get_audio_channel(
 ) {
   int err;
 
-  size_t len = frame->handle->linesize[0];
+  const int bytes = av_samples_get_buffer_size(
+    NULL,
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    (AVSampleFormat)frame->handle->format,
+    1
+  );
 
-  int8_t *data;
-  js_arraybuffer_t result;
-  err = js_create_arraybuffer(env, len, data, result);
+  js_arraybuffer_t buffer;
+  err = js_create_arraybuffer(env, frame->handle->data[0], buffer);
   assert(err == 0);
-
-  memcpy(data, frame->handle->data[0], len);
-
-  return result;
+  return buffer;
 }
 
 static int32_t
@@ -1539,7 +1541,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initResampler", bare_ffmpeg_resampler_init)
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
-  V("resampleResampler", bare_ffmpeg_resampler_convert_frames)
+  V("convertResampler", bare_ffmpeg_resampler_convert_frames)
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
   V("flushResampler", bare_ffmpeg_resampler_flush)
 #undef V
