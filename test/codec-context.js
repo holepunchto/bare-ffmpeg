@@ -5,9 +5,7 @@ test('codec context could be open without options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
   setDefaultOptions(codecCtx)
 
-  t.execution(() => {
-    codecCtx.open()
-  })
+  t.ok(codecCtx.open())
 })
 
 test('codec context could not open wihtout timebase', (t) => {
@@ -58,9 +56,7 @@ test('codec context could be open with options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
   setDefaultOptions(codecCtx)
 
-  t.execution(() => {
-    codecCtx.open(getEncoderOptions())
-  })
+  t.ok(codecCtx.open(getEncoderOptions()))
 })
 
 test('codec context should expose a sendFrame method', (t) => {
