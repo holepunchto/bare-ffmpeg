@@ -500,107 +500,49 @@ bare_ffmpeg_codec_context_open(
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
+    throw js_pending_exception;
   }
 
-  return NULL;
+  return err == 0;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_get_format(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  js_value_t *result;
-  err = js_create_int64(env, frame->handle->format, &result);
-  assert(err == 0);
-
-  return result;
+static int64_t
+bare_ffmpeg_frame_get_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->format;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_set_format(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  int64_t format;
-  err = js_get_value_int64(env, argv[1], &format);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_frame_set_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t format
+) {
   frame->handle->format = format;
-
-  return NULL;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_get_channel_layout(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  uint64_t mask = frame->handle->ch_layout.u.mask;
-
-  js_value_t *result;
-  err = js_create_int64(env, mask, &result);
-  assert(err == 0);
-
-  return result;
+static uint64_t
+bare_ffmpeg_frame_get_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->ch_layout.u.mask;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_set_channel_layout(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  int64_t channel_layout;
-  err = js_get_value_int64(env, argv[1], &channel_layout);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_frame_set_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  uint64_t channel_layout
+) {
   av_channel_layout_from_mask(&frame->handle->ch_layout, channel_layout);
-
-  return NULL;
 }
 
 static bool
@@ -623,50 +565,23 @@ bare_ffmpeg_codec_context_open_with_options(
   return err == 0;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_get_nb_samples(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 1);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  js_value_t *result;
-  err = js_create_int32(env, frame->handle->nb_samples, &result);
-  assert(err == 0);
-
-  return result;
+static int32_t
+bare_ffmpeg_frame_get_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->nb_samples;
 }
 
-static js_value_t *
-bare_ffmpeg_frame_set_nb_samples(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 2);
-
-  bare_ffmpeg_frame_t *frame;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &frame, NULL);
-  assert(err == 0);
-
-  int32_t nb_samples;
-  err = js_get_value_int32(env, argv[1], &nb_samples);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_frame_set_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
   frame->handle->nb_samples = nb_samples;
-
-  return NULL;
 }
 
 static int64_t
@@ -937,21 +852,18 @@ static js_arraybuffer_t
 bare_ffmpeg_frame_get_audio_channel(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int32_t i
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   int err;
 
-  assert(i < AV_NUM_DATA_POINTERS);
-
-  size_t len = frame->handle->linesize[i];
+  size_t len = frame->handle->linesize[0];
 
   int8_t *data;
   js_arraybuffer_t result;
   err = js_create_arraybuffer(env, len, data, result);
   assert(err == 0);
 
-  memcpy(data, frame->handle->data[i], len);
+  memcpy(data, frame->handle->data[0], len);
 
   return result;
 }
@@ -1418,44 +1330,24 @@ bare_ffmpeg_dictionary_get_entry(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
-static js_value_t *
-bare_ffmpeg_resampler_init(js_env_t *env, js_callback_info_t *info) {
+static js_arraybuffer_t
+bare_ffmpeg_resampler_init(
+    js_env_t *env,
+    js_receiver_t,
+    int32_t in_rate,
+    int64_t in_fmt,
+    int64_t in_layout,
+    int32_t out_rate,
+    int64_t out_fmt,
+    int64_t out_layout
+) {
   int err;
-
-  size_t argc = 6;
-  js_value_t *argv[6];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 6);
-
-  int32_t in_rate, out_rate;
-  int64_t in_fmt, out_fmt, in_layout, out_layout;
-
-  err = js_get_value_int32(env, argv[0], &in_rate);
-  assert(err == 0);
-  err = js_get_value_int64(env, argv[1], &in_fmt);
-  assert(err == 0);
-  err = js_get_value_int64(env, argv[2], &in_layout);
-  assert(err == 0);
-  err = js_get_value_int32(env, argv[3], &out_rate);
-  assert(err == 0);
-  err = js_get_value_int64(env, argv[4], &out_fmt);
-  assert(err == 0);
-  err = js_get_value_int64(env, argv[5], &out_layout);
-  assert(err == 0);
-
-  js_value_t *handle;
+  js_arraybuffer_t handle;
   bare_ffmpeg_resampler_t *resampler;
-  err = js_create_arraybuffer(env, sizeof(bare_ffmpeg_resampler_t), (void **) &resampler, &handle);
+  err = js_create_arraybuffer(env, resampler, handle);
   assert(err == 0);
 
   resampler->handle = swr_alloc();
-  if (!resampler->handle) {
-    err = js_throw_error(env, NULL, "Failed to allocate resampler");
-    assert(err == 0);
-    return NULL;
-  }
 
   AVChannelLayout in_ch_layout = {};
   AVChannelLayout out_ch_layout = {};
@@ -1472,7 +1364,7 @@ bare_ffmpeg_resampler_init(js_env_t *env, js_callback_info_t *info) {
     swr_free(&resampler->handle);
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-    return NULL;
+    throw js_pending_exception;
   }
 
   err = swr_init(resampler->handle);
@@ -1480,142 +1372,86 @@ bare_ffmpeg_resampler_init(js_env_t *env, js_callback_info_t *info) {
     swr_free(&resampler->handle);
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
-    return NULL;
+    throw js_pending_exception;
   }
 
   return handle;
 }
 
-static js_value_t *
-bare_ffmpeg_resampler_convert_frames(js_env_t *env, js_callback_info_t *info) {
+static int64_t
+bare_ffmpeg_resampler_convert_frames(
+    js_env_t *env,
+    js_receiver_t,
+    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> in_frame,
+    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
+) {
   int err;
 
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 3);
-
-  bare_ffmpeg_resampler_t *resampler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &resampler, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *in_frame;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &in_frame, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *out_frame;
-  err = js_get_arraybuffer_info(env, argv[2], (void **) &out_frame, NULL);
-  assert(err == 0);
-
-  int ret = swr_convert(
+  int result = swr_convert(
     resampler->handle,
-    out_frame->handle->data, out_frame->handle->nb_samples,
-    (const uint8_t **)in_frame->handle->data, in_frame->handle->nb_samples
+    (uint8_t **) out_frame->handle->data,
+    out_frame->handle->nb_samples,
+    (const uint8_t **) in_frame->handle->data,
+    in_frame->handle->nb_samples
   );
 
-  if (ret < 0) {
-    err = js_throw_error(env, NULL, av_err2str(ret));
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
     assert(err == 0);
-    return NULL;
+    throw js_pending_exception;
   }
 
-  out_frame->handle->nb_samples = ret;
-
-  js_value_t *result;
-  err = js_create_int32(env, ret, &result);
-  assert(err == 0);
+  out_frame->handle->nb_samples = result;
 
   return result;
 }
 
-static js_value_t *
-bare_ffmpeg_resampler_get_delay(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 2);
-
-  bare_ffmpeg_resampler_t *resampler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &resampler, NULL);
-  assert(err == 0);
-
-  int64_t base;
-  err = js_get_value_int64(env, argv[1], &base);
-  assert(err == 0);
-
-  int64_t delay = swr_get_delay(resampler->handle, base);
-
-  js_value_t *result;
-  err = js_create_int64(env, delay, &result);
-  assert(err == 0);
-
-  return result;
+static int64_t
+bare_ffmpeg_resampler_get_delay(
+    js_env_t *env,
+    js_receiver_t,
+    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+    int64_t base
+) {
+  return swr_get_delay(resampler->handle, base);
 }
 
-static js_value_t *
-bare_ffmpeg_resampler_flush(js_env_t *env, js_callback_info_t *info) {
+static int64_t
+bare_ffmpeg_resampler_flush(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
+) {
   int err;
 
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 2);
-
-  bare_ffmpeg_resampler_t *resampler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &resampler, NULL);
-  assert(err == 0);
-
-  bare_ffmpeg_frame_t *out_frame;
-  err = js_get_arraybuffer_info(env, argv[1], (void **) &out_frame, NULL);
-  assert(err == 0);
-
-  int ret = swr_convert(
+  int result = swr_convert(
     resampler->handle,
-    out_frame->handle->data, out_frame->handle->nb_samples,
-    NULL, 0
+    out_frame->handle->data,
+    out_frame->handle->nb_samples,
+    NULL,
+    0
   );
 
-  if (ret < 0) {
-    err = js_throw_error(env, NULL, av_err2str(ret));
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
     assert(err == 0);
-    return NULL;
+    throw js_pending_exception;
   }
 
-  out_frame->handle->nb_samples = ret;
-
-  js_value_t *result;
-  err = js_create_int32(env, ret, &result);
-  assert(err == 0);
+  out_frame->handle->nb_samples = result;
 
   return result;
 }
 
-static js_value_t *
-bare_ffmpeg_resampler_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-  assert(argc == 1);
-
-  bare_ffmpeg_resampler_t *resampler;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &resampler, NULL);
-  assert(err == 0);
-
+static void
+bare_ffmpeg_resampler_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler
+) {
   swr_free(&resampler->handle);
-
-  return NULL;
 }
 
 static js_value_t *
@@ -1700,6 +1536,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
+
+  V("initResampler", bare_ffmpeg_resampler_init)
+  V("destroyResampler", bare_ffmpeg_resampler_destroy)
+  V("resampleResampler", bare_ffmpeg_resampler_convert_frames)
+  V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
+  V("flushResampler", bare_ffmpeg_resampler_flush)
 #undef V
 
 #define V(name, fn) \
@@ -1719,12 +1561,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
-
-  V("initResampler", bare_ffmpeg_resampler_init)
-  V("destroyResampler", bare_ffmpeg_resampler_destroy)
-  V("resampleResampler", bare_ffmpeg_resampler_convert_frames)
-  V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
-  V("flushResampler", bare_ffmpeg_resampler_flush)
 #undef V
 
 #define V(name) \
