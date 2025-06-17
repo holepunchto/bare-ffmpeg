@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -529,9 +528,9 @@ bare_ffmpeg_frame_set_format(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int64_t format
+  int format
 ) {
-  frame->handle->format = static_cast<int>(format);
+  frame->handle->format = format;
 }
 
 static uint64_t
@@ -625,9 +624,9 @@ bare_ffmpeg_codec_context_set_width(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  uint64_t value
+  int value
 ) {
-  context->handle->width = static_cast<int>(value);
+  context->handle->width = value;
 }
 
 static int64_t
@@ -644,9 +643,9 @@ bare_ffmpeg_codec_context_set_height(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  uint64_t value
+  int value
 ) {
-  context->handle->height = static_cast<int>(value);
+  context->handle->height = value;
 }
 
 static js_arraybuffer_t
@@ -672,11 +671,11 @@ bare_ffmpeg_codec_context_set_time_base(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  uint64_t num,
-  uint64_t den
+  int num,
+  int den
 ) {
-  context->handle->time_base.num = static_cast<int>(num);
-  context->handle->time_base.den = static_cast<int>(den);
+  context->handle->time_base.num = num;
+  context->handle->time_base.den = den;
 }
 
 static void
@@ -1035,8 +1034,8 @@ bare_ffmpeg_packet_init_from_buffer(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_t data,
-  int64_t offset,
-  int64_t len
+  uint64_t offset,
+  uint64_t len
 ) {
   int err;
 
@@ -1143,16 +1142,16 @@ bare_ffmpeg_scaler_scale(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_scaler_t, 1> scaler,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> source,
-  int64_t y,
-  int64_t height,
+  int y,
+  int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
   return sws_scale(
     scaler->handle,
     (const uint8_t *const *) source->handle->data,
     source->handle->linesize,
-    static_cast<int>(y),
-    static_cast<int>(height),
+    y,
+    height,
     target->handle->data,
     target->handle->linesize
   );
