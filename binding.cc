@@ -17,6 +17,7 @@ extern "C" {
 #include <libavdevice/avdevice.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/channel_layout.h>
 #include <libavutil/dict.h>
 #include <libavutil/error.h>
 #include <libavutil/frame.h>
@@ -25,6 +26,7 @@ extern "C" {
 #include <libavutil/mem.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
+#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
 
@@ -75,6 +77,10 @@ typedef struct {
 typedef struct {
   struct AVDictionary *handle;
 } bare_ffmpeg_dictionary_t;
+
+typedef struct {
+  struct SwrContext *handle;
+} bare_ffmpeg_resampler_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -509,6 +515,44 @@ bare_ffmpeg_codec_context_open(
   return err == 0;
 }
 
+static int64_t
+bare_ffmpeg_frame_get_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->format;
+}
+
+static void
+bare_ffmpeg_frame_set_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t format
+) {
+  frame->handle->format = format;
+}
+
+static uint64_t
+bare_ffmpeg_frame_get_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->ch_layout.u.mask;
+}
+
+static void
+bare_ffmpeg_frame_set_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  uint64_t channel_layout
+) {
+  av_channel_layout_from_mask(&frame->handle->ch_layout, channel_layout);
+}
+
 static bool
 bare_ffmpeg_codec_context_open_with_options(
   js_env_t *env,
@@ -527,6 +571,25 @@ bare_ffmpeg_codec_context_open_with_options(
   }
 
   return err == 0;
+}
+
+static int32_t
+bare_ffmpeg_frame_get_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->nb_samples;
+}
+
+static void
+bare_ffmpeg_frame_set_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
+  frame->handle->nb_samples = nb_samples;
 }
 
 static int64_t
@@ -797,23 +860,22 @@ static js_arraybuffer_t
 bare_ffmpeg_frame_get_audio_channel(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int32_t i
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   int err;
 
-  assert(i < AV_NUM_DATA_POINTERS);
+  const int bytes = av_samples_get_buffer_size(
+    NULL,
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    (AVSampleFormat)frame->handle->format,
+    1
+  );
 
-  size_t len = static_cast<size_t>(frame->handle->linesize[i]);
-
-  int8_t *data;
-  js_arraybuffer_t result;
-  err = js_create_arraybuffer(env, len, data, result);
+  js_arraybuffer_t buffer;
+  err = js_create_arraybuffer(env, frame->handle->data[0], buffer);
   assert(err == 0);
-
-  memcpy(data, frame->handle->data[i], len);
-
-  return result;
+  return buffer;
 }
 
 static int32_t
@@ -1148,6 +1210,130 @@ bare_ffmpeg_dictionary_get_entry(
   return std::string{entry->value};
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_resampler_init(
+    js_env_t *env,
+    js_receiver_t,
+    int32_t in_rate,
+    int64_t in_fmt,
+    int64_t in_layout,
+    int32_t out_rate,
+    int64_t out_fmt,
+    int64_t out_layout
+) {
+  int err;
+  js_arraybuffer_t handle;
+  bare_ffmpeg_resampler_t *resampler;
+  err = js_create_arraybuffer(env, resampler, handle);
+  assert(err == 0);
+
+  resampler->handle = swr_alloc();
+
+  AVChannelLayout in_ch_layout = {};
+  AVChannelLayout out_ch_layout = {};
+  av_channel_layout_from_mask(&in_ch_layout, in_layout);
+  av_channel_layout_from_mask(&out_ch_layout, out_layout);
+
+  err = swr_alloc_set_opts2(&resampler->handle,
+    &out_ch_layout, (enum AVSampleFormat) out_fmt, out_rate,
+    &in_ch_layout, (enum AVSampleFormat) in_fmt, in_rate,
+    0, NULL
+  );
+
+  if (err < 0) {
+    swr_free(&resampler->handle);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = swr_init(resampler->handle);
+  if (err < 0) {
+    swr_free(&resampler->handle);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  return handle;
+}
+
+static int64_t
+bare_ffmpeg_resampler_convert_frames(
+    js_env_t *env,
+    js_receiver_t,
+    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> in_frame,
+    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
+) {
+  int err;
+
+  int result = swr_convert(
+    resampler->handle,
+    (uint8_t **) out_frame->handle->data,
+    out_frame->handle->nb_samples,
+    (const uint8_t **) in_frame->handle->data,
+    in_frame->handle->nb_samples
+  );
+
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  out_frame->handle->nb_samples = result;
+
+  return result;
+}
+
+static int64_t
+bare_ffmpeg_resampler_get_delay(
+    js_env_t *env,
+    js_receiver_t,
+    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+    int64_t base
+) {
+  return swr_get_delay(resampler->handle, base);
+}
+
+static int64_t
+bare_ffmpeg_resampler_flush(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
+) {
+  int err;
+
+  int result = swr_convert(
+    resampler->handle,
+    out_frame->handle->data,
+    out_frame->handle->nb_samples,
+    NULL,
+    0
+  );
+
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  out_frame->handle->nb_samples = result;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_resampler_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler
+) {
+  swr_free(&resampler->handle);
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -1213,7 +1399,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameHeight", bare_ffmpeg_frame_set_height)
   V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
   V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
+  V("getFrameFormat", bare_ffmpeg_frame_get_format)
+  V("setFrameFormat", bare_ffmpeg_frame_set_format)
+  V("getFrameChannelLayout", bare_ffmpeg_frame_get_channel_layout)
+  V("setFrameChannelLayout", bare_ffmpeg_frame_set_channel_layout)
   V("allocFrame", bare_ffmpeg_frame_alloc)
+  V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
+  V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
@@ -1233,6 +1425,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
+
+  V("initResampler", bare_ffmpeg_resampler_init)
+  V("destroyResampler", bare_ffmpeg_resampler_destroy)
+  V("convertResampler", bare_ffmpeg_resampler_convert_frames)
+  V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
+  V("flushResampler", bare_ffmpeg_resampler_flush)
 #undef V
 
 #define V(name) \
@@ -1246,6 +1444,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V(AV_CODEC_ID_MJPEG)
   V(AV_CODEC_ID_H264)
+  V(AV_CODEC_ID_AAC)
 
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_RGB24)
@@ -1259,6 +1458,24 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AVMEDIA_TYPE_SUBTITLE)
   V(AVMEDIA_TYPE_ATTACHMENT)
   V(AVMEDIA_TYPE_NB)
+
+  V(AV_SAMPLE_FMT_NONE)
+  V(AV_SAMPLE_FMT_U8)
+  V(AV_SAMPLE_FMT_S16)
+  V(AV_SAMPLE_FMT_S32)
+  V(AV_SAMPLE_FMT_FLT)
+  V(AV_SAMPLE_FMT_DBL)
+  V(AV_SAMPLE_FMT_U8P)
+  V(AV_SAMPLE_FMT_S16P)
+  V(AV_SAMPLE_FMT_S32P)
+  V(AV_SAMPLE_FMT_FLTP)
+  V(AV_SAMPLE_FMT_DBLP)
+  V(AV_SAMPLE_FMT_S64)
+  V(AV_SAMPLE_FMT_S64P)
+  V(AV_SAMPLE_FMT_NB)
+
+  V(AV_CH_LAYOUT_MONO)
+  V(AV_CH_LAYOUT_STEREO)
 #undef V
 
   return exports;
