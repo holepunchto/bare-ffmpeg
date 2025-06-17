@@ -98,9 +98,24 @@ bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t 
 
   if (len == 0) io = NULL;
   else {
-    io = reinterpret_cast<uint8_t *>(av_malloc(len));
+    if (offset < 0 && offset > SIZE_MAX) {
+      err = js_throw_type_error(env, NULL, "Invalid offset");
+      assert(err == 0);
 
-    memcpy(io, &data[offset], len);
+      throw js_pending_exception;
+    }
+    size_t safe_offset = static_cast<size_t>(offset);
+
+    if (len < 0 && len > SIZE_MAX) {
+      err = js_throw_type_error(env, NULL, "Invalid length");
+      assert(err == 0);
+
+      throw js_pending_exception;
+    }
+    size_t safe_size = static_cast<size_t>(len);
+
+    io = reinterpret_cast<uint8_t *>(av_malloc(safe_size));
+    memcpy(io, &data[safe_offset], safe_size);
   }
 
   context->handle = avio_alloc_context(io, len, 0, NULL, NULL, NULL, NULL);
