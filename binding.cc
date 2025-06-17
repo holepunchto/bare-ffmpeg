@@ -1401,25 +1401,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
-<<<<<<< audio
-
-  V("initResampler", bare_ffmpeg_resampler_init)
-  V("destroyResampler", bare_ffmpeg_resampler_destroy)
-  V("convertResampler", bare_ffmpeg_resampler_convert_frames)
-  V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
-  V("flushResampler", bare_ffmpeg_resampler_flush)
-#undef V
-
-#define V(name, fn) \
-  { \
-    js_value_t *val; \
-    err = js_create_function(env, name, -1, fn, NULL, &val); \
-    assert(err == 0); \
-    err = js_set_named_property(env, exports, name, val); \
-    assert(err == 0); \
-  }
-=======
->>>>>>> main
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
@@ -1429,6 +1410,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
+
+  V("initResampler", bare_ffmpeg_resampler_init)
+  V("destroyResampler", bare_ffmpeg_resampler_destroy)
+  V("convertResampler", bare_ffmpeg_resampler_convert_frames)
+  V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
+  V("flushResampler", bare_ffmpeg_resampler_flush)
 #undef V
 
 #define V(name) \
