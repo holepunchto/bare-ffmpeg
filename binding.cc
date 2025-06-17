@@ -868,7 +868,7 @@ bare_ffmpeg_frame_get_audio_channel(
     NULL,
     frame->handle->ch_layout.nb_channels,
     frame->handle->nb_samples,
-    (AVSampleFormat)frame->handle->format,
+    (AVSampleFormat) frame->handle->format,
     1
   );
 
@@ -1212,14 +1212,14 @@ bare_ffmpeg_dictionary_get_entry(
 
 static js_arraybuffer_t
 bare_ffmpeg_resampler_init(
-    js_env_t *env,
-    js_receiver_t,
-    int32_t in_rate,
-    int64_t in_fmt,
-    int64_t in_layout,
-    int32_t out_rate,
-    int64_t out_fmt,
-    int64_t out_layout
+  js_env_t *env,
+  js_receiver_t,
+  int32_t in_rate,
+  int64_t in_fmt,
+  int64_t in_layout,
+  int32_t out_rate,
+  int64_t out_fmt,
+  int64_t out_layout
 ) {
   int err;
   js_arraybuffer_t handle;
@@ -1234,11 +1234,7 @@ bare_ffmpeg_resampler_init(
   av_channel_layout_from_mask(&in_ch_layout, in_layout);
   av_channel_layout_from_mask(&out_ch_layout, out_layout);
 
-  err = swr_alloc_set_opts2(&resampler->handle,
-    &out_ch_layout, (enum AVSampleFormat) out_fmt, out_rate,
-    &in_ch_layout, (enum AVSampleFormat) in_fmt, in_rate,
-    0, NULL
-  );
+  err = swr_alloc_set_opts2(&resampler->handle, &out_ch_layout, (enum AVSampleFormat) out_fmt, out_rate, &in_ch_layout, (enum AVSampleFormat) in_fmt, in_rate, 0, NULL);
 
   if (err < 0) {
     swr_free(&resampler->handle);
@@ -1260,11 +1256,11 @@ bare_ffmpeg_resampler_init(
 
 static int64_t
 bare_ffmpeg_resampler_convert_frames(
-    js_env_t *env,
-    js_receiver_t,
-    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
-    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> in_frame,
-    js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> in_frame,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> out_frame
 ) {
   int err;
 
@@ -1289,10 +1285,10 @@ bare_ffmpeg_resampler_convert_frames(
 
 static int64_t
 bare_ffmpeg_resampler_get_delay(
-    js_env_t *env,
-    js_receiver_t,
-    js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
-    int64_t base
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  int64_t base
 ) {
   return swr_get_delay(resampler->handle, base);
 }
