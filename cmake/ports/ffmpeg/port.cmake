@@ -125,20 +125,22 @@ if(CMAKE_C_COMPILER)
     set(CC_filename "clang.exe")
   endif()
 
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" CC_path "${CC_path}")
+  endif()
+
   list(APPEND args
-    "--cc=${CC_filename}"
-    "--host-cc=${CC_filename}"
+    "--cc=${CC_path}/${CC_filename}"
+    "--host-cc=${CC_path}/${CC_filename}"
     "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-    "--ld=${CC_filename}"
-    "--host-ld=${CC_filename}"
+    "--ld=${CC_path}/${CC_filename}"
+    "--host-ld=${CC_path}/${CC_filename}"
     "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
   )
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND args --extra-ldflags=-fuse-ld=lld)
   endif()
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
 endif()
 
 if(CMAKE_CXX_COMPILER)
@@ -149,12 +151,14 @@ if(CMAKE_CXX_COMPILER)
     set(CXX_filename "clang.exe")
   endif()
 
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" CXX_path "${CXX_path}")
+  endif()
+
   list(APPEND args
-    "--cxx=${CXX_filename}"
+    "--cxx=${CXX_path}/${CXX_filename}"
     "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
   )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
 endif()
 
 if(CMAKE_OBJC_COMPILER)
@@ -162,11 +166,9 @@ if(CMAKE_OBJC_COMPILER)
   cmake_path(GET CMAKE_OBJC_COMPILER FILENAME OBJC_filename)
 
   list(APPEND args
-    "--objcc=${OBJC_filename}"
+    "--objcc=${OBJC_path}/${OBJC_filename}"
     "--extra-objcflags=--target=${CMAKE_OBJC_COMPILER_TARGET}"
   )
-
-  list(APPEND env --modify "PATH=path_list_prepend:${OBJC_path}")
 endif()
 
 if(CMAKE_ASM_COMPILER)
@@ -177,18 +179,22 @@ if(CMAKE_ASM_COMPILER)
     set(AS_filename "clang.exe")
   endif()
 
-  list(APPEND args "--as=${AS_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" AS_path "${AS_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${AS_path}")
+  list(APPEND args "--as=${AS_path}/${AS_filename}")
 endif()
 
 if(CMAKE_RC_COMPILER)
   cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
   cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
 
-  list(APPEND args "--windres=${RC_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" RC_path "${RC_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${RC_path}")
+  list(APPEND args "--windres=${RC_path}/${RC_filename}")
 endif()
 
 if(CMAKE_AR)
@@ -199,36 +205,44 @@ if(CMAKE_AR)
     set(AR_filename "llvm-ar.exe")
   endif()
 
-  list(APPEND args "--ar=${AR_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" AR_path "${AR_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+  list(APPEND args "--ar=${AR_path}/${AR_filename}")
 endif()
 
 if(CMAKE_NM)
   cmake_path(GET CMAKE_NM PARENT_PATH NM_path)
   cmake_path(GET CMAKE_NM FILENAME NM_filename)
 
-  list(APPEND args "--nm=${NM_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" NM_path "${NM_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${NM_path}")
+  list(APPEND args "--nm=${NM_path}/${NM_filename}")
 endif()
 
 if(CMAKE_RANLIB)
   cmake_path(GET CMAKE_RANLIB PARENT_PATH RANLIB_path)
   cmake_path(GET CMAKE_RANLIB FILENAME RANLIB_filename)
 
-  list(APPEND args "--ranlib=${RANLIB_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" RANLIB_path "${RANLIB_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${RANLIB_path}")
+  list(APPEND args "--ranlib=${RANLIB_path}/${RANLIB_filename}")
 endif()
 
 if(CMAKE_STRIP)
   cmake_path(GET CMAKE_STRIP PARENT_PATH STRIP_path)
   cmake_path(GET CMAKE_STRIP FILENAME STRIP_filename)
 
-  list(APPEND args "--strip=${STRIP_filename}")
+  if(CMAKE_HOST_WIN32)
+    string(REGEX REPLACE "([A-Z]):" "/\\1" STRIP_path "${STRIP_path}")
+  endif()
 
-  list(APPEND env --modify "PATH=path_list_prepend:${STRIP_path}")
+  list(APPEND args "--strip=${STRIP_path}/${STRIP_filename}")
 endif()
 
 set(depends)
@@ -246,6 +260,16 @@ if("dav1d" IN_LIST features)
   list(APPEND paths "${dav1d_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE dav1d)
+endif()
+
+if("svt-av1" IN_LIST features)
+  find_port(svt-av1)
+
+  list(APPEND depends svt-av1)
+  list(APPEND args --enable-libsvtav1)
+  list(APPEND paths "${svt-av1_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE svt-av1)
 endif()
 
 if("x264" IN_LIST features)
