@@ -12,6 +12,8 @@ find_port(ffmpeg FEATURES dav1d x264)
 
 add_bare_module(bare_ffmpeg)
 
+harden(${bare_ffmpeg})
+
 target_sources(
   ${bare_ffmpeg}
   PRIVATE
