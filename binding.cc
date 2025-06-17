@@ -85,7 +85,13 @@ bare_ffmpeg__on_init(void) {
 }
 
 static js_arraybuffer_t
-bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t data, int64_t offset, int64_t len) {
+bare_ffmpeg_io_context_init(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t data,
+  uint64_t offset,
+  uint64_t len
+) {
   int err;
 
   js_arraybuffer_t handle;
@@ -95,31 +101,17 @@ bare_ffmpeg_io_context_init(js_env_t *env, js_receiver_t, js_arraybuffer_span_t 
   assert(err == 0);
 
   uint8_t *io;
+  size_t size = static_cast<size_t>(len);
 
   if (len == 0) io = NULL;
   else {
-    if (offset < 0 && offset > SIZE_MAX) {
-      err = js_throw_type_error(env, NULL, "Invalid offset");
-      assert(err == 0);
+    io = reinterpret_cast<uint8_t *>(av_malloc(size));
 
-      throw js_pending_exception;
-    }
-    size_t safe_offset = static_cast<size_t>(offset);
-
-    if (len < 0 && len > SIZE_MAX) {
-      err = js_throw_type_error(env, NULL, "Invalid length");
-      assert(err == 0);
-
-      throw js_pending_exception;
-    }
-    size_t safe_size = static_cast<size_t>(len);
-
-    io = reinterpret_cast<uint8_t *>(av_malloc(safe_size));
-    memcpy(io, &data[safe_offset], safe_size);
+    size_t off = static_cast<size_t>(offset);
+    memcpy(io, &data[off], size);
   }
 
-  context->handle = avio_alloc_context(io, len, 0, NULL, NULL, NULL, NULL);
-
+  context->handle = avio_alloc_context(io, static_cast<int>(len), 0, NULL, NULL, NULL, NULL);
   context->handle->opaque = (void *) context;
 
   return handle;
@@ -570,9 +562,9 @@ bare_ffmpeg_codec_context_set_width(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  int64_t value
+  uint64_t value
 ) {
-  context->handle->width = value;
+  context->handle->width = static_cast<int>(value);
 }
 
 static int64_t
@@ -589,9 +581,9 @@ bare_ffmpeg_codec_context_set_height(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  int64_t value
+  uint64_t value
 ) {
-  context->handle->height = value;
+  context->handle->height = static_cast<int>(value);
 }
 
 static js_arraybuffer_t
@@ -617,11 +609,11 @@ bare_ffmpeg_codec_context_set_time_base(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  int64_t num,
-  int64_t den
+  uint64_t num,
+  uint64_t den
 ) {
-  context->handle->time_base.num = num;
-  context->handle->time_base.den = den;
+  context->handle->time_base.num = static_cast<int>(num);
+  context->handle->time_base.den = static_cast<int>(den);
 }
 
 static void
@@ -812,7 +804,7 @@ bare_ffmpeg_frame_get_audio_channel(
 
   assert(i < AV_NUM_DATA_POINTERS);
 
-  size_t len = frame->handle->linesize[i];
+  size_t len = static_cast<size_t>(frame->handle->linesize[i]);
 
   int8_t *data;
   js_arraybuffer_t result;
@@ -908,11 +900,16 @@ bare_ffmpeg_image_init(
   int32_t height,
   int32_t align
 ) {
-  size_t len = av_image_get_buffer_size((enum AVPixelFormat) format, width, height, align);
+  int len = av_image_get_buffer_size(
+    static_cast<AVPixelFormat>(format),
+    width,
+    height,
+    align
+  );
 
   js_arraybuffer_t handle;
   uint8_t *data;
-  int err = js_create_arraybuffer(env, len, data, handle);
+  int err = js_create_arraybuffer(env, static_cast<size_t>(len), data, handle);
   assert(err == 0);
 
   return handle;
@@ -929,10 +926,11 @@ bare_ffmpeg_image_fill(
   int64_t offset,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
+  size_t off = static_cast<size_t>(offset);
   int err = av_image_fill_arrays(
     frame->handle->data,
     frame->handle->linesize,
-    &data[offset],
+    &data[off],
     static_cast<AVPixelFormat>(pixel_format),
     width,
     height,
@@ -983,10 +981,11 @@ bare_ffmpeg_packet_init_from_buffer(
   AVPacket *pkt = av_packet_alloc();
   assert(pkt != NULL);
 
-  err = av_new_packet(pkt, len);
+  err = av_new_packet(pkt, static_cast<int>(len));
   assert(err == 0);
 
-  memcpy(pkt->data, &data[offset], len);
+  size_t off = static_cast<size_t>(offset);
+  memcpy(pkt->data, &data[off], static_cast<size_t>(len));
 
   js_arraybuffer_t handle;
   bare_ffmpeg_packet_t *packet;
@@ -1023,13 +1022,14 @@ bare_ffmpeg_packet_get_data(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   int err;
+  size_t size = static_cast<size_t>(packet->handle->size);
 
   js_arraybuffer_t handle;
   uint8_t *data;
-  err = js_create_arraybuffer(env, packet->handle->size, data, handle);
+  err = js_create_arraybuffer(env, size, data, handle);
   assert(err == 0);
 
-  memcpy(data, packet->handle->data, packet->handle->size);
+  memcpy(data, packet->handle->data, size);
 
   return handle;
 }
@@ -1089,8 +1089,8 @@ bare_ffmpeg_scaler_scale(
     scaler->handle,
     (const uint8_t *const *) source->handle->data,
     source->handle->linesize,
-    y,
-    height,
+    static_cast<int>(y),
+    static_cast<int>(height),
     target->handle->data,
     target->handle->linesize
   );
