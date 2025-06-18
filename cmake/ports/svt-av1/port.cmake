@@ -6,15 +6,22 @@ else()
   set(lib libSvtAv1Enc.a)
 endif()
 
+set(args
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  -DBUILD_SHARED_LIBS=OFF
+  -DBUILD_TESTING=OFF
+  -DBUILD_APPS=OFF
+)
+
+if(WIN32)
+  list(APPEND args -DENABLE_NEON_DOTPROD=OFF)
+endif()
+
 declare_port(
   "gitlab:AOMediaCodec/SVT-AV1@2.3.0"
   svt-av1
   BYPRODUCTS lib/${lib}
-  ARGS
-    -DBUILD_SHARED_LIBS=OFF
-    -DBUILD_TESTING=OFF
-    -DBUILD_APPS=OFF
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  ARGS ${args}
 )
 
 add_library(svt-av1 STATIC IMPORTED GLOBAL)
