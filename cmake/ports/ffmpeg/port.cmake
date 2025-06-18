@@ -281,6 +281,8 @@ else()
   )
 endif()
 
+list(APPEND path $ENV{PATH})
+
 list(APPEND args
   "--pkg-config=${pkg-config}"
   "--pkg-config-flags=--static"
