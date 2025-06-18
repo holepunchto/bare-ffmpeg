@@ -16,7 +16,7 @@ endif()
 fetch_package("github:holepunchto/libjstl#096669a")
 fetch_package("github:xiph/opus#c0eb2ca")
 
-find_port(ffmpeg FEATURES dav1d svt-av1 x264)
+find_port(ffmpeg FEATURES dav1d svt-av1 x264 libopus)
 
 add_bare_module(bare_ffmpeg)
 
