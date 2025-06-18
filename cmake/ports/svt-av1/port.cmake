@@ -14,7 +14,7 @@ set(args
 )
 
 if(WIN32)
-  list(APPEND args -DENABLE_NEON_DOTPROD=OFF)
+  list(APPEND args -DCOMPILE_C_ONLY=ON)
 endif()
 
 declare_port(
