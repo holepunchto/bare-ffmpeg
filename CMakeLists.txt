@@ -5,9 +5,17 @@ find_package(cmake-ports REQUIRED PATHS node_modules/cmake-ports)
 
 project(bare_ffmpeg C CXX)
 
-fetch_package("github:holepunchto/libjstl#122cbdd")
+bare_arch(arch)
 
-find_port(ffmpeg FEATURES dav1d x264 libopus)
+if(arch MATCHES "arm64")
+  set(OPUS_MAY_HAVE_NEON OFF CACHE BOOL "" FORCE)
+  set(OPUS_PRESUME_NEON ON CACHE BOOL "" FORCE)
+endif()
+
+fetch_package("github:holepunchto/libjstl#122cbdd")
+fetch_package("github:xiph/opus#c0eb2ca")
+
+find_port(ffmpeg FEATURES dav1d x264)
 
 add_bare_module(bare_ffmpeg)
 
