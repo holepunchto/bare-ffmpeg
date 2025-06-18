@@ -281,7 +281,11 @@ else()
   )
 endif()
 
-list(APPEND path $ENV{PATH})
+foreach(part "$ENV{PATH}")
+  cmake_path(NORMAL_PATH part)
+
+  list(APPEND path "${part}")
+endforeach()
 
 list(APPEND args
   "--pkg-config=${pkg-config}"
