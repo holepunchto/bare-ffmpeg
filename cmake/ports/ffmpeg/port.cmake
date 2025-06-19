@@ -444,6 +444,28 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
+elseif(ANDROID)
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      android
+      mediandk
+  )
+
+  target_link_libraries(
+    avdevice
+    INTERFACE
+      android
+      camera2ndk
+      mediandk
+  )
+
+  target_link_libraries(
+    avutil
+    INTERFACE
+      android
+      mediandk
+  )
 elseif(WIN32)
   target_link_libraries(
     avcodec
