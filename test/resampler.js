@@ -169,7 +169,6 @@ test('resampler with audio from aiff file', (t) => {
   }
 
   format.destroy()
-  io.destroy()
 })
 
 test('resampler converts between different sample formats', (t) => {
