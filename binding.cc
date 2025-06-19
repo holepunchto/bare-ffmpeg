@@ -877,16 +877,16 @@ bare_ffmpeg_frame_get_audio_channel(
     throw js_pending_exception;
   }
 
-  size_t len = static_cast<size_t>(buffer_size);
-
-  int8_t *data;
-  js_arraybuffer_t result;
-  err = js_create_arraybuffer(env, len, data, result);
+  js_arraybuffer_t buffer;
+  err = js_create_arraybuffer(
+    env,
+    frame->handle->data,
+    static_cast<size_t>(buffer_size),
+    buffer
+  );
   assert(err == 0);
 
-  memcpy(data, frame->handle->data[0], len);
-
-  return result;
+  return buffer;
 }
 
 static int32_t
