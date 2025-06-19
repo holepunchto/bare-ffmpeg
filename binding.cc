@@ -863,21 +863,24 @@ bare_ffmpeg_frame_get_audio_channel(
 ) {
   int err;
 
-  auto result = av_samples_get_buffer_size(
+  auto buffer_size = av_samples_get_buffer_size(
     NULL,
     frame->handle->ch_layout.nb_channels,
     frame->handle->nb_samples,
     (AVSampleFormat) frame->handle->format,
     1
   );
-  if (result < 0) {
-    js_throw_error(env, NULL, av_err2str(result));
+
+  if (buffer_size < 0) {
+    err = js_throw_error(env, NULL, av_err2str(buffer_size));
+    assert(err == 0);
     throw js_pending_exception;
   }
 
   js_arraybuffer_t buffer;
-  err = js_create_arraybuffer(env, (size_t)result, frame->handle->data[0], buffer);
+  err = js_create_external_arraybuffer(env, frame->handle->data[0], static_cast<size_t>(buffer_size), buffer);
   assert(err == 0);
+
   return buffer;
 }
 
