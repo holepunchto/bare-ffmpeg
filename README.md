@@ -470,12 +470,6 @@ Allocates memory for the frame data.
 
 **Returns**: void
 
-##### `Frame.audioChannel()`
-
-Gets the audio data buffer for the first channel.
-
-**Returns**: Buffer containing audio data
-
 ##### `Frame.destroy()`
 
 Destroys the Frame and frees all associated resources.
