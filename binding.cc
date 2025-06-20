@@ -880,7 +880,7 @@ bare_ffmpeg_frame_get_audio_channel(
   js_arraybuffer_t buffer;
   err = js_create_arraybuffer(
     env,
-    frame->handle->data,
+    frame->handle->data[0],
     static_cast<size_t>(buffer_size),
     buffer
   );
