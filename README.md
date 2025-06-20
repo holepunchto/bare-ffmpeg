@@ -601,6 +601,218 @@ Parameters:
 
 **Returns**: number
 
+### Rational
+
+The Rational API provides functionality to represent rational numbers (fractions).
+
+```javascript
+const rational = new ffmpeg.Rational(numerator, denominator)
+```
+
+Parameters:
+
+- `numerator` (number): The numerator
+- `denominator` (number): The denominator
+
+**Returns**: A new `Rational` instance
+
+#### Properties
+
+##### `Rational.numerator`
+
+Gets the numerator.
+
+**Returns**: number
+
+##### `Rational.denominator`
+
+Gets the denominator.
+
+**Returns**: number
+
+### Stream
+
+The Stream API provides functionality to access media stream information and create decoders/encoders.
+
+```javascript
+const stream = new ffmpeg.Stream(handle)
+```
+
+Parameters:
+
+- `handle` (ArrayBuffer): Internal stream handle representing AVFormatContext from FFmpeg API
+
+**Returns**: A new `Stream` instance
+
+> Streams are typically obtained from format contexts: `const stream = format.streams[0]`
+
+#### Properties
+
+##### `Stream.codecParameters`
+
+Gets the codec parameters for this stream.
+
+**Returns**: `CodecParameters` instance
+
+##### `Stream.codec`
+
+Gets the codec for this stream
+
+**Returns**: `Codec` instance
+
+#### Methods
+
+##### `Stream.decoder()`
+
+Creates and opens a decoder for this stream.
+
+**Returns**: `CodecContext` instance
+
+##### `Stream.encoder()`
+
+Creates and opens an encoder for this stream.
+
+**Returns**: `CodecContext` instance
+
+##### `Stream.destroy()`
+
+Destroys the Stream and frees all associated resources.
+
+**Returns**: void
+
+### Resampler
+
+The Resampler API provides functionality to convert audio between different sample rates, channel layouts, and sample formats.
+
+```javascript
+const resampler = new ffmpeg.Resampler(
+  inputSampleRate,
+  inputChannelLayout,
+  inputSampleFormat,
+  outputSampleRate,
+  outputChannelLayout,
+  outputSampleFormat
+)
+```
+
+Parameters:
+
+- `inputSampleRate` (number): Input sample rate in Hz
+- `inputChannelLayout` (number): Input channel layout constant
+- `inputSampleFormat` (number): Input sample format constant
+- `outputSampleRate` (number): Output sample rate in Hz
+- `outputChannelLayout` (number): Output channel layout constant
+- `outputSampleFormat` (number): Output sample format constant
+
+**Returns**: A new `Resampler` instance
+
+#### Properties
+
+##### `Resampler.inputSampleRate`
+
+Gets the input sample rate.
+
+**Returns**: number
+
+##### `Resampler.outputSampleRate`
+
+Gets the output sample rate.
+
+**Returns**: number
+
+##### `Resampler.delay`
+
+Gets the resampler delay in samples.
+
+**Returns**: number
+
+#### Methods
+
+##### `Resampler.convert(inputFrame, outputFrame)`
+
+Converts audio data from input frame to output frame.
+
+Parameters:
+
+- `inputFrame` (Frame): The input audio frame
+- `outputFrame` (Frame): The output audio frame
+
+**Returns**: number of samples converted
+
+##### `Resampler.flush(outputFrame)`
+
+Flushes any remaining samples in the resampler.
+
+Parameters:
+
+- `outputFrame` (Frame): The output audio frame
+
+**Returns**: number of samples flushed
+
+##### `Resampler.destroy()`
+
+Destroys the resampler and frees resources.
+
+**Returns**: void
+
+### Scaler
+
+The Scaler API provides functionality to scale and convert video frames between different pixel formats and resolutions.
+
+```javascript
+const scaler = new ffmpeg.Scaler(
+  sourcePixelFormat,
+  sourceWidth,
+  sourceHeight,
+  targetPixelFormat,
+  targetWidth,
+  targetHeight
+)
+```
+
+Parameters:
+
+- `sourcePixelFormat` (number | string): Source pixel format
+- `sourceWidth` (number): Source width in pixels
+- `sourceHeight` (number): Source height in pixels
+- `targetPixelFormat` (number | string): Target pixel format
+- `targetWidth` (number): Target width in pixels
+- `targetHeight` (number): Target height in pixels
+
+**Returns**: A new `Scaler` instance
+
+#### Methods
+
+##### `Scaler.scale(source, target)`
+
+Scales a source frame to a target frame.
+
+Parameters:
+
+- `source` (Frame): The source frame
+- `target` (Frame): The target frame
+
+**Returns**: boolean indicating success
+
+##### `Scaler.scale(source, y, height, target)`
+
+Scales a portion of a source frame to a target frame.
+
+Parameters:
+
+- `source` (Frame): The source frame
+- `y` (number): Starting Y coordinate
+- `height` (number): Height to scale
+- `target` (Frame): The target frame
+
+**Returns**: boolean indicating success
+
+##### `Scaler.destroy()`
+
+Destroys the Scaler and frees all associated resources.
+
+**Returns**: void
+
 ## License
 
 Apache-2.0
