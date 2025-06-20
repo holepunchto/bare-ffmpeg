@@ -98,8 +98,8 @@ const format = new ffmpeg.InputFormatContext(io, options[, url])
 
 Parameters:
 
-- `io` (IOContext | InputFormat): The IO context or input format
-- `options` (Dictionary): Format options. Required when using InputFormat, ignored when using IOContext
+- `io` (IOContext | InputFormat): The IO context or input format. The ownership of `io` is transferred, meaning you don't have to call the `destroy` method.
+- `options` (Dictionary): Format options. Required when using InputFormat, ignored when using IOContext. The ownership of `options` is transferred.
 - `url` (string, optional): Media source URL. Defaults to platform-specific default
 
 **Returns**: A new `InputFormatContext` instance
@@ -123,7 +123,7 @@ const format = new ffmpeg.OutputFormatContext(formatName, io)
 Parameters:
 
 - `formatName` (string): The output format name (e.g., 'mp4', 'avi')
-- `io` (IOContext): The IO context for writing
+- `io` (IOContext): The IO context for writing. The ownership of `io` is transferred, meaning you don't have to call the `destroy` method.
 
 **Returns**: A new `OutputFormatContext` instance
 
