@@ -24,7 +24,7 @@ endif()
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
-if(MSVC AND arch matches "x64")
+if(MSVC AND arch MATCHES "x64")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1" CACHE STRING "" FORCE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1" CACHE STRING "" FORCE)
 endif()
