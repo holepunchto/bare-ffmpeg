@@ -21,16 +21,11 @@ if(arch MATCHES "arm64")
   )
 endif()
 
-if(MSVC)
-  set(SSE4_1_SUPPORTED OFF CACHE BOOL "" FORCE)
-endif()
-
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
-if(MSVC AND arch MATCHES "x64")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1" CACHE STRING "" FORCE)
+if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
 endif()
 
 declare_port(
