@@ -21,6 +21,10 @@ if(arch MATCHES "arm64")
   )
 endif()
 
+if(MSVC)
+  set(SSE4_1_SUPPORTED OFF CACHE BOOL "" FORCE)
+endif()
+
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
