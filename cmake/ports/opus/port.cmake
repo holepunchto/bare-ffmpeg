@@ -23,24 +23,26 @@ endif()
 
 declare_port(
   "github:xiph/opus#c0eb2ca"
-  libopus
+  opus
   BYPRODUCTS lib/${lib}
   ARGS ${args}
+  PATCHES
+    patches/01-windows-clang.patch
 )
 
-add_library(libopus STATIC IMPORTED GLOBAL)
+add_library(opus STATIC IMPORTED GLOBAL)
 
-add_dependencies(libopus ${libopus})
+add_dependencies(opus ${opus})
 
 set_target_properties(
-  libopus
+  opus
   PROPERTIES
-  IMPORTED_LOCATION "${libopus_PREFIX}/lib/${lib}"
+  IMPORTED_LOCATION "${opus_PREFIX}/lib/${lib}"
 )
 
-file(MAKE_DIRECTORY "${libopus_PREFIX}/include")
+file(MAKE_DIRECTORY "${opus_PREFIX}/include")
 
 target_include_directories(
-  libopus
-  INTERFACE "${libopus_PREFIX}/include"
+  opus
+  INTERFACE "${opus_PREFIX}/include"
 )

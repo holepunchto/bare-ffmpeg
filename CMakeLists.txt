@@ -10,7 +10,7 @@ bare_arch(arch)
 
 fetch_package("github:holepunchto/libjstl#5b85a24")
 
-find_port(ffmpeg FEATURES dav1d svt-av1 x264 libopus)
+find_port(ffmpeg FEATURES dav1d svt-av1 x264 opus)
 
 add_bare_module(bare_ffmpeg)
 
