@@ -24,9 +24,29 @@ endif()
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
-if(MSVC AND OPUS_X86_MAY_HAVE_SSE4_1 AND SSE4_1_SUPPORTED)
-  set_source_files_properties(${celt_sources_sse4_1} ${silk_sources_sse4_1} ${dnn_sources_sse4_1}
-    PROPERTIES COMPILE_FLAGS "/arch:SSE2") # enables sse2 through sse4.1
+if(OPUS_CPU_X86 OR OPUS_CPU_X64)
+    if(OPUS_X86_MAY_HAVE_SSE4_1)
+        target_compile_definitions(opus PRIVATE OPUS_X86_MAY_HAVE_SSE4_1)
+        if(NOT MSVC)
+            set_source_files_properties(${sse4_sources}
+                PROPERTIES COMPILE_FLAGS -msse4.1)
+        endif()
+    endif()
+
+    if(OPUS_X86_MAY_HAVE_AVX2)
+        target_compile_definitions(opus PRIVATE OPUS_X86_MAY_HAVE_AVX2)
+        if(MSVC)
+            set_source_files_properties(${avx2_sources}
+                PROPERTIES COMPILE_FLAGS "/arch:AVX2")
+        else()
+            set_source_files_properties(${avx2_sources}
+                PROPERTIES COMPILE_FLAGS "-mavx2 -mfma -mavx")
+        endif()
+    endif()
+endif()
+
+if(MSVC AND CMAKE_CL_64)
+    target_compile_definitions(opus PRIVATE __SSE__=1 __SSE2__=1)
 endif()
 
 declare_port(
