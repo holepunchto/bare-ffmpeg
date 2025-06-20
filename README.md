@@ -367,6 +367,53 @@ Destroys the CodecParameters and frees all associated resources.
 
 **Returns**: void
 
+### InputFormat
+
+The InputFormat API provides functionality to specify input format for media sources.
+
+```javascript
+const format = new ffmpeg.InputFormat([name])
+```
+
+Parameters:
+
+- `name` (string, optional): The input format name. Defaults to platform-specific default:
+  - `darwin`: 'avfoundation'
+  - `linux`: 'v4l2'
+  - `win32`: 'dshow'
+
+**Returns**: A new `InputFormat` instance
+
+#### Methods
+
+##### `InputFormat.destroy()`
+
+Destroys the InputFormat and frees all associated resources.
+
+**Returns**: void
+
+### OutputFormat
+
+The OutputFormat API provides functionality to specify output format for media files.
+
+```javascript
+const format = new ffmpeg.OutputFormat(name)
+```
+
+Parameters:
+
+- `name` (string): The output format name (e.g., 'mp4', 'avi', 'mov')
+
+**Returns**: A new `OutputFormat` instance
+
+#### Methods
+
+##### `OutputFormat.destroy()`
+
+Destroys the OutputFormat and frees all associated resources.
+
+**Returns**: void
+
 ## License
 
 Apache-2.0
