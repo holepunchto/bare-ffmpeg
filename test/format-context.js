@@ -15,41 +15,37 @@ test('InputFormatContext should be instantiate with IOContext', (t) => {
   })
   const io = new ffmpeg.IOContext(image)
 
-  const inputFormatContext = new ffmpeg.InputFormatContext(io)
-  t.teardown(() => inputFormatContext.destroy())
+  using inputFormatContext = new ffmpeg.InputFormatContext(io)
 
   t.ok(inputFormatContext)
 })
 
 test('InputFormatContext should be instantiate with InputFormat', (t) => {
-  const inputFormatContext = new ffmpeg.InputFormatContext(
+  using inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => inputFormatContext.destroy())
 
   t.ok(inputFormatContext)
 })
 
 test('InputFormatContext should be instantiate with InputFormat', (t) => {
-  const inputFormatContext = new ffmpeg.InputFormatContext(
+  using inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => inputFormatContext.destroy())
 
   t.ok(inputFormatContext)
 })
 
 test('InputFormatContext.getBestStream should return a stream', (t) => {
-  const inputFormatContext = new ffmpeg.InputFormatContext(
+  using inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
     ffmpeg.constants.mediaTypes.VIDEO
@@ -59,12 +55,11 @@ test('InputFormatContext.getBestStream should return a stream', (t) => {
 })
 
 test('InputFormatContext.getBestStream should return a null if no stream is found', (t) => {
-  const inputFormatContext = new ffmpeg.InputFormatContext(
+  using inputFormatContext = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat(fallbackName),
     getOptions(),
     fallbackURL
   )
-  t.teardown(() => inputFormatContext.destroy())
 
   const bestStream = inputFormatContext.getBestStream(
     ffmpeg.constants.mediaTypes.SUBTITLE

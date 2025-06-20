@@ -678,7 +678,7 @@ bare_ffmpeg_codec_context_set_time_base(
   context->handle->time_base.den = den;
 }
 
-static void
+static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
   js_receiver_t,
@@ -688,12 +688,14 @@ bare_ffmpeg_codec_context_send_packet(
   int err;
 
   err = avcodec_send_packet(context->handle, packet->handle);
-  if (err < 0) {
+  if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
     throw js_pending_exception;
   }
+
+  return err == 0;
 }
 
 static bool
