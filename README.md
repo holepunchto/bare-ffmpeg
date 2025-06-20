@@ -416,7 +416,7 @@ Destroys the OutputFormat and frees all associated resources.
 
 ### Frame
 
-The Frame API provides functionality to create and manage media frames.
+This structure describes decoded (raw) audio or video data.
 
 ```javascript
 const frame = new ffmpeg.Frame()
@@ -484,7 +484,7 @@ Destroys the Frame and frees all associated resources.
 
 ### Packet
 
-The Packet API provides functionality to handle encoded media data.
+This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.
 
 ```javascript
 const packet = new ffmpeg.Packet([buffer])
