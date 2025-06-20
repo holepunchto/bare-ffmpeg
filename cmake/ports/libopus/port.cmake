@@ -24,25 +24,9 @@ endif()
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
-if(OPUS_CPU_X86 OR OPUS_CPU_X64)
-    if(OPUS_X86_MAY_HAVE_SSE4_1)
-        target_compile_definitions(opus PRIVATE OPUS_X86_MAY_HAVE_SSE4_1)
-        if(NOT MSVC)
-            set_source_files_properties(${sse4_sources}
-                PROPERTIES COMPILE_FLAGS -msse4.1)
-        endif()
-    endif()
-
-    if(OPUS_X86_MAY_HAVE_AVX2)
-        target_compile_definitions(opus PRIVATE OPUS_X86_MAY_HAVE_AVX2)
-        if(MSVC)
-            set_source_files_properties(${avx2_sources}
-                PROPERTIES COMPILE_FLAGS "/arch:AVX2")
-        else()
-            set_source_files_properties(${avx2_sources}
-                PROPERTIES COMPILE_FLAGS "-mavx2 -mfma -mavx")
-        endif()
-    endif()
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1" CACHE STRING "" FORCE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1" CACHE STRING "" FORCE)
 endif()
 
 declare_port(
