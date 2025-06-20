@@ -46,7 +46,7 @@ if(OPUS_CPU_X86 OR OPUS_CPU_X64)
 endif()
 
 if(MSVC AND CMAKE_CL_64)
-    target_compile_definitions(opus PRIVATE __SSE__=1 __SSE2__=1)
+    target_compile_definitions(libopus PRIVATE __SSE__=1 __SSE2__=1)
 endif()
 
 declare_port(
