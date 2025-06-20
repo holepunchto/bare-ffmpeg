@@ -89,7 +89,6 @@ function decodeImage(image) {
   }
 
   format.destroy()
-  io.destroy()
 
   return result
 }
@@ -130,7 +129,6 @@ function decodeAudio(audio) {
   }
 
   format.destroy()
-  io.destroy()
 
   return result
 }

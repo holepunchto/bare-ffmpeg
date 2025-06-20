@@ -8,7 +8,7 @@ project(bare_ffmpeg C CXX)
 
 bare_arch(arch)
 
-fetch_package("github:holepunchto/libjstl#096669a")
+fetch_package("github:holepunchto/libjstl#5b85a24")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 x264 libopus)
 
