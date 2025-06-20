@@ -24,6 +24,11 @@ endif()
 set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
 set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
+if(MSVC AND OPUS_X86_MAY_HAVE_SSE4_1 AND SSE4_1_SUPPORTED)
+  set_source_files_properties(${celt_sources_sse4_1} ${silk_sources_sse4_1} ${dnn_sources_sse4_1}
+    PROPERTIES COMPILE_FLAGS "/arch:SSE2") # enables sse2 through sse4.1
+endif()
+
 declare_port(
   "github:xiph/opus#c0eb2ca"
   libopus
