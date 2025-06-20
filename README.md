@@ -22,8 +22,6 @@ Parameters:
 
 **Returns**: A new `IOContext` instance
 
-> The IOContext instance is reference counted. Use `.ref()` to increment the reference count and `.unref()` to decrement it. The context will be automatically destroyed when the reference count reaches zero.
-
 Example:
 
 ```javascript
@@ -31,11 +29,16 @@ const image = require('./fixtures/image/sample.jpeg', {
   with: { type: 'binary' }
 })
 const io = new ffmpeg.IOContext(image)
-io.ref() // Increment reference count
-// ... use io context ...
-io.unref() // Decrement reference count
-// Context will be destroyed when reference count reaches zero
+io.destroy()
 ```
+
+#### Methods
+
+##### `IOContext.destroy()`
+
+Destroys the IOContext and frees all associated resources.
+
+**Returns**: void
 
 ### FormatContext
 
@@ -79,6 +82,12 @@ Parameters:
 
 **Returns**: `Stream` instance or null if not found
 
+##### `FormatContext.destroy()`
+
+Destroys the FormatContext and frees all associated resources including streams.
+
+**Returns**: void
+
 ### InputFormatContext
 
 The InputFormatContext API extends `FormatContext` to provide functionality for reading media files.
@@ -95,7 +104,13 @@ Parameters:
 
 **Returns**: A new `InputFormatContext` instance
 
-> The format context instance is reference counted. Use `.ref()` to increment the reference count and `.unref()` to decrement it.
+#### Methods
+
+##### `InputFormatContext.destroy()`
+
+Destroys the InputFormatContext and closes the input format.
+
+**Returns**: void
 
 ### OutputFormatContext
 
@@ -112,8 +127,6 @@ Parameters:
 
 **Returns**: A new `OutputFormatContext` instance
 
-> The format context instance is reference counted. Use `.ref()` to increment the reference count and `.unref()` to decrement it.
-
 #### Methods
 
 ##### `OutputFormatContext.createStream(codec)`
@@ -125,6 +138,12 @@ Parameters:
 - `codec` (Codec): The codec to use for the stream
 
 **Returns**: A new `Stream` instance
+
+##### `OutputFormatContext.destroy()`
+
+Destroys the OutputFormatContext and closes the output format.
+
+**Returns**: void
 
 ## License
 
