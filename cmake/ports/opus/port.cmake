@@ -21,12 +21,12 @@ if(arch MATCHES "arm64")
   )
 endif()
 
-set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
-set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
+# set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
+# set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
 
-if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
-endif()
+# if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
+#   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
+# endif()
 
 declare_port(
   "github:xiph/opus#c0eb2ca"
