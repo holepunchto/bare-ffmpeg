@@ -8,13 +8,7 @@ project(bare_ffmpeg C CXX)
 
 bare_arch(arch)
 
-if(arch MATCHES "arm64")
-  set(OPUS_MAY_HAVE_NEON OFF CACHE BOOL "" FORCE)
-  set(OPUS_PRESUME_NEON ON CACHE BOOL "" FORCE)
-endif()
-
 fetch_package("github:holepunchto/libjstl#096669a")
-fetch_package("github:xiph/opus#c0eb2ca")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 x264 libopus)
 

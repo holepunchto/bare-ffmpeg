@@ -260,7 +260,13 @@ if("x264" IN_LIST features)
 endif()
 
 if("libopus" IN_LIST features)
+  find_port(libopus)
+
+  list(APPEND depends libopus)
   list(APPEND args --enable-libopus)
+  list(APPEND pkg_config_path "${libopus_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE libopus)
 endif()
 
 if(CMAKE_HOST_WIN32)
