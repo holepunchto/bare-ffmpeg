@@ -45,10 +45,6 @@ if(OPUS_CPU_X86 OR OPUS_CPU_X64)
     endif()
 endif()
 
-if(MSVC AND CMAKE_CL_64)
-    target_compile_definitions(libopus PRIVATE __SSE__=1 __SSE2__=1)
-endif()
-
 declare_port(
   "github:xiph/opus#c0eb2ca"
   libopus
