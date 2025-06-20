@@ -414,6 +414,110 @@ Destroys the OutputFormat and frees all associated resources.
 
 **Returns**: void
 
+### Frame
+
+This structure describes decoded (raw) audio or video data.
+
+```javascript
+const frame = new ffmpeg.Frame()
+```
+
+**Returns**: A new `Frame` instance
+
+#### Properties
+
+##### `Frame.width`
+
+Gets or sets the frame width.
+
+**Returns**: number
+
+##### `Frame.height`
+
+Gets or sets the frame height.
+
+**Returns**: number
+
+##### `Frame.pixelFormat`
+
+Gets or sets the pixel format.
+
+**Returns**: number (pixel format constant)
+
+##### `Frame.format`
+
+Gets or sets the sample format for audio frames.
+
+**Returns**: number (sample format constant)
+
+##### `Frame.channelLayout`
+
+Gets or sets the channel layout for audio frames.
+
+**Returns**: number (channel layout constant)
+
+##### `Frame.nbSamples`
+
+Gets or sets the number of audio samples.
+
+**Returns**: number
+
+#### Methods
+
+##### `Frame.alloc()`
+
+Allocates memory for the frame data.
+
+**Returns**: void
+
+##### `Frame.destroy()`
+
+Destroys the Frame and frees all associated resources.
+
+**Returns**: void
+
+### Packet
+
+This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.
+
+```javascript
+const packet = new ffmpeg.Packet([buffer])
+```
+
+Parameters:
+
+- `buffer` (Buffer, optional): Initial packet data
+
+**Returns**: A new `Packet` instance
+
+#### Properties
+
+##### `Packet.data`
+
+Gets the packet data buffer.
+
+**Returns**: Buffer
+
+##### `Packet.streamIndex`
+
+Gets the stream index this packet belongs to.
+
+**Returns**: number
+
+#### Methods
+
+##### `Packet.unref()`
+
+Decrements the reference count and unreferences the packet.
+
+**Returns**: void
+
+##### `Packet.destroy()`
+
+Destroys the Packet and frees all associated resources.
+
+**Returns**: void
+
 ## License
 
 Apache-2.0
