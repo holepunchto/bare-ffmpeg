@@ -3,3 +3,4 @@ prebuilds/
 sandbox/
 node_modules/
 package-lock.json
+.cache

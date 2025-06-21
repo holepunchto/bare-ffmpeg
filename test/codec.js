@@ -19,6 +19,12 @@ test('codec class should expose a static AAC builder', (t) => {
   t.ok(codec.decoder)
 })
 
+test('codec class should expose a static OPUS builder', (t) => {
+  const codec = ffmpeg.Codec.OPUS
+  t.ok(codec.encoder)
+  t.ok(codec.decoder)
+})
+
 test('codec class should expose a static AV1 builder', (t) => {
   const codec = ffmpeg.Codec.AV1
   t.ok(codec.encoder)
