@@ -259,14 +259,14 @@ if("x264" IN_LIST features)
   target_link_libraries(avcodec INTERFACE x264)
 endif()
 
-if("libopus" IN_LIST features)
-  find_port(libopus)
+if("opus" IN_LIST features)
+  find_port(opus)
 
-  list(APPEND depends libopus)
+  list(APPEND depends opus)
   list(APPEND args --enable-libopus)
-  list(APPEND pkg_config_path "${libopus_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_path "${opus_PREFIX}/lib/pkgconfig")
 
-  target_link_libraries(avcodec INTERFACE libopus)
+  target_link_libraries(avcodec INTERFACE opus)
 endif()
 
 if(CMAKE_HOST_WIN32)
@@ -454,6 +454,28 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
+elseif(ANDROID)
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      android
+      mediandk
+  )
+
+  target_link_libraries(
+    avdevice
+    INTERFACE
+      android
+      camera2ndk
+      mediandk
+  )
+
+  target_link_libraries(
+    avutil
+    INTERFACE
+      android
+      mediandk
+  )
 elseif(WIN32)
   target_link_libraries(
     avcodec
