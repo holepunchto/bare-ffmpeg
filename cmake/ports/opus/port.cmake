@@ -26,8 +26,8 @@ declare_port(
   opus
   BYPRODUCTS lib/${lib}
   ARGS ${args}
-  PATCHES
-    patches/01-windows-clang.patch
+  # PATCHES
+  #   patches/01-windows-clang.patch
 )
 
 add_library(opus STATIC IMPORTED GLOBAL)

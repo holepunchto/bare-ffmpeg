@@ -260,11 +260,11 @@ if("x264" IN_LIST features)
 endif()
 
 if("opus" IN_LIST features)
-  find_port(libopus)
+  find_port(opus)
 
   list(APPEND depends opus)
   list(APPEND args --enable-libopus)
-  list(APPEND pkg_config_path "${libopus_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_path "${opus_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE opus)
 endif()
