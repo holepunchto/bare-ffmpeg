@@ -24,7 +24,9 @@ if(arch MATCHES "arm64")
 endif()
 
 if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
+  list(APPEND args
+    -DCMAKE_C_FLAGS=-msse4.1
+  )
 endif()
 
 declare_port(
