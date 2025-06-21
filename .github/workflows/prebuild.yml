@@ -64,7 +64,7 @@ jobs:
           sudo apt update
           sudo apt install -y meson nasm
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
-      - run: brew install meson nasm
+      - run: brew install meson nasm pkgconf
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco install --ignore-package-exit-codes meson nasm msys2
         if: ${{ matrix.platform == 'win32' }}
