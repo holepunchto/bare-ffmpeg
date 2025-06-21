@@ -23,7 +23,7 @@ if(arch MATCHES "arm64")
   )
 endif()
 
-if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
+if(MSVC AND arch MATCHES "x64")
   list(APPEND args
     -DCMAKE_C_FLAGS=-msse4.1
   )
