@@ -259,7 +259,7 @@ if("x264" IN_LIST features)
   target_link_libraries(avcodec INTERFACE x264)
 endif()
 
-if("libopus" IN_LIST features)
+if("opus" IN_LIST features)
   find_port(libopus)
 
   list(APPEND depends libopus)
