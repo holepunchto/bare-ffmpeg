@@ -6,8 +6,6 @@ find_package(cmake-ports REQUIRED PATHS node_modules/cmake-ports)
 
 project(bare_ffmpeg C CXX)
 
-bare_arch(arch)
-
 fetch_package("github:holepunchto/libjstl#5b85a24")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 x264 opus)
