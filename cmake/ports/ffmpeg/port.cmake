@@ -266,7 +266,7 @@ if("opus" IN_LIST features)
   list(APPEND args --enable-libopus)
   list(APPEND pkg_config_path "${libopus_PREFIX}/lib/pkgconfig")
 
-  target_link_libraries(avcodec INTERFACE libopus)
+  target_link_libraries(avcodec INTERFACE opus)
 endif()
 
 if(CMAKE_HOST_WIN32)
