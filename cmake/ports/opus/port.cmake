@@ -11,6 +11,8 @@ set(args
   -DBUILD_SHARED_LIBS=OFF
   -DOPUS_BUILD_PROGRAMS=OFF
   -DOPUS_BUILD_TESTING=OFF
+  -DOPUS_X86_MAY_HAVE_SSE4_1=ON
+  -DOPUS_X86_MAY_HAVE_AVX2=ON
 )
 
 bare_arch(arch)
@@ -21,9 +23,6 @@ if(arch MATCHES "arm64")
   )
 endif()
 
-set(OPUS_X86_MAY_HAVE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 runtime detection")
-set(OPUS_X86_MAY_HAVE_AVX2 ON CACHE BOOL "Enable AVX2 runtime detection")
-
 if(MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang" AND arch MATCHES "x64")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
 endif()
@@ -33,8 +32,6 @@ declare_port(
   opus
   BYPRODUCTS lib/${lib}
   ARGS ${args}
-  # PATCHES
-  #   patches/01-windows-clang.patch
 )
 
 add_library(opus STATIC IMPORTED GLOBAL)
