@@ -81,7 +81,7 @@ jobs:
       - if: ${{ always() }}
         run: cat /home/runner/work/bare-ffmpeg/bare-ffmpeg/build/_ports/github+FFmpeg+FFmpeg/src/github+FFmpeg+FFmpeg-stamp/github+FFmpeg+FFmpeg-configure.log
       - if: ${{ always() }}
-        run: cat ls -la /home/runner/work/bare-ffmpeg/bare-ffmpeg/build/_ports/github+xiph+opus/lib/pkgconfig/
+        run: ls -la /home/runner/work/bare-ffmpeg/bare-ffmpeg/build/_ports/github+xiph+opus/lib/pkgconfig/
       - run: bare-make install
       - uses: actions/upload-artifact@v4
         with:
