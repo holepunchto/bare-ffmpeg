@@ -262,7 +262,7 @@ endif()
 if("opus" IN_LIST features)
   find_port(libopus)
 
-  list(APPEND depends libopus)
+  list(APPEND depends opus)
   list(APPEND args --enable-libopus)
   list(APPEND pkg_config_path "${libopus_PREFIX}/lib/pkgconfig")
 
