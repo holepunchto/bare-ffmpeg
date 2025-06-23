@@ -36,7 +36,7 @@ io.destroy()
 
 ##### `IOContext.destroy()`
 
-Destroys the `IOContext` and frees all associated resources.
+Destroys the `IOContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -84,7 +84,7 @@ Parameters:
 
 ##### `FormatContext.destroy()`
 
-Destroys the `FormatContext` and frees all associated resources including streams.
+Destroys the `FormatContext` and frees all associated resources including streams. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -108,7 +108,7 @@ Parameters:
 
 ##### `InputFormatContext.destroy()`
 
-Destroys the `InputFormatContext` and closes the input format.
+Destroys the `InputFormatContext` and closes the input format. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: void
 
@@ -141,7 +141,7 @@ Parameters:
 
 ##### `OutputFormatContext.destroy()`
 
-Destroys the `OutputFormatContext` and closes the output format.
+Destroys the `OutputFormatContext` and closes the output format. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -301,7 +301,7 @@ Parameters:
 
 ##### `CodecContext.destroy()`
 
-Destroys the `CodecContext` and frees all associated resources.
+Destroys the `CodecContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -363,7 +363,7 @@ Parameters:
 
 ##### `CodecParameters.destroy()`
 
-Destroys the `CodecParameters` and frees all associated resources.
+Destroys the `CodecParameters` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -388,7 +388,7 @@ Parameters:
 
 ##### `InputFormat.destroy()`
 
-Destroys the `InputFormat` and frees all associated resources.
+Destroys the `InputFormat` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -410,7 +410,7 @@ Parameters:
 
 ##### `OutputFormat.destroy()`
 
-Destroys the `OutputFormat` and frees all associated resources.
+Destroys the `OutputFormat` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -472,7 +472,7 @@ Allocates memory for the frame data.
 
 ##### `Frame.destroy()`
 
-Destroys the `Frame` and frees all associated resources.
+Destroys the `Frame` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -514,7 +514,7 @@ Decrements the reference count and unreferences the packet.
 
 ##### `Packet.destroy()`
 
-Destroys the `Packet` and frees all associated resources.
+Destroys the `Packet` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -678,7 +678,7 @@ Creates and opens an encoder for this stream.
 
 ##### `Stream.destroy()`
 
-Destroys the `Stream` and frees all associated resources.
+Destroys the `Stream` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -753,7 +753,7 @@ Parameters:
 
 ##### `Resampler.destroy()`
 
-Destroys the `Resampler` and frees all associated resources.
+Destroys the `Resampler` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
@@ -811,7 +811,7 @@ Parameters:
 
 ##### `Scaler.destroy()`
 
-Destroys the `Scaler` and frees all associated resources.
+Destroys the `Scaler` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 
