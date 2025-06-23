@@ -2,7 +2,7 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('resampler converts frames', (t) => {
-  const resampler = new ffmpeg.Resampler(
+  using resampler = new ffmpeg.Resampler(
     44100,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
@@ -11,24 +11,18 @@ test('resampler converts frames', (t) => {
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const inputFrame = createAudioFrame(
+  using inputFrame = createAudioFrame(
     1024,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
   const outputSamples = Math.ceil((1024 * 48000) / 44100)
-  const outputFrame = createAudioFrame(
+  using outputFrame = createAudioFrame(
     outputSamples,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
-
-  t.teardown(() => {
-    inputFrame.destroy()
-    outputFrame.destroy()
-    resampler.destroy()
-  })
 
   const converted = resampler.convert(inputFrame, outputFrame)
   t.ok(converted >= 0, 'conversion returns non-negative sample count')
@@ -38,7 +32,7 @@ test('resampler converts frames', (t) => {
 test('resampler converts audio data', (t) => {
   const inputRate = 44100
   const outputRate = 48000
-  const resampler = new ffmpeg.Resampler(
+  using resampler = new ffmpeg.Resampler(
     inputRate,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
@@ -48,23 +42,17 @@ test('resampler converts audio data', (t) => {
   )
 
   const inputSamples = 1024
-  const inputFrame = createAudioFrame(
+  using inputFrame = createAudioFrame(
     inputSamples,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const outputFrame = createAudioFrame(
+  using outputFrame = createAudioFrame(
     inputSamples * 2,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
-
-  t.teardown(() => {
-    inputFrame.destroy()
-    outputFrame.destroy()
-    resampler.destroy()
-  })
 
   const buffer = inputFrame.audioChannel()
   for (let i = 0; i < buffer.length; i += 2) {
@@ -93,7 +81,7 @@ test('resampler converts audio data', (t) => {
 })
 
 test('resampler can flush remaining samples', (t) => {
-  const resampler = new ffmpeg.Resampler(
+  using resampler = new ffmpeg.Resampler(
     44100,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16,
@@ -102,23 +90,17 @@ test('resampler can flush remaining samples', (t) => {
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const inputFrame = createAudioFrame(
+  using inputFrame = createAudioFrame(
     1024,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const outputFrame = createAudioFrame(
+  using outputFrame = createAudioFrame(
     2048,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.S16
   )
-
-  t.teardown(() => {
-    inputFrame.destroy()
-    outputFrame.destroy()
-    resampler.destroy()
-  })
 
   resampler.convert(inputFrame, outputFrame)
 
@@ -177,11 +159,11 @@ test('resampler converts between different sample formats', (t) => {
   })
 
   const io = new ffmpeg.IOContext(audio)
-  const format = new ffmpeg.InputFormatContext(io)
+  using format = new ffmpeg.InputFormatContext(io)
   const stream = format.streams[0]
-  const decoder = stream.decoder()
+  using decoder = stream.decoder()
 
-  const resampler = new ffmpeg.Resampler(
+  using resampler = new ffmpeg.Resampler(
     stream.codecParameters.sampleRate,
     ffmpeg.constants.channelLayouts.MONO,
     ffmpeg.constants.sampleFormats.S16,
@@ -190,12 +172,6 @@ test('resampler converts between different sample formats', (t) => {
     ffmpeg.constants.sampleFormats.FLTP
   )
 
-  t.teardown(() => {
-    stream.destroy()
-    decoder.destroy()
-    resampler.destroy()
-  })
-
   const packet = new ffmpeg.Packet()
   const inputFrame = new ffmpeg.Frame()
 
@@ -203,7 +179,7 @@ test('resampler converts between different sample formats', (t) => {
     decoder.sendPacket(packet)
 
     if (decoder.receiveFrame(inputFrame)) {
-      const outputFrame = new ffmpeg.Frame()
+      using outputFrame = new ffmpeg.Frame()
       outputFrame.format = ffmpeg.constants.sampleFormats.FLTP
       outputFrame.nbSamples = inputFrame.nbSamples
       outputFrame.channelLayout =
@@ -212,8 +188,6 @@ test('resampler converts between different sample formats', (t) => {
 
       const converted = resampler.convert(inputFrame, outputFrame)
       t.is(converted, inputFrame.nbSamples, 'converted all samples')
-
-      outputFrame.destroy()
     }
   }
 })
