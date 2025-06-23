@@ -6,25 +6,25 @@ Low-level FFmpeg bindings for Bare.
 npm i bare-ffmpeg
 ```
 
-## Documentation
+## API
 
-### IOContext
+### `IOContext`
 
-The IOContext API provides functionality to create input/output contexts for media files.
+The `IOContext` API provides functionality to create input/output contexts for media files.
 
-```javascript
+```js
 const io = new ffmpeg.IOContext(buffer)
 ```
 
 Parameters:
 
-- `buffer` (Buffer): The media data buffer
+- `buffer` (`Buffer`): The media data buffer
 
 **Returns**: A new `IOContext` instance
 
 Example:
 
-```javascript
+```js
 const image = require('./fixtures/image/sample.jpeg', {
   with: { type: 'binary' }
 })
@@ -36,13 +36,13 @@ io.destroy()
 
 ##### `IOContext.destroy()`
 
-Destroys the IOContext and frees all associated resources.
+Destroys the `IOContext` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### FormatContext
+### `FormatContext`
 
-The FormatContext API provides the base functionality for reading and writing media files.
+The `FormatContext` API provides the base functionality for reading and writing media files.
 
 > This is the base class that `InputFormatContext` and `OutputFormatContext` extend.
 
@@ -52,7 +52,7 @@ The FormatContext API provides the base functionality for reading and writing me
 
 Gets the IO context associated with this format context.
 
-**Returns**: `IOContext` instance or null
+**Returns**: `IOContext` instance or `null`
 
 ##### `FormatContext.streams`
 
@@ -68,9 +68,9 @@ Reads the next frame from the media file into a packet.
 
 Parameters:
 
-- `packet` (Packet): The packet to store the frame data
+- `packet` (`Packet`): The packet to store the frame data
 
-**Returns**: boolean indicating if a frame was read
+**Returns**: `boolean` indicating if a frame was read
 
 ##### `FormatContext.getBestStream(type)`
 
@@ -78,29 +78,29 @@ Gets the best stream of the specified media type.
 
 Parameters:
 
-- `type` (number): The media type from `ffmpeg.constants.mediaTypes`
+- `type` (`number`): The media type from `ffmpeg.constants.mediaTypes`
 
-**Returns**: `Stream` instance or null if not found
+**Returns**: `Stream` instance or `null` if not found
 
 ##### `FormatContext.destroy()`
 
-Destroys the FormatContext and frees all associated resources including streams.
+Destroys the `FormatContext` and frees all associated resources including streams.
 
-**Returns**: void
+**Returns**: `void`
 
-### InputFormatContext
+### `InputFormatContext`
 
-The InputFormatContext API extends `FormatContext` to provide functionality for reading media files.
+The `InputFormatContext` API extends `FormatContext` to provide functionality for reading media files.
 
-```javascript
+```js
 const format = new ffmpeg.InputFormatContext(io, options[, url])
 ```
 
 Parameters:
 
-- `io` (IOContext | InputFormat): The IO context or input format. The ownership of `io` is transferred, meaning you don't have to call the `destroy` method.
-- `options` (Dictionary): Format options. Required when using InputFormat, ignored when using IOContext. The ownership of `options` is transferred.
-- `url` (string, optional): Media source URL. Defaults to platform-specific default
+- `io` (`IOContext` | `InputFormat`): The IO context or input format. The ownership of `io` is transferred.
+- `options` (`Dictionary`): Format options. Required when using `InputFormat`, ignored when using `IOContext`. The ownership of `options` is transferred.
+- `url` (`string`, optional): Media source URL. Defaults to a platform-specific value
 
 **Returns**: A new `InputFormatContext` instance
 
@@ -108,22 +108,22 @@ Parameters:
 
 ##### `InputFormatContext.destroy()`
 
-Destroys the InputFormatContext and closes the input format.
+Destroys the `InputFormatContext` and closes the input format.
 
 **Returns**: void
 
-### OutputFormatContext
+### `OutputFormatContext`
 
-The OutputFormatContext API extends `FormatContext` to provide functionality for writing media files.
+The `OutputFormatContext` API extends `FormatContext` to provide functionality for writing media files.
 
-```javascript
+```js
 const format = new ffmpeg.OutputFormatContext(formatName, io)
 ```
 
 Parameters:
 
-- `formatName` (string): The output format name (e.g., 'mp4', 'avi')
-- `io` (IOContext): The IO context for writing. The ownership of `io` is transferred, meaning you don't have to call the `destroy` method.
+- `formatName` (`string`): The output format name (e.g., `'mp4'`, `'avi'`)
+- `io` (`IOContext`): The IO context for writing. The ownership of `io` is transferred.
 
 **Returns**: A new `OutputFormatContext` instance
 
@@ -135,21 +135,21 @@ Creates a new stream in the output format.
 
 Parameters:
 
-- `codec` (Codec): The codec to use for the stream
+- `codec` (`Codec`): The codec to use for the stream
 
 **Returns**: A new `Stream` instance
 
 ##### `OutputFormatContext.destroy()`
 
-Destroys the OutputFormatContext and closes the output format.
+Destroys the `OutputFormatContext` and closes the output format.
 
-**Returns**: void
+**Returns**: `void`
 
-### Codec
+### `Codec`
 
-The Codec API provides access to FFmpeg codecs for encoding and decoding.
+The `Codec` API provides access to FFmpeg codecs for encoding and decoding.
 
-#### Static Properties
+#### Static properties
 
 ##### `Codec.H264`
 
@@ -181,7 +181,7 @@ AV1 video codec.
 
 Gets the codec ID.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Codec.encoder`
 
@@ -203,15 +203,15 @@ Gets a codec by ID.
 
 Parameters:
 
-- `id` (number): The codec ID
+- `id` (`number`): The codec ID
 
 **Returns**: `Codec` instance
 
-### CodecContext
+### `CodecContext`
 
-The CodecContext API provides functionality to encode or decode media frames.
+The `CodecContext` API provides functionality to encode or decode media frames.
 
-```javascript
+```js
 const codecCtx = new ffmpeg.CodecContext(codec)
 ```
 
@@ -233,19 +233,19 @@ Gets or sets the time base for the codec context.
 
 Gets or sets the pixel format for video codecs.
 
-**Returns**: number (pixel format constant)
+**Returns**: `number` (pixel format constant)
 
 ##### `CodecContext.width`
 
 Gets or sets the frame width for video codecs.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `CodecContext.height`
 
 Gets or sets the frame height for video codecs.
 
-**Returns**: number
+**Returns**: `number`
 
 #### Methods
 
@@ -255,7 +255,7 @@ Opens the codec context for encoding/decoding.
 
 Parameters:
 
-- `options` (Dictionary, optional): Codec-specific options
+- `options` (`Dictionary`, optional): Codec-specific options
 
 **Returns**: `CodecContext` instance (for chaining)
 
@@ -265,9 +265,9 @@ Sends a frame to the encoder.
 
 Parameters:
 
-- `frame` (Frame): The frame to encode
+- `frame` (`Frame`): The frame to encode
 
-**Returns**: boolean indicating if the frame was accepted
+**Returns**: `boolean` indicating if the frame was sent
 
 ##### `CodecContext.receiveFrame(frame)`
 
@@ -275,9 +275,9 @@ Receives a decoded frame from the decoder.
 
 Parameters:
 
-- `frame` (Frame): The frame to store the decoded data
+- `frame` (`Frame`): The frame to store the decoded data
 
-**Returns**: boolean indicating if a frame was received
+**Returns**: `boolean` indicating if a frame was received
 
 ##### `CodecContext.sendPacket(packet)`
 
@@ -285,9 +285,9 @@ Sends a packet to the decoder.
 
 Parameters:
 
-- `packet` (Packet): The packet to decode
+- `packet` (`Packet`): The packet to decode
 
-**Returns**: `CodecContext` instance (for chaining)
+**Returns**: `boolean` indicating if the packet was sent
 
 ##### `CodecContext.receivePacket(packet)`
 
@@ -295,21 +295,21 @@ Receives an encoded packet from the encoder.
 
 Parameters:
 
-- `packet` (Packet): The packet to store the encoded data
+- `packet` (`Packet`): The packet to store the encoded data
 
-**Returns**: boolean indicating if a packet was received
+**Returns**: `boolean` indicating if a packet was received
 
 ##### `CodecContext.destroy()`
 
-Destroys the CodecContext and frees all associated resources.
+Destroys the `CodecContext` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### CodecParameters
+### `CodecParameters`
 
-The CodecParameters API provides functionality to access codec parameters from streams.
+The `CodecParameters` API provides functionality to access codec parameters from streams.
 
-```javascript
+```js
 const params = stream.codecParameters // Get from stream
 ```
 
@@ -319,25 +319,25 @@ const params = stream.codecParameters // Get from stream
 
 Gets the bit rate.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `CodecParameters.bitsPerCodedSample`
 
 Gets the bits per coded sample.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `CodecParameters.bitsPerRawSample`
 
 Gets the bits per raw sample.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `CodecParameters.sampleRate`
 
 Gets the sample rate for audio codecs.
 
-**Returns**: number
+**Returns**: `number`
 
 #### Methods
 
@@ -347,9 +347,9 @@ Copies parameters from a codec context.
 
 Parameters:
 
-- `context` (CodecContext): The codec context
+- `context` (`CodecContext`): The codec context
 
-**Returns**: void
+**Returns**: `void`
 
 ##### `CodecParameters.toContext(context)`
 
@@ -357,30 +357,30 @@ Copies parameters to a codec context.
 
 Parameters:
 
-- `context` (CodecContext): The codec context
+- `context` (`CodecContext`): The codec context
 
-**Returns**: void
+**Returns**: `void`
 
 ##### `CodecParameters.destroy()`
 
-Destroys the CodecParameters and frees all associated resources.
+Destroys the `CodecParameters` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### InputFormat
+### `InputFormat`
 
-The InputFormat API provides functionality to specify input format for media sources.
+The `InputFormat` API provides functionality to specify input format for media sources.
 
-```javascript
+```js
 const format = new ffmpeg.InputFormat([name])
 ```
 
 Parameters:
 
-- `name` (string, optional): The input format name. Defaults to platform-specific default:
-  - `darwin`: 'avfoundation'
-  - `linux`: 'v4l2'
-  - `win32`: 'dshow'
+- `name` (`string`, optional): The input format name. Defaults to a platform-specific value:
+  - `darwin`, `ios`: ``'avfoundation'`
+  - `linux`: `'v4l2'`
+  - `win32`: `'dshow'`
 
 **Returns**: A new `InputFormat` instance
 
@@ -388,21 +388,21 @@ Parameters:
 
 ##### `InputFormat.destroy()`
 
-Destroys the InputFormat and frees all associated resources.
+Destroys the `InputFormat` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### OutputFormat
+### `OutputFormat`
 
-The OutputFormat API provides functionality to specify output format for media files.
+The `OutputFormat` API provides functionality to specify output format for media files.
 
-```javascript
+```js
 const format = new ffmpeg.OutputFormat(name)
 ```
 
 Parameters:
 
-- `name` (string): The output format name (e.g., 'mp4', 'avi', 'mov')
+- `name` (`string`): The output format name (e.g., `'mp4'`, `'avi'`, `'mov'`)
 
 **Returns**: A new `OutputFormat` instance
 
@@ -410,15 +410,15 @@ Parameters:
 
 ##### `OutputFormat.destroy()`
 
-Destroys the OutputFormat and frees all associated resources.
+Destroys the `OutputFormat` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### Frame
+### `Frame`
 
 This structure describes decoded (raw) audio or video data.
 
-```javascript
+```js
 const frame = new ffmpeg.Frame()
 ```
 
@@ -430,37 +430,37 @@ const frame = new ffmpeg.Frame()
 
 Gets or sets the frame width.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Frame.height`
 
 Gets or sets the frame height.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Frame.pixelFormat`
 
 Gets or sets the pixel format.
 
-**Returns**: number (pixel format constant)
+**Returns**: `number` (pixel format constant)
 
 ##### `Frame.format`
 
 Gets or sets the sample format for audio frames.
 
-**Returns**: number (sample format constant)
+**Returns**: `number` (sample format constant)
 
 ##### `Frame.channelLayout`
 
 Gets or sets the channel layout for audio frames.
 
-**Returns**: number (channel layout constant)
+**Returns**: `number` (channel layout constant)
 
 ##### `Frame.nbSamples`
 
 Gets or sets the number of audio samples.
 
-**Returns**: number
+**Returns**: `number`
 
 #### Methods
 
@@ -468,25 +468,25 @@ Gets or sets the number of audio samples.
 
 Allocates memory for the frame data.
 
-**Returns**: void
+**Returns**: `void`
 
 ##### `Frame.destroy()`
 
-Destroys the Frame and frees all associated resources.
+Destroys the `Frame` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### Packet
+### `Packet`
 
 This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.
 
-```javascript
+```js
 const packet = new ffmpeg.Packet([buffer])
 ```
 
 Parameters:
 
-- `buffer` (Buffer, optional): Initial packet data
+- `buffer` (`Buffer`, optional): Initial packet data
 
 **Returns**: A new `Packet` instance
 
@@ -496,13 +496,13 @@ Parameters:
 
 Gets the packet data buffer.
 
-**Returns**: Buffer
+**Returns**: `Buffer`
 
 ##### `Packet.streamIndex`
 
 Gets the stream index this packet belongs to.
 
-**Returns**: number
+**Returns**: `number`
 
 #### Methods
 
@@ -510,28 +510,28 @@ Gets the stream index this packet belongs to.
 
 Decrements the reference count and unreferences the packet.
 
-**Returns**: void
+**Returns**: `void`
 
 ##### `Packet.destroy()`
 
-Destroys the Packet and frees all associated resources.
+Destroys the `Packet` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### Image
+### `Image`
 
-The Image API provides functionality to create and manage image buffers.
+The `Image` API provides functionality to create and manage image buffers.
 
-```javascript
+```js
 const image = new ffmpeg.Image(pixelFormat, width, height[, align])
 ```
 
 Parameters:
 
-- `pixelFormat` (number | string): The pixel format
-- `width` (number): The image width in pixels
-- `height` (number): The image height in pixels
-- `align` (number, optional): Memory alignment. Defaults to 1
+- `pixelFormat` (`number` | `string`): The pixel format
+- `width` (`number`): The image width in pixels
+- `height` (`number`): The image height in pixels
+- `align` (`number`, optional): Memory alignment. Defaults to 1
 
 **Returns**: A new `Image` instance
 
@@ -541,31 +541,31 @@ Parameters:
 
 Gets the pixel format.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Image.width`
 
 Gets the image width.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Image.height`
 
 Gets the image height.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Image.align`
 
 Gets the memory alignment.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Image.data`
 
 Gets the image data buffer.
 
-**Returns**: Buffer
+**Returns**: `Buffer`
 
 #### Methods
 
@@ -575,7 +575,7 @@ Fills a frame with the image data.
 
 Parameters:
 
-- `frame` (Frame): The frame to fill
+- `frame` (`Frame`): The frame to fill
 
 **Returns**: void
 
@@ -585,9 +585,11 @@ Gets the line size for a specific plane.
 
 Parameters:
 
-- `plane` (number, optional): Plane index. Defaults to 0
+- `plane` (`number`, optional): Plane index. Defaults to 0
 
-**Returns**: number
+**Returns**: `number`
+
+#### Static methods
 
 ##### `Image.lineSize(pixelFormat, width[, plane])`
 
@@ -595,24 +597,24 @@ Static method to get line size for a pixel format.
 
 Parameters:
 
-- `pixelFormat` (number | string): The pixel format
-- `width` (number): The image width
-- `plane` (number, optional): Plane index. Defaults to 0
+- `pixelFormat` (`number` | `string`): The pixel format
+- `width` (`number`): The image width
+- `plane` (`number`, optional): Plane index. Defaults to 0
 
-**Returns**: number
+**Returns**: `number`
 
-### Rational
+### `Rational`
 
-The Rational API provides functionality to represent rational numbers (fractions).
+The `Rational` API provides functionality to represent rational numbers (fractions).
 
-```javascript
+```js
 const rational = new ffmpeg.Rational(numerator, denominator)
 ```
 
 Parameters:
 
-- `numerator` (number): The numerator
-- `denominator` (number): The denominator
+- `numerator` (`number`): The numerator
+- `denominator` (`number`): The denominator
 
 **Returns**: A new `Rational` instance
 
@@ -622,25 +624,25 @@ Parameters:
 
 Gets the numerator.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Rational.denominator`
 
 Gets the denominator.
 
-**Returns**: number
+**Returns**: `number`
 
-### Stream
+### `Stream`
 
-The Stream API provides functionality to access media stream information and create decoders/encoders.
+The `Stream` API provides functionality to access media stream information and create decoders/encoders.
 
-```javascript
+```js
 const stream = new ffmpeg.Stream(handle)
 ```
 
 Parameters:
 
-- `handle` (ArrayBuffer): Internal stream handle representing AVFormatContext from FFmpeg API
+- `handle` (`ArrayBuffer`): Internal stream handle
 
 **Returns**: A new `Stream` instance
 
@@ -676,15 +678,15 @@ Creates and opens an encoder for this stream.
 
 ##### `Stream.destroy()`
 
-Destroys the Stream and frees all associated resources.
+Destroys the `Stream` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### Resampler
+### `Resampler`
 
-The Resampler API provides functionality to convert audio between different sample rates, channel layouts, and sample formats.
+The `Resampler` API provides functionality to convert audio between different sample rates, channel layouts, and sample formats.
 
-```javascript
+```js
 const resampler = new ffmpeg.Resampler(
   inputSampleRate,
   inputChannelLayout,
@@ -697,12 +699,12 @@ const resampler = new ffmpeg.Resampler(
 
 Parameters:
 
-- `inputSampleRate` (number): Input sample rate in Hz
-- `inputChannelLayout` (number): Input channel layout constant
-- `inputSampleFormat` (number): Input sample format constant
-- `outputSampleRate` (number): Output sample rate in Hz
-- `outputChannelLayout` (number): Output channel layout constant
-- `outputSampleFormat` (number): Output sample format constant
+- `inputSampleRate` (`number`): Input sample rate in Hz
+- `inputChannelLayout` (`number`): Input channel layout constant
+- `inputSampleFormat` (`number`): Input sample format constant
+- `outputSampleRate` (`number`): Output sample rate in Hz
+- `outputChannelLayout` (`number`): Output channel layout constant
+- `outputSampleFormat` (`number`): Output sample format constant
 
 **Returns**: A new `Resampler` instance
 
@@ -712,19 +714,19 @@ Parameters:
 
 Gets the input sample rate.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Resampler.outputSampleRate`
 
 Gets the output sample rate.
 
-**Returns**: number
+**Returns**: `number`
 
 ##### `Resampler.delay`
 
 Gets the resampler delay in samples.
 
-**Returns**: number
+**Returns**: `number`
 
 #### Methods
 
@@ -734,10 +736,10 @@ Converts audio data from input frame to output frame.
 
 Parameters:
 
-- `inputFrame` (Frame): The input audio frame
-- `outputFrame` (Frame): The output audio frame
+- `inputFrame` (`Frame`): The input audio frame
+- `outputFrame` (`Frame`): The output audio frame
 
-**Returns**: number of samples converted
+**Returns**: `number` of samples converted
 
 ##### `Resampler.flush(outputFrame)`
 
@@ -745,21 +747,21 @@ Flushes any remaining samples in the resampler.
 
 Parameters:
 
-- `outputFrame` (Frame): The output audio frame
+- `outputFrame` (`Frame`): The output audio frame
 
-**Returns**: number of samples flushed
+**Returns**: `number` of samples flushed
 
 ##### `Resampler.destroy()`
 
-Destroys the resampler and frees resources.
+Destroys the `Resampler` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
-### Scaler
+### `Scaler`
 
-The Scaler API provides functionality to scale and convert video frames between different pixel formats and resolutions.
+The `Scaler` API provides functionality to scale and convert video frames between different pixel formats and resolutions.
 
-```javascript
+```js
 const scaler = new ffmpeg.Scaler(
   sourcePixelFormat,
   sourceWidth,
@@ -772,12 +774,12 @@ const scaler = new ffmpeg.Scaler(
 
 Parameters:
 
-- `sourcePixelFormat` (number | string): Source pixel format
-- `sourceWidth` (number): Source width in pixels
-- `sourceHeight` (number): Source height in pixels
-- `targetPixelFormat` (number | string): Target pixel format
-- `targetWidth` (number): Target width in pixels
-- `targetHeight` (number): Target height in pixels
+- `sourcePixelFormat` (`number` | `string`): Source pixel format
+- `sourceWidth` (`number`): Source width in pixels
+- `sourceHeight` (`number`): Source height in pixels
+- `targetPixelFormat` (`number` | `string`): Target pixel format
+- `targetWidth` (`number`): Target width in pixels
+- `targetHeight` (`number`): Target height in pixels
 
 **Returns**: A new `Scaler` instance
 
@@ -789,10 +791,10 @@ Scales a source frame to a target frame.
 
 Parameters:
 
-- `source` (Frame): The source frame
-- `target` (Frame): The target frame
+- `source` (`Frame`): The source frame
+- `target` (`Frame`): The target frame
 
-**Returns**: boolean indicating success
+**Returns**: `boolean` indicating success
 
 ##### `Scaler.scale(source, y, height, target)`
 
@@ -800,18 +802,18 @@ Scales a portion of a source frame to a target frame.
 
 Parameters:
 
-- `source` (Frame): The source frame
-- `y` (number): Starting Y coordinate
-- `height` (number): Height to scale
-- `target` (Frame): The target frame
+- `source` (`Frame`): The source frame
+- `y` (`number`): Starting Y coordinate
+- `height` (`number`): Height to scale
+- `target` (`Frame`): The target frame
 
-**Returns**: boolean indicating success
+**Returns**: `boolean` indicating success
 
 ##### `Scaler.destroy()`
 
-Destroys the Scaler and frees all associated resources.
+Destroys the `Scaler` and frees all associated resources.
 
-**Returns**: void
+**Returns**: `void`
 
 ## License
 
