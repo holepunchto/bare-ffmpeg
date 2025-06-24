@@ -11,18 +11,10 @@ set(args
   -DBUILD_TESTING=OFF
 )
 
-message(arch="${arch}")
-
 if(arch MATCHES "x64")
   list(APPEND args
     -DOPUS_X86_MAY_HAVE_SSE4_1=ON
     -DOPUS_X86_MAY_HAVE_AVX2=ON
-  )
-endif()
-
-if(MSVC AND arch MATCHES "x64")
-  list(APPEND args
-    -DCMAKE_C_FLAGS=-msse4.1
   )
 endif()
 
@@ -31,6 +23,8 @@ declare_port(
   opus
   BYPRODUCTS lib/${lib}
   ARGS ${args}
+  PATCHES
+    patches/01-windows-clang.patch
 )
 
 add_library(opus STATIC IMPORTED GLOBAL)
