@@ -11,13 +11,6 @@ set(args
   -DBUILD_TESTING=OFF
 )
 
-if(arch MATCHES "x64")
-  list(APPEND args
-    -DOPUS_X86_MAY_HAVE_SSE4_1=ON
-    -DOPUS_X86_MAY_HAVE_AVX2=ON
-  )
-endif()
-
 declare_port(
   "github:xiph/opus@v1.5.2"
   opus
