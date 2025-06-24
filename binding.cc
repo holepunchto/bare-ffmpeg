@@ -1463,6 +1463,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_MJPEG)
   V(AV_CODEC_ID_H264)
   V(AV_CODEC_ID_AAC)
+  V(AV_CODEC_ID_OPUS)
   V(AV_CODEC_ID_AV1)
 
   V(AV_PIX_FMT_RGBA)

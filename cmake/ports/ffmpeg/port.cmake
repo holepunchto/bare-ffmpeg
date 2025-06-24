@@ -271,6 +271,16 @@ if("x264" IN_LIST features)
   target_link_libraries(avcodec INTERFACE x264)
 endif()
 
+if("opus" IN_LIST features)
+  find_port(opus)
+
+  list(APPEND depends opus)
+  list(APPEND args --enable-libopus)
+  list(APPEND pkg_config_path "${opus_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE opus)
+endif()
+
 if(CMAKE_HOST_WIN32)
   find_path(
     msys2
