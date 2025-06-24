@@ -18,6 +18,7 @@ foreach(name IN LISTS libraries)
   list(APPEND byproducts lib/lib${name}.a)
 endforeach()
 
+set(path)
 set(args
   --disable-autodetect
   --disable-doc
@@ -221,8 +222,20 @@ if(CMAKE_STRIP)
 endif()
 
 set(depends)
-set(paths)
-set(gpl OFF)
+set(pkg_config_path)
+
+if("gpl" IN_LIST features)
+  list(APPEND args --enable-gpl)
+
+  add_library(postproc STATIC IMPORTED GLOBAL)
+
+  list(APPEND libraries postproc)
+  list(APPEND byproducts lib/libpostproc.a)
+
+  target_link_libraries(postproc INTERFACE avutil)
+  target_link_libraries(avdevice INTERFACE postproc)
+  target_link_libraries(avfilter INTERFACE postproc)
+endif()
 
 if("zlib" IN_LIST features)
   list(APPEND args --enable-zlib)
@@ -256,12 +269,6 @@ if("x264" IN_LIST features)
   list(APPEND pkg_config_path "${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)
-
-  set(gpl ON)
-endif()
-
-if(gpl)
-  list(APPEND args --enable-gpl)
 endif()
 
 if(CMAKE_HOST_WIN32)
