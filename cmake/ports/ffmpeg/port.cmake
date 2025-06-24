@@ -6,7 +6,6 @@ set(libraries
   avfilter
   avformat
   avutil
-  postproc
   swresample
   swscale
 )
@@ -27,7 +26,6 @@ set(args
 
   --enable-pic
   --enable-cross-compile
-  --enable-gpl
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -224,6 +222,7 @@ endif()
 
 set(depends)
 set(paths)
+set(gpl OFF)
 
 if("zlib" IN_LIST features)
   list(APPEND args --enable-zlib)
@@ -257,6 +256,12 @@ if("x264" IN_LIST features)
   list(APPEND pkg_config_path "${x264_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE x264)
+
+  set(gpl ON)
+endif()
+
+if(gpl)
+  list(APPEND args --enable-gpl)
 endif()
 
 if(CMAKE_HOST_WIN32)
@@ -357,7 +362,6 @@ target_link_libraries(
     avfilter
     avformat
     avutil
-    postproc
     swresample
     swscale
 )
@@ -368,7 +372,6 @@ target_link_libraries(
     avcodec
     avformat
     avutil
-    postproc
     swresample
     swscale
 )
@@ -379,12 +382,6 @@ target_link_libraries(
     avcodec
     avutil
     swresample
-)
-
-target_link_libraries(
-  postproc
-  INTERFACE
-    avutil
 )
 
 target_link_libraries(
