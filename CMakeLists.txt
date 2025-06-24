@@ -8,7 +8,7 @@ project(bare_ffmpeg C CXX)
 
 fetch_package("github:holepunchto/libjstl#5b85a24")
 
-find_port(ffmpeg FEATURES dav1d svt-av1 x264)
+find_port(ffmpeg FEATURES gpl dav1d svt-av1 x264)
 
 add_bare_module(bare_ffmpeg)
 
