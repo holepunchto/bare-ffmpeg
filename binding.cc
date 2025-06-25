@@ -696,6 +696,38 @@ bare_ffmpeg_codec_context_set_time_base(
   context->handle->time_base.den = den;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_codec_context_get_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *layout;
+  err = js_create_arraybuffer(env, layout, result);
+  assert(err == 0);
+
+  err = av_channel_layout_copy(&layout->handle, &context->handle->ch_layout);
+  assert(err == 0);
+
+  return result;
+}
+
+static void
+bare_ffmpeg_codec_context_set_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  int err;
+  err = av_channel_layout_copy(&context->handle->ch_layout, &layout->handle);
+  assert(err == 0);
+}
+
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
@@ -1591,6 +1623,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextSampleFormat", bare_ffmpeg_codec_context_set_sample_format)
   V("getCodecContextTimeBase", bare_ffmpeg_codec_context_get_time_base)
   V("setCodecContextTimeBase", bare_ffmpeg_codec_context_set_time_base)
+  V("getCodecContextChannelLayout", bare_ffmpeg_codec_context_get_channel_layout);
+  V("setCodecContextChannelLayout", bare_ffmpeg_codec_context_set_channel_layout);
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
   V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
