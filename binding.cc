@@ -871,15 +871,6 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
   return parameters->handle->ch_layout.u.mask;
 }
 
-static int32_t
-bare_ffmpeg_stream_get_index(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
-) {
-  return stream->handle->index;
-}
-
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   js_arraybuffer_t handle;
@@ -1466,7 +1457,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
-  V("getStreamIndex", bare_ffmpeg_stream_get_index)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
