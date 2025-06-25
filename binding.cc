@@ -747,7 +747,6 @@ bare_ffmpeg_codec_context_set_sample_rate(
   context->handle->sample_rate = sample_rate;
 }
 
-
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
