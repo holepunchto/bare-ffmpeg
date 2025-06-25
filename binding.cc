@@ -728,6 +728,26 @@ bare_ffmpeg_codec_context_set_channel_layout(
   assert(err == 0);
 }
 
+static int
+bare_ffmpeg_codec_context_get_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->sample_rate;
+}
+
+static void
+bare_ffmpeg_codec_context_set_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int32_t sample_rate
+) {
+  context->handle->sample_rate = sample_rate;
+}
+
+
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
@@ -1625,6 +1645,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextTimeBase", bare_ffmpeg_codec_context_set_time_base)
   V("getCodecContextChannelLayout", bare_ffmpeg_codec_context_get_channel_layout);
   V("setCodecContextChannelLayout", bare_ffmpeg_codec_context_set_channel_layout);
+  V("getCodecContextSampleRate", bare_ffmpeg_codec_context_get_sample_rate);
+  V("setCodecContextSampleRate", bare_ffmpeg_codec_context_set_sample_rate);
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
   V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
