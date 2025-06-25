@@ -37,7 +37,7 @@ test('decode .jpeg', (t) => {
   t.comment('data', decoded.data)
 })
 
-test.skip('decode .aiff', (t) => {
+test('decode .aiff', (t) => {
   const audio = require('./fixtures/audio/sample.aiff', {
     with: { type: 'binary' }
   })
@@ -108,17 +108,16 @@ function decodeAudio(audio) {
     using packet = new ffmpeg.Packet()
     using raw = new ffmpeg.Frame()
 
-    using decoder = stream.decoder()
-
     using resampler = new ffmpeg.Resampler(
       stream.codecParameters.sampleRate,
       stream.codecParameters.channelLayout,
-      decoder.sampleFormat,
+      stream.codecParameters.format,
       stream.codecParameters.sampleRate,
       ffmpeg.constants.channelLayouts.STEREO,
       ffmpeg.constants.sampleFormats.S16
     )
 
+    using decoder = stream.decoder()
     const buffers = []
 
     while (format.readFrame(packet)) {
@@ -148,7 +147,7 @@ function decodeAudio(audio) {
 
     const samples = new ffmpeg.Samples(
       output.format,
-      output.channelLayout,
+      output.channelLayout.nbChannels,
       output.nbSamples
     )
     samples.fill(output)
