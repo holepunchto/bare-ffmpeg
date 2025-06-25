@@ -65,25 +65,25 @@ test('decode .mp3', (t) => {
 
 function decodeImage(image) {
   const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.InputFormatContext(io)
+  using format = new ffmpeg.InputFormatContext(io)
 
   let result
 
   for (const stream of format.streams) {
-    const packet = new ffmpeg.Packet()
+    using packet = new ffmpeg.Packet()
     format.readFrame(packet)
 
-    const raw = new ffmpeg.Frame()
-    const rgba = new ffmpeg.Frame()
+    using raw = new ffmpeg.Frame()
+    using rgba = new ffmpeg.Frame()
 
-    const decoder = stream.decoder()
+    using decoder = stream.decoder()
     decoder.sendPacket(packet)
     decoder.receiveFrame(raw)
 
     result = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
     result.fill(rgba)
 
-    const scaler = new ffmpeg.Scaler(
+    using scaler = new ffmpeg.Scaler(
       decoder.pixelFormat,
       decoder.width,
       decoder.height,
@@ -93,32 +93,24 @@ function decodeImage(image) {
     )
 
     scaler.scale(raw, rgba)
-    scaler.destroy()
-
-    packet.unref()
-    packet.destroy()
-    raw.destroy()
-    rgba.destroy()
-    decoder.destroy()
   }
-
-  format.destroy()
 
   return result
 }
 
-function decodeAudio(encoded) {
-  const io = new ffmpeg.IOContext(encoded)
-  const format = new ffmpeg.InputFormatContext(io)
+function decodeAudio(audio) {
+  const io = new ffmpeg.IOContext(audio)
+  using format = new ffmpeg.InputFormatContext(io)
 
   let result
 
   for (const stream of format.streams) {
-    const packet = new ffmpeg.Packet()
-    const raw = new ffmpeg.Frame()
-    const decoder = stream.decoder()
+    using packet = new ffmpeg.Packet()
+    using raw = new ffmpeg.Frame()
 
-    const resampler = new ffmpeg.Resampler(
+    using decoder = stream.decoder()
+
+    using resampler = new ffmpeg.Resampler(
       stream.codecParameters.sampleRate,
       stream.codecParameters.channelLayout,
       decoder.sampleFormat,
@@ -133,7 +125,7 @@ function decodeAudio(encoded) {
       decoder.sendPacket(packet)
 
       while (decoder.receiveFrame(raw)) {
-        const output = new ffmpeg.Frame()
+        using output = new ffmpeg.Frame()
         output.channelLayout = ffmpeg.constants.channelLayouts.STEREO
         output.format = ffmpeg.constants.sampleFormats.S16
         output.nbSamples = raw.nbSamples
@@ -144,13 +136,12 @@ function decodeAudio(encoded) {
 
         resampler.convert(raw, output)
         buffers.push(Buffer.from(samples.data))
-        output.destroy()
       }
 
       packet.unref()
     }
 
-    let output = new ffmpeg.Frame()
+    using output = new ffmpeg.Frame()
     output.channelLayout = ffmpeg.constants.channelLayouts.STEREO
     output.format = ffmpeg.constants.sampleFormats.S16
     output.nbSamples = 1024
@@ -166,12 +157,6 @@ function decodeAudio(encoded) {
       buffers.push(Buffer.from(samples.data))
     }
 
-    output.destroy()
-    packet.destroy()
-    raw.destroy()
-    decoder.destroy()
-    resampler.destroy()
-
     result = {
       hz: stream.codecParameters.sampleRate,
       channels: stream.codecParameters.nbChannels,
@@ -179,8 +164,6 @@ function decodeAudio(encoded) {
       data: Buffer.concat(buffers)
     }
   }
-
-  format.destroy()
 
   return result
 }
