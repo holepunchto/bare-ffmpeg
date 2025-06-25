@@ -174,7 +174,7 @@ function decodeAudio(encoded) {
 
     result = {
       hz: stream.codecParameters.sampleRate,
-      channels: stream.codecParameters.channels,
+      channels: stream.codecParameters.nbChannels,
       format: 'S16',
       data: Buffer.concat(buffers)
     }
