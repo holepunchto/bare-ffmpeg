@@ -54,11 +54,6 @@ test('resampler converts audio data', (t) => {
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const buffer = inputFrame.audioChannel()
-  for (let i = 0; i < buffer.length; i += 2) {
-    buffer.writeInt16LE(1000, i)
-  }
-
   const converted = resampler.convert(inputFrame, outputFrame)
 
   t.ok(converted > 0, 'converted some samples')

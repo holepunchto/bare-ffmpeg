@@ -44,32 +44,46 @@ test('decode .aiff', (t) => {
 
   const decoded = decodeAudio(audio)
 
-  t.comment('hz', decoded.hx)
-  t.comment('bits', decoded.bits)
+  t.comment('hz', decoded.hz)
+  t.comment('channels', decoded.channels)
+  t.comment('format', decoded.format)
+  t.comment('data', decoded.data)
+})
+
+test('decode .mp3', (t) => {
+  const audio = require('./fixtures/audio/sample.mp3', {
+    with: { type: 'binary' }
+  })
+
+  const decoded = decodeAudio(audio)
+
+  t.comment('hz', decoded.hz)
+  t.comment('channels', decoded.channels)
+  t.comment('format', decoded.format)
   t.comment('data', decoded.data)
 })
 
 function decodeImage(image) {
   const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.InputFormatContext(io)
+  using format = new ffmpeg.InputFormatContext(io)
 
   let result
 
   for (const stream of format.streams) {
-    const packet = new ffmpeg.Packet()
+    using packet = new ffmpeg.Packet()
     format.readFrame(packet)
 
-    const raw = new ffmpeg.Frame()
-    const rgba = new ffmpeg.Frame()
+    using raw = new ffmpeg.Frame()
+    using rgba = new ffmpeg.Frame()
 
-    const decoder = stream.decoder()
+    using decoder = stream.decoder()
     decoder.sendPacket(packet)
     decoder.receiveFrame(raw)
 
     result = new ffmpeg.Image('RGBA', decoder.width, decoder.height)
     result.fill(rgba)
 
-    const scaler = new ffmpeg.Scaler(
+    using scaler = new ffmpeg.Scaler(
       decoder.pixelFormat,
       decoder.width,
       decoder.height,
@@ -79,56 +93,76 @@ function decodeImage(image) {
     )
 
     scaler.scale(raw, rgba)
-    scaler.destroy()
-
-    packet.unref()
-    packet.destroy()
-    raw.destroy()
-    rgba.destroy()
-    decoder.destroy()
   }
-
-  format.destroy()
 
   return result
 }
 
 function decodeAudio(audio) {
   const io = new ffmpeg.IOContext(audio)
-  const format = new ffmpeg.InputFormatContext(io)
+  using format = new ffmpeg.InputFormatContext(io)
 
   let result
 
   for (const stream of format.streams) {
-    const packet = new ffmpeg.Packet()
-    const frame = new ffmpeg.Frame()
+    using packet = new ffmpeg.Packet()
+    using raw = new ffmpeg.Frame()
 
-    const decoder = stream.decoder()
+    using resampler = new ffmpeg.Resampler(
+      stream.codecParameters.sampleRate,
+      stream.codecParameters.channelLayout,
+      stream.codecParameters.format,
+      stream.codecParameters.sampleRate,
+      ffmpeg.constants.channelLayouts.STEREO,
+      ffmpeg.constants.sampleFormats.S16
+    )
 
+    using decoder = stream.decoder()
     const buffers = []
 
     while (format.readFrame(packet)) {
       decoder.sendPacket(packet)
 
-      while (decoder.receiveFrame(frame)) {
-        buffers.push(frame.audioChannel())
+      while (decoder.receiveFrame(raw)) {
+        using output = new ffmpeg.Frame()
+        output.channelLayout = ffmpeg.constants.channelLayouts.STEREO
+        output.format = ffmpeg.constants.sampleFormats.S16
+        output.nbSamples = raw.nbSamples
+        output.sampleRate = stream.codecParameters.sampleRate
+
+        const samples = new ffmpeg.Samples('S16', 2, output.nbSamples)
+        samples.fill(output)
+
+        resampler.convert(raw, output)
+        buffers.push(Buffer.from(samples.data))
       }
 
       packet.unref()
     }
 
-    packet.destroy()
-    frame.destroy()
-    decoder.destroy()
+    using output = new ffmpeg.Frame()
+    output.channelLayout = ffmpeg.constants.channelLayouts.STEREO
+    output.format = ffmpeg.constants.sampleFormats.S16
+    output.nbSamples = 1024
+
+    const samples = new ffmpeg.Samples(
+      output.format,
+      output.channelLayout.nbChannels,
+      output.nbSamples
+    )
+    samples.fill(output)
+
+    while (resampler.flush(output) > 0) {
+      buffers.push(Buffer.from(samples.data))
+    }
 
     result = {
       hz: stream.codecParameters.sampleRate,
-      bits: stream.codecParameters.bitsPerCodedSample,
+      channels: stream.codecParameters.nbChannels,
+      format: 'S16',
       data: Buffer.concat(buffers)
     }
   }
-
-  format.destroy()
 
   return result
 }

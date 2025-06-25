@@ -1,7 +1,9 @@
+const ChannelLayout = require('./lib/channel-layout')
 const Codec = require('./lib/codec')
 const CodecContext = require('./lib/codec-context')
 const CodecParameters = require('./lib/codec-parameters')
 const Decoder = require('./lib/decoder')
+const Dictionary = require('./lib/dictionary')
 const Encoder = require('./lib/encoder')
 const {
   InputFormatContext,
@@ -13,16 +15,18 @@ const IOContext = require('./lib/io-context')
 const InputFormat = require('./lib/input-format')
 const OutputFormat = require('./lib/output-format')
 const Packet = require('./lib/packet')
+const Samples = require('./lib/samples')
 const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
-const Dictionary = require('./lib/dictionary')
 const Resampler = require('./lib/resampler')
 
+exports.ChannelLayout = ChannelLayout
 exports.Codec = Codec
 exports.CodecContext = CodecContext
 exports.CodecParameters = CodecParameters
 exports.Decoder = Decoder
+exports.Dictionary = Dictionary
 exports.Encoder = Encoder
 exports.Frame = Frame
 exports.IOContext = IOContext
@@ -32,10 +36,10 @@ exports.InputFormatContext = InputFormatContext
 exports.OutputFormat = OutputFormat
 exports.OutputFormatContext = OutputFormatContext
 exports.Packet = Packet
+exports.Samples = Samples
 exports.Scaler = Scaler
 exports.Stream = Stream
 exports.Rational = Rational
-exports.Dictionary = Dictionary
 exports.Resampler = Resampler
 
 exports.constants = require('./lib/constants')

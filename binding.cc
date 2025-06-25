@@ -25,6 +25,7 @@ extern "C" {
 #include <libavutil/mem.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
+#include <libavutil/samplefmt.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -60,6 +61,10 @@ typedef struct {
 typedef struct {
   AVCodecContext *handle;
 } bare_ffmpeg_codec_context_t;
+
+typedef struct {
+  AVChannelLayout handle;
+} bare_ffmpeg_channel_layout_t;
 
 typedef struct {
   AVFrame *handle;
@@ -533,13 +538,24 @@ bare_ffmpeg_frame_set_format(
   frame->handle->format = format;
 }
 
-static uint64_t
+static js_arraybuffer_t
 bare_ffmpeg_frame_get_channel_layout(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
-  return frame->handle->ch_layout.u.mask;
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *layout;
+  err = js_create_arraybuffer(env, layout, result);
+  assert(err == 0);
+
+  err = av_channel_layout_copy(&layout->handle, &frame->handle->ch_layout);
+  assert(err == 0);
+
+  return result;
 }
 
 static void
@@ -547,9 +563,11 @@ bare_ffmpeg_frame_set_channel_layout(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  uint64_t channel_layout
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
 ) {
-  av_channel_layout_from_mask(&frame->handle->ch_layout, channel_layout);
+  int err;
+  err = av_channel_layout_copy(&frame->handle->ch_layout, &layout->handle);
+  assert(err == 0);
 }
 
 static bool
@@ -572,25 +590,6 @@ bare_ffmpeg_codec_context_open_with_options(
   return err == 0;
 }
 
-static int32_t
-bare_ffmpeg_frame_get_nb_samples(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
-) {
-  return frame->handle->nb_samples;
-}
-
-static void
-bare_ffmpeg_frame_set_nb_samples(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int32_t nb_samples
-) {
-  frame->handle->nb_samples = nb_samples;
-}
-
 static int64_t
 bare_ffmpeg_codec_context_get_pixel_format(
   js_env_t *env,
@@ -605,7 +604,7 @@ bare_ffmpeg_codec_context_set_pixel_format(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  int64_t value
+  int32_t value
 ) {
   context->handle->pix_fmt = static_cast<AVPixelFormat>(value);
 }
@@ -646,6 +645,25 @@ bare_ffmpeg_codec_context_set_height(
   int value
 ) {
   context->handle->height = value;
+}
+
+static int64_t
+bare_ffmpeg_codec_context_get_sample_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->sample_fmt;
+}
+
+static void
+bare_ffmpeg_codec_context_set_sample_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int32_t value
+) {
+  context->handle->sample_fmt = static_cast<AVSampleFormat>(value);
 }
 
 static js_arraybuffer_t
@@ -825,6 +843,15 @@ bare_ffmpeg_codec_parameters_get_bits_per_raw_sample(
   return parameters->handle->bits_per_raw_sample;
 }
 
+static int
+bare_ffmpeg_codec_parameters_get_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->format;
+}
+
 static int64_t
 bare_ffmpeg_codec_parameters_get_sample_rate(
   js_env_t *env,
@@ -832,6 +859,44 @@ bare_ffmpeg_codec_parameters_get_sample_rate(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->sample_rate;
+}
+
+static int64_t
+bare_ffmpeg_codec_parameters_get_nb_channels(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->ch_layout.nb_channels;
+}
+
+static int64_t
+bare_ffmpeg_codec_parameters_get_codec_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->codec_type;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_codec_parameters_get_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *layout;
+  err = js_create_arraybuffer(env, layout, result);
+  assert(err == 0);
+
+  err = av_channel_layout_copy(&layout->handle, &parameters->handle->ch_layout);
+  assert(err == 0);
+
+  return result;
 }
 
 static js_arraybuffer_t
@@ -855,49 +920,6 @@ bare_ffmpeg_frame_destroy(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   av_frame_free(&frame->handle);
-}
-
-static js_arraybuffer_t
-bare_ffmpeg_frame_get_audio_channel(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
-) {
-  int err;
-
-  auto len = av_samples_get_buffer_size(
-    NULL,
-    frame->handle->ch_layout.nb_channels,
-    frame->handle->nb_samples,
-    (AVSampleFormat) frame->handle->format,
-    1
-  );
-
-  if (len < 0) {
-    err = js_throw_error(env, NULL, av_err2str(len));
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
-  uint8_t *data;
-
-  js_arraybuffer_t buffer;
-  err = js_create_arraybuffer(env, static_cast<size_t>(len), data, buffer);
-  assert(err == 0);
-
-  err = av_samples_copy(
-    &data,
-    frame->handle->data,
-    0,
-    0,
-    frame->handle->nb_samples,
-    frame->handle->ch_layout.nb_channels,
-    (AVSampleFormat) frame->handle->format
-  );
-  assert(err == 0);
-
-  return buffer;
 }
 
 static int32_t
@@ -952,9 +974,28 @@ bare_ffmpeg_frame_set_pixel_format(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int64_t format
+  int32_t format
 ) {
   frame->handle->format = static_cast<AVPixelFormat>(format);
+}
+
+static int32_t
+bare_ffmpeg_frame_get_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->nb_samples;
+}
+
+static void
+bare_ffmpeg_frame_set_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
+  frame->handle->nb_samples = nb_samples;
 }
 
 static void
@@ -979,21 +1020,29 @@ static js_arraybuffer_t
 bare_ffmpeg_image_init(
   js_env_t *env,
   js_receiver_t,
-  int64_t format,
+  int32_t pixel_format,
   int32_t width,
   int32_t height,
   int32_t align
 ) {
-  int len = av_image_get_buffer_size(
-    static_cast<AVPixelFormat>(format),
+  int err;
+
+  auto len = av_image_get_buffer_size(
+    static_cast<AVPixelFormat>(pixel_format),
     width,
     height,
     align
   );
 
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
   js_arraybuffer_t handle;
-  uint8_t *data;
-  int err = js_create_arraybuffer(env, static_cast<size_t>(len), data, handle);
+  err = js_create_arraybuffer(env, static_cast<size_t>(len), handle);
   assert(err == 0);
 
   return handle;
@@ -1003,31 +1052,39 @@ static void
 bare_ffmpeg_image_fill(
   js_env_t *env,
   js_receiver_t,
-  int64_t pixel_format,
+  int32_t pixel_format,
   int32_t width,
   int32_t height,
+  int32_t align,
   js_arraybuffer_span_t data,
-  int64_t offset,
+  uint64_t offset,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
-  size_t off = static_cast<size_t>(offset);
-  int err = av_image_fill_arrays(
+  int err;
+
+  err = av_image_fill_arrays(
     frame->handle->data,
     frame->handle->linesize,
-    &data[off],
+    &data[static_cast<size_t>(offset)],
     static_cast<AVPixelFormat>(pixel_format),
     width,
     height,
-    1
+    align
   );
-  assert(err >= 0);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 }
 
 static int
 bare_ffmpeg_image_get_line_size(
   js_env_t *env,
   js_receiver_t,
-  int64_t pixel_format,
+  int32_t pixel_format,
   int32_t width,
   int32_t plane
 ) {
@@ -1036,6 +1093,73 @@ bare_ffmpeg_image_get_line_size(
     width,
     plane
   );
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_samples_init(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t sample_format,
+  int32_t nb_channels,
+  int32_t nb_samples,
+  int32_t align
+) {
+  int err;
+
+  auto len = av_samples_get_buffer_size(
+    NULL,
+    nb_channels,
+    nb_samples,
+    static_cast<AVSampleFormat>(sample_format),
+    align
+  );
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t handle;
+  err = js_create_arraybuffer(env, static_cast<size_t>(len), handle);
+  assert(err == 0);
+
+  return handle;
+}
+
+static int
+bare_ffmpeg_samples_fill(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t sample_format,
+  int32_t nb_channels,
+  int32_t nb_samples,
+  int32_t align,
+  js_arraybuffer_span_t data,
+  uint64_t offset,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  auto len = av_samples_fill_arrays(
+    frame->handle->data,
+    frame->handle->linesize,
+    &data[static_cast<size_t>(offset)],
+    nb_channels,
+    nb_samples,
+    static_cast<AVSampleFormat>(sample_format),
+    align
+  );
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return len;
 }
 
 static js_arraybuffer_t
@@ -1068,8 +1192,7 @@ bare_ffmpeg_packet_init_from_buffer(
   err = av_new_packet(pkt, static_cast<int>(len));
   assert(err == 0);
 
-  size_t off = static_cast<size_t>(offset);
-  memcpy(pkt->data, &data[off], static_cast<size_t>(len));
+  memcpy(pkt->data, &data[static_cast<size_t>(offset)], static_cast<size_t>(len));
 
   js_arraybuffer_t handle;
   bare_ffmpeg_packet_t *packet;
@@ -1237,39 +1360,51 @@ bare_ffmpeg_resampler_init(
   js_env_t *env,
   js_receiver_t,
   int32_t in_rate,
-  int64_t in_fmt,
-  uint64_t in_layout,
+  int32_t in_fmt,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> in_layout,
   int32_t out_rate,
-  int64_t out_fmt,
-  uint64_t out_layout
+  int32_t out_fmt,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> out_layout
 ) {
   int err;
+
   js_arraybuffer_t handle;
+
   bare_ffmpeg_resampler_t *resampler;
   err = js_create_arraybuffer(env, resampler, handle);
   assert(err == 0);
 
   resampler->handle = swr_alloc();
 
-  AVChannelLayout in_ch_layout = {};
-  AVChannelLayout out_ch_layout = {};
-  av_channel_layout_from_mask(&in_ch_layout, in_layout);
-  av_channel_layout_from_mask(&out_ch_layout, out_layout);
-
-  err = swr_alloc_set_opts2(&resampler->handle, &out_ch_layout, (enum AVSampleFormat) out_fmt, out_rate, &in_ch_layout, (enum AVSampleFormat) in_fmt, in_rate, 0, NULL);
+  err = swr_alloc_set_opts2(
+    &resampler->handle,
+    &out_layout->handle,
+    static_cast<AVSampleFormat>(out_fmt),
+    out_rate,
+    &in_layout->handle,
+    static_cast<AVSampleFormat>(in_fmt),
+    in_rate,
+    0,
+    NULL
+  );
 
   if (err < 0) {
     swr_free(&resampler->handle);
+
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
   err = swr_init(resampler->handle);
+
   if (err < 0) {
     swr_free(&resampler->handle);
+
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -1352,6 +1487,64 @@ bare_ffmpeg_resampler_destroy(
   swr_free(&resampler->handle);
 }
 
+static void
+bare_ffmpeg_channel_layout_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  av_channel_layout_uninit(&layout->handle);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_channel_layout_copy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *copy;
+  err = js_create_arraybuffer(env, copy, result);
+  assert(err == 0);
+
+  err = av_channel_layout_copy(&copy->handle, &layout->handle);
+  assert(err == 0);
+
+  return result;
+}
+
+static int
+bare_ffmpeg_channel_layout_get_nb_channels(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  return layout->handle.nb_channels;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_channel_layout_from_mask(
+  js_env_t *env,
+  js_receiver_t,
+  uint64_t mask
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *layout;
+  err = js_create_arraybuffer(env, layout, result);
+  assert(err == 0);
+
+  err = av_channel_layout_from_mask(&layout->handle, mask);
+  assert(err == 0);
+
+  return result;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -1394,6 +1587,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextWidth", bare_ffmpeg_codec_context_set_width)
   V("getCodecContextHeight", bare_ffmpeg_codec_context_get_height)
   V("setCodecContextHeight", bare_ffmpeg_codec_context_set_height)
+  V("getCodecContextSampleFormat", bare_ffmpeg_codec_context_get_sample_format)
+  V("setCodecContextSampleFormat", bare_ffmpeg_codec_context_set_sample_format)
   V("getCodecContextTimeBase", bare_ffmpeg_codec_context_get_time_base)
   V("setCodecContextTimeBase", bare_ffmpeg_codec_context_set_time_base)
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
@@ -1406,11 +1601,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersBitRate", bare_ffmpeg_codec_parameters_get_bit_rate)
   V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
   V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
+  V("getCodecParametersFormat", bare_ffmpeg_codec_parameters_get_format)
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
+  V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
+  V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
-  V("getFrameAudioChannel", bare_ffmpeg_frame_get_audio_channel)
   V("getFrameWidth", bare_ffmpeg_frame_get_width)
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
   V("getFrameHeight", bare_ffmpeg_frame_get_height)
@@ -1421,13 +1619,16 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameFormat", bare_ffmpeg_frame_set_format)
   V("getFrameChannelLayout", bare_ffmpeg_frame_get_channel_layout)
   V("setFrameChannelLayout", bare_ffmpeg_frame_set_channel_layout)
-  V("allocFrame", bare_ffmpeg_frame_alloc)
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
+  V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
+
+  V("initSamples", bare_ffmpeg_samples_init)
+  V("fillSamples", bare_ffmpeg_samples_fill)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
@@ -1449,6 +1650,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("convertResampler", bare_ffmpeg_resampler_convert_frames)
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
   V("flushResampler", bare_ffmpeg_resampler_flush)
+
+  V("destroyChannelLayout", bare_ffmpeg_channel_layout_destroy)
+  V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
+  V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
+  V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
 #undef V
 
 #define V(name) \
@@ -1496,6 +1702,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V(AV_CH_LAYOUT_MONO)
   V(AV_CH_LAYOUT_STEREO)
+  V(AV_CH_LAYOUT_QUAD)
+  V(AV_CH_LAYOUT_SURROUND)
+  V(AV_CH_LAYOUT_2POINT1)
+  V(AV_CH_LAYOUT_5POINT0)
+  V(AV_CH_LAYOUT_5POINT1)
+  V(AV_CH_LAYOUT_7POINT1)
 #undef V
 
   return exports;
