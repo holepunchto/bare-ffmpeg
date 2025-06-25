@@ -1496,6 +1496,26 @@ bare_ffmpeg_channel_layout_destroy(
   av_channel_layout_uninit(&layout->handle);
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_channel_layout_copy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  bare_ffmpeg_channel_layout_t *copy;
+  err = js_create_arraybuffer(env, copy, result);
+  assert(err == 0);
+
+  err = av_channel_layout_copy(&copy->handle, &layout->handle);
+  assert(err == 0);
+
+  return result;
+}
+
 static int
 bare_ffmpeg_channel_layout_get_nb_channels(
   js_env_t *env,
@@ -1632,6 +1652,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("flushResampler", bare_ffmpeg_resampler_flush)
 
   V("destroyChannelLayout", bare_ffmpeg_channel_layout_destroy)
+  V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
   V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
   V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
 #undef V
