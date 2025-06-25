@@ -37,6 +37,19 @@ test('decode .jpeg', (t) => {
   t.comment('data', decoded.data)
 })
 
+test.skip('decode .aiff', (t) => {
+  const audio = require('./fixtures/audio/sample.aiff', {
+    with: { type: 'binary' }
+  })
+
+  const decoded = decodeAudio(audio)
+
+  t.comment('hz', decoded.hz)
+  t.comment('channels', decoded.channels)
+  t.comment('format', decoded.format)
+  t.comment('data', decoded.data)
+})
+
 test('decode .mp3', (t) => {
   const audio = require('./fixtures/audio/sample.mp3', {
     with: { type: 'binary' }
@@ -47,7 +60,7 @@ test('decode .mp3', (t) => {
   t.comment('hz', decoded.hz)
   t.comment('channels', decoded.channels)
   t.comment('format', decoded.format)
-  t.comment('data length', decoded.data.length)
+  t.comment('data', decoded.data)
 })
 
 function decodeImage(image) {
@@ -126,11 +139,11 @@ function decodeAudio(encoded) {
         output.nbSamples = raw.nbSamples
         output.sampleRate = stream.codecParameters.sampleRate
 
-        const audio = new ffmpeg.Audio('S16', 2, output.nbSamples)
-        audio.fill(output)
+        const samples = new ffmpeg.Samples('S16', 2, output.nbSamples)
+        samples.fill(output)
 
         resampler.convert(raw, output)
-        buffers.push(Buffer.from(output.audioChannel()))
+        buffers.push(Buffer.from(samples.data))
         output.destroy()
       }
 
@@ -142,15 +155,15 @@ function decodeAudio(encoded) {
     output.format = ffmpeg.constants.sampleFormats.S16
     output.nbSamples = 1024
 
-    const audio = new ffmpeg.Audio(
+    const samples = new ffmpeg.Samples(
       output.format,
       output.channelLayout,
       output.nbSamples
     )
-    audio.fill(output)
+    samples.fill(output)
 
     while (resampler.flush(output) > 0) {
-      buffers.push(Buffer.from(output.audioChannel()))
+      buffers.push(Buffer.from(samples.data))
     }
 
     output.destroy()
