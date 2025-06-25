@@ -25,6 +25,7 @@ extern "C" {
 #include <libavutil/mem.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
+#include <libavutil/samplefmt.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -638,6 +639,15 @@ bare_ffmpeg_codec_context_get_height(
   return context->handle->height;
 }
 
+static int64_t
+bare_ffmpeg_codec_context_get_sample_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->sample_fmt;
+}
+
 static void
 bare_ffmpeg_codec_context_set_height(
   js_env_t *env,
@@ -832,6 +842,42 @@ bare_ffmpeg_codec_parameters_get_sample_rate(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->sample_rate;
+}
+
+static int64_t
+bare_ffmpeg_codec_parameters_get_channels(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->ch_layout.nb_channels;
+}
+
+static int64_t
+bare_ffmpeg_codec_parameters_get_codec_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->codec_type;
+}
+
+static uint64_t
+bare_ffmpeg_codec_parameters_get_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->ch_layout.u.mask;
+}
+
+static int32_t
+bare_ffmpeg_stream_get_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->index;
 }
 
 static js_arraybuffer_t
@@ -1352,6 +1398,119 @@ bare_ffmpeg_resampler_destroy(
   swr_free(&resampler->handle);
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_audio_init(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t format,
+  int32_t nb_channels,
+  int32_t nb_samples,
+  int32_t align
+) {
+  int len = av_samples_get_buffer_size(
+    NULL,
+    nb_channels,
+    nb_samples,
+    static_cast<AVSampleFormat>(format),
+    align
+  );
+
+  if (len < 0) {
+    js_throw_error(env, NULL, "Failed to get audio buffer size");
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t handle;
+  uint8_t *data;
+  int err = js_create_arraybuffer(env, static_cast<size_t>(len), data, handle);
+  assert(err == 0);
+
+  return handle;
+}
+
+static int
+bare_ffmpeg_audio_fill(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_t buffer,
+  uint64_t offset,
+  uint64_t buffer_size
+) {
+  int len = av_samples_fill_arrays(
+      frame->handle->data,
+      frame->handle->linesize,
+      &buffer[offset],
+      frame->handle->ch_layout.nb_channels,
+      frame->handle->nb_samples,
+      (enum AVSampleFormat)frame->handle->format,
+      0
+  );
+
+    if (len < 0) {
+      int err = js_throw_error(env, NULL, av_err2str(len));
+      assert(err == 0);
+      throw js_pending_exception;
+    }
+
+    return len;
+}
+
+static int
+bare_ffmpeg_audio_get_buffer_size(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t nb_channels,
+  int32_t nb_samples,
+  int64_t sample_fmt,
+  int32_t align
+) {
+  int size = av_samples_get_buffer_size(
+    NULL,
+    nb_channels,
+    nb_samples,
+    static_cast<AVSampleFormat>(sample_fmt),
+    align
+  );
+
+  if (size < 0) {
+    js_throw_error(env, NULL, av_err2str(size));
+    throw js_pending_exception;
+  }
+
+  return size;
+}
+
+static int
+bare_ffmpeg_audio_get_line_size(
+  js_env_t *env,
+  js_receiver_t,
+  int64_t sample_fmt,
+  int32_t nb_channels,
+  int32_t nb_samples,
+  int32_t plane
+) {
+  int linesize;
+  int err = av_samples_get_buffer_size(
+    &linesize,
+    nb_channels,
+    nb_samples,
+    static_cast<AVSampleFormat>(sample_fmt),
+    1
+  );
+
+  if (err < 0) {
+    js_throw_error(env, NULL, av_err2str(err));
+    throw js_pending_exception;
+  }
+
+  if (av_sample_fmt_is_planar(static_cast<AVSampleFormat>(sample_fmt))) {
+    return linesize / nb_channels;
+  }
+
+  return linesize;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -1380,6 +1539,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
+  V("getStreamIndex", bare_ffmpeg_stream_get_index)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
@@ -1394,6 +1554,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextWidth", bare_ffmpeg_codec_context_set_width)
   V("getCodecContextHeight", bare_ffmpeg_codec_context_get_height)
   V("setCodecContextHeight", bare_ffmpeg_codec_context_set_height)
+  V("getCodecContextSampleFormat", bare_ffmpeg_codec_context_get_sample_format)
   V("getCodecContextTimeBase", bare_ffmpeg_codec_context_get_time_base)
   V("setCodecContextTimeBase", bare_ffmpeg_codec_context_set_time_base)
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
@@ -1407,6 +1568,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
   V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
+  V("getCodecParametersChannels", bare_ffmpeg_codec_parameters_get_channels)
+  V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
@@ -1429,6 +1593,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("fillImage", bare_ffmpeg_image_fill)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
+  V("initAudio", bare_ffmpeg_audio_init)
+  V("fillAudio", bare_ffmpeg_audio_fill)
+
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
@@ -1449,6 +1616,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("convertResampler", bare_ffmpeg_resampler_convert_frames)
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
   V("flushResampler", bare_ffmpeg_resampler_flush)
+
+  V("getAudioBufferSize", bare_ffmpeg_audio_get_buffer_size)
+  V("getAudioLineSize", bare_ffmpeg_audio_get_line_size)
 #undef V
 
 #define V(name) \
@@ -1496,6 +1666,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V(AV_CH_LAYOUT_MONO)
   V(AV_CH_LAYOUT_STEREO)
+  V(AV_CH_LAYOUT_QUAD)
+  V(AV_CH_LAYOUT_SURROUND)
+  V(AV_CH_LAYOUT_2POINT1)
+  V(AV_CH_LAYOUT_5POINT0)
+  V(AV_CH_LAYOUT_5POINT1)
+  V(AV_CH_LAYOUT_7POINT1)
 #undef V
 
   return exports;
