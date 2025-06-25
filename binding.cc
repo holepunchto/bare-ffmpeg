@@ -590,25 +590,6 @@ bare_ffmpeg_codec_context_open_with_options(
   return err == 0;
 }
 
-static int32_t
-bare_ffmpeg_frame_get_nb_samples(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
-) {
-  return frame->handle->nb_samples;
-}
-
-static void
-bare_ffmpeg_frame_set_nb_samples(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int32_t nb_samples
-) {
-  frame->handle->nb_samples = nb_samples;
-}
-
 static int64_t
 bare_ffmpeg_codec_context_get_pixel_format(
   js_env_t *env,
@@ -996,6 +977,25 @@ bare_ffmpeg_frame_set_pixel_format(
   int32_t format
 ) {
   frame->handle->format = static_cast<AVPixelFormat>(format);
+}
+
+static int32_t
+bare_ffmpeg_frame_get_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->nb_samples;
+}
+
+static void
+bare_ffmpeg_frame_set_nb_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
+  frame->handle->nb_samples = nb_samples;
 }
 
 static void
@@ -1599,9 +1599,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameFormat", bare_ffmpeg_frame_set_format)
   V("getFrameChannelLayout", bare_ffmpeg_frame_get_channel_layout)
   V("setFrameChannelLayout", bare_ffmpeg_frame_set_channel_layout)
-  V("allocFrame", bare_ffmpeg_frame_alloc)
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
+  V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
