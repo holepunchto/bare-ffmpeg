@@ -91,6 +91,7 @@ static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 static void
 bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
+
   avdevice_register_all();
 }
 
@@ -117,8 +118,7 @@ bare_ffmpeg_io_context_init(
   else {
     io = reinterpret_cast<uint8_t *>(av_malloc(size));
 
-    size_t off = static_cast<size_t>(offset);
-    memcpy(io, &data[off], size);
+    memcpy(io, &data[static_cast<size_t>(offset)], size);
   }
 
   context->handle = avio_alloc_context(io, static_cast<int>(len), 0, NULL, NULL, NULL, NULL);
@@ -128,8 +128,13 @@ bare_ffmpeg_io_context_init(
 }
 
 static void
-bare_ffmpeg_io_context_destroy(js_env_t *env, js_receiver_t, js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> context) {
+bare_ffmpeg_io_context_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_io_context_t, 1> context
+) {
   av_free(context->handle->buffer);
+
   avio_context_free(&context->handle);
 }
 
@@ -147,6 +152,7 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   }
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_output_format_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -161,6 +167,7 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
 
   const AVInputFormat *format = av_find_input_format(name.c_str());
+
   if (format == NULL) {
     err = js_throw_errorf(env, NULL, "No input format found for name '%s'", name.c_str());
     assert(err == 0);
@@ -169,6 +176,7 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   }
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_input_format_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -280,6 +288,7 @@ bare_ffmpeg_format_context_open_output(
   int err;
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_format_context_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -344,11 +353,11 @@ bare_ffmpeg_format_context_get_best_stream_index(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   int32_t type
 ) {
-  int best_stream = av_find_best_stream(context->handle, static_cast<AVMediaType>(type), -1, -1, NULL, 0);
+  auto i = av_find_best_stream(context->handle, static_cast<AVMediaType>(type), -1, -1, NULL, 0);
 
-  if (best_stream < 0) best_stream = -1;
+  if (i < 0) i = -1;
 
-  return best_stream;
+  return i;
 }
 
 static js_arraybuffer_t
@@ -361,6 +370,7 @@ bare_ffmpeg_format_context_create_stream(
   int err;
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_stream_t *stream;
   err = js_create_arraybuffer(env, stream, handle);
   assert(err == 0);
@@ -384,9 +394,11 @@ bare_ffmpeg_format_context_read_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
+  int err;
+
   av_packet_unref(packet->handle);
 
-  int err = av_read_frame(context->handle, packet->handle);
+  err = av_read_frame(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -439,6 +451,7 @@ bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   }
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_codec_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -462,6 +475,7 @@ bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   }
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_codec_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -566,6 +580,7 @@ bare_ffmpeg_frame_set_channel_layout(
   js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
 ) {
   int err;
+
   err = av_channel_layout_copy(&frame->handle->ch_layout, &layout->handle);
   assert(err == 0);
 }
@@ -672,10 +687,12 @@ bare_ffmpeg_codec_context_get_time_base(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
 ) {
-  js_arraybuffer_t result;
-  int32_t *data;
+  int err;
 
-  int err = js_create_arraybuffer(env, data, result);
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
   assert(err == 0);
 
   data[0] = context->handle->time_base.num;
@@ -724,6 +741,7 @@ bare_ffmpeg_codec_context_set_channel_layout(
   js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
 ) {
   int err;
+
   err = av_channel_layout_copy(&context->handle->ch_layout, &layout->handle);
   assert(err == 0);
 }
@@ -797,11 +815,7 @@ bare_ffmpeg_codec_context_send_frame(
   int err;
 
   err = avcodec_send_frame(context->handle, frame->handle);
-  if (err == AVERROR(EAGAIN) || err == AVERROR_EOF) {
-    return false;
-  }
-
-  if (err < 0) {
+  if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 
@@ -952,10 +966,12 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
 
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
+  int err;
+
   js_arraybuffer_t handle;
 
   bare_ffmpeg_frame_t *frame;
-  int err = js_create_arraybuffer(env, frame, handle);
+  err = js_create_arraybuffer(env, frame, handle);
   assert(err == 0);
 
   frame->handle = av_frame_alloc();
@@ -1113,7 +1129,7 @@ bare_ffmpeg_image_fill(
 ) {
   int err;
 
-  err = av_image_fill_arrays(
+  auto len = av_image_fill_arrays(
     frame->handle->data,
     frame->handle->linesize,
     &data[static_cast<size_t>(offset)],
@@ -1123,8 +1139,8 @@ bare_ffmpeg_image_fill(
     align
   );
 
-  if (err < 0) {
-    err = js_throw_error(env, NULL, av_err2str(err));
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
 
     throw js_pending_exception;
@@ -1218,6 +1234,7 @@ bare_ffmpeg_packet_init(js_env_t *env, js_receiver_t) {
   int err;
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_packet_t *packet;
   err = js_create_arraybuffer(env, packet, handle);
   assert(err == 0);
@@ -1238,7 +1255,6 @@ bare_ffmpeg_packet_init_from_buffer(
   int err;
 
   AVPacket *pkt = av_packet_alloc();
-  assert(pkt != NULL);
 
   err = av_new_packet(pkt, static_cast<int>(len));
   assert(err == 0);
@@ -1246,6 +1262,7 @@ bare_ffmpeg_packet_init_from_buffer(
   memcpy(pkt->data, &data[static_cast<size_t>(offset)], static_cast<size_t>(len));
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_packet_t *packet;
   err = js_create_arraybuffer(env, packet, handle);
   assert(err == 0);
@@ -1280,9 +1297,11 @@ bare_ffmpeg_packet_get_data(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   int err;
-  size_t size = static_cast<size_t>(packet->handle->size);
+
+  auto size = static_cast<size_t>(packet->handle->size);
 
   js_arraybuffer_t handle;
+
   uint8_t *data;
   err = js_create_arraybuffer(env, size, data, handle);
   assert(err == 0);
@@ -1303,18 +1322,21 @@ bare_ffmpeg_scaler_init(
   int32_t target_width,
   int32_t target_height
 ) {
+  int err;
+
   js_arraybuffer_t handle;
+
   bare_ffmpeg_scaler_t *scaler;
-  int err = js_create_arraybuffer(env, scaler, handle);
+  err = js_create_arraybuffer(env, scaler, handle);
   assert(err == 0);
 
   scaler->handle = sws_getContext(
     source_width,
     source_height,
-    (enum AVPixelFormat) source_format,
+    static_cast<AVPixelFormat>(source_format),
     target_width,
     target_height,
-    (enum AVPixelFormat) target_format,
+    static_cast<AVPixelFormat>(target_format),
     SWS_BICUBIC,
     NULL,
     NULL,
@@ -1345,7 +1367,7 @@ bare_ffmpeg_scaler_scale(
 ) {
   return sws_scale(
     scaler->handle,
-    (const uint8_t *const *) source->handle->data,
+    reinterpret_cast<const uint8_t *const *>(source->handle->data),
     source->handle->linesize,
     y,
     height,
@@ -1359,9 +1381,12 @@ bare_ffmpeg_dictionary_init(
   js_env_t *env,
   js_receiver_t
 ) {
+  int err;
+
   js_arraybuffer_t handle;
+
   bare_ffmpeg_dictionary_t *dict;
-  int err = js_create_arraybuffer(env, dict, handle);
+  err = js_create_arraybuffer(env, dict, handle);
   assert(err == 0);
 
   dict->handle = NULL;
@@ -1386,7 +1411,9 @@ bare_ffmpeg_dictionary_set_entry(
   std::string key,
   std::string value
 ) {
-  int err = av_dict_set(&dict->handle, key.c_str(), value.c_str(), 0);
+  int err;
+
+  err = av_dict_set(&dict->handle, key.c_str(), value.c_str(), 0);
   assert(err == 0);
 }
 
@@ -1449,7 +1476,6 @@ bare_ffmpeg_resampler_init(
   }
 
   err = swr_init(resampler->handle);
-
   if (err < 0) {
     swr_free(&resampler->handle);
 
@@ -1472,7 +1498,7 @@ bare_ffmpeg_resampler_convert_frames(
 ) {
   int err;
 
-  int result = swr_convert(
+  auto result = swr_convert(
     resampler->handle,
     (uint8_t **) out_frame->handle->data,
     out_frame->handle->nb_samples,
@@ -1483,6 +1509,7 @@ bare_ffmpeg_resampler_convert_frames(
   if (result < 0) {
     err = js_throw_error(env, NULL, av_err2str(result));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -1510,7 +1537,7 @@ bare_ffmpeg_resampler_flush(
 ) {
   int err;
 
-  int result = swr_convert(
+  auto result = swr_convert(
     resampler->handle,
     out_frame->handle->data,
     out_frame->handle->nb_samples,
@@ -1521,6 +1548,7 @@ bare_ffmpeg_resampler_flush(
   if (result < 0) {
     err = js_throw_error(env, NULL, av_err2str(result));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
