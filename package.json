@@ -12,7 +12,8 @@
     "binding.js",
     "CMakeLists.txt",
     "lib",
-    "prebuilds"
+    "prebuilds",
+    "cmake"
   ],
   "addon": true,
   "scripts": {
