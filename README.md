@@ -361,12 +361,6 @@ Parameters:
 
 **Returns**: `void`
 
-##### `CodecParameters.destroy()`
-
-Destroys the `CodecParameters` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
-
-**Returns**: `void`
-
 ### `InputFormat`
 
 The `InputFormat` API provides functionality to specify input format for media sources.
@@ -675,12 +669,6 @@ Creates and opens a decoder for this stream.
 Creates and opens an encoder for this stream.
 
 **Returns**: `CodecContext` instance
-
-##### `Stream.destroy()`
-
-Destroys the `Stream` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
-
-**Returns**: `void`
 
 ### `Resampler`
 
