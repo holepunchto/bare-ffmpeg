@@ -1538,15 +1538,6 @@ bare_ffmpeg_resampler_destroy(
   swr_free(&resampler->handle);
 }
 
-static void
-bare_ffmpeg_channel_layout_destroy(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
-) {
-  av_channel_layout_uninit(&layout->handle);
-}
-
 static js_arraybuffer_t
 bare_ffmpeg_channel_layout_copy(
   js_env_t *env,
@@ -1706,7 +1697,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
   V("flushResampler", bare_ffmpeg_resampler_flush)
 
-  V("destroyChannelLayout", bare_ffmpeg_channel_layout_destroy)
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
   V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
   V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
