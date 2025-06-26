@@ -377,13 +377,6 @@ bare_ffmpeg_format_context_create_stream(
 
   stream->handle = avformat_new_stream(context->handle, codec->handle);
 
-  if (stream->handle == NULL) {
-    err = js_throw_error(env, NULL, av_err2str(err));
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
   return handle;
 }
 
