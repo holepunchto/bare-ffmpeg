@@ -66,6 +66,8 @@ jobs:
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: brew install meson nasm
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
+      - run: choco upgrade llvm
+        if: ${{ matrix.platform == 'win32' }}
       - run: choco install --ignore-package-exit-codes meson nasm msys2
         if: ${{ matrix.platform == 'win32' }}
       - run: pacman --noconfirm -S git make ninja pkgconf
