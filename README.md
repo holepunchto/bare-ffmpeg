@@ -803,6 +803,98 @@ Destroys the `Scaler` and frees all associated resources. Automatically called w
 
 **Returns**: `void`
 
+### `AudioFifo`
+
+The `AudioFifo` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.
+
+```js
+const fifo = new ffmpeg.AudioFifo(sampleFormat, channels, nbSamples)
+```
+
+Parameters:
+
+- `sampleFormat` (`number` | `string`): The audio sample format
+- `channels` (`number`): Number of audio channels
+- `nbSamples` (`number`): Initial buffer size in samples
+
+**Returns**: A new `AudioFifo` instance
+
+Example:
+
+```js
+const fifo = new ffmpeg.AudioFifo(ffmpeg.constants.sampleFormats.S16, 2, 1024)
+```
+
+#### Properties
+
+##### `AudioFifo.size`
+
+Gets the number of samples currently in the FIFO.
+
+**Returns**: `number`
+
+##### `AudioFifo.space`
+
+Gets the number of samples that can be written to the FIFO.
+
+**Returns**: `number`
+
+#### Methods
+
+##### `AudioFifo.write(frame)`
+
+Writes samples from a frame to the FIFO. The FIFO will automatically grow if needed.
+
+Parameters:
+
+- `frame` (`Frame`): The audio frame containing samples to write
+
+**Returns**: `number` of samples written
+
+##### `AudioFifo.read(frame, nbSamples)`
+
+Reads samples from the FIFO into a frame.
+
+Parameters:
+
+- `frame` (`Frame`): The frame to read samples into
+- `nbSamples` (`number`): Number of samples to read
+
+**Returns**: `number` of samples actually read
+
+##### `AudioFifo.peek(frame, nbSamples)`
+
+Reads samples from the FIFO without removing them.
+
+Parameters:
+
+- `frame` (`Frame`): The frame to read samples into
+- `nbSamples` (`number`): Number of samples to peek
+
+**Returns**: `number` of samples peeked
+
+##### `AudioFifo.drain(nbSamples)`
+
+Removes samples from the FIFO without reading them.
+
+Parameters:
+
+- `nbSamples` (`number`): Number of samples to drain
+
+**Returns**: `void`
+
+##### `AudioFifo.reset()`
+
+Resets the FIFO to empty state.
+
+**Returns**: `void`
+
+##### `AudioFifo.destroy()`
+
+Destroys the `AudioFifo` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
+
+**Returns**: `void`
+
 ## License
 
 Apache-2.0
