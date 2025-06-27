@@ -26,6 +26,7 @@ extern "C" {
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libavutil/samplefmt.h>
+#include <libavutil/audio_fifo.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -85,6 +86,10 @@ typedef struct {
 typedef struct {
   struct SwrContext *handle;
 } bare_ffmpeg_resampler_t;
+
+typedef struct {
+  AVAudioFifo *handle;
+} bare_ffmpeg_audio_fifo_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -1608,6 +1613,149 @@ bare_ffmpeg_channel_layout_from_mask(
   return result;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_audio_fifo_init(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t sample_fmt,
+  int32_t channels,
+  int32_t nb_samples
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_audio_fifo_t *fifo;
+  err = js_create_arraybuffer(env, fifo, handle);
+  assert(err == 0);
+
+  fifo->handle = av_audio_fifo_alloc(
+    static_cast<AVSampleFormat>(sample_fmt),
+    channels,
+    nb_samples
+  );
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_audio_fifo_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo
+) {
+  av_audio_fifo_free(fifo->handle);
+}
+
+static int
+bare_ffmpeg_audio_fifo_write(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  int len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->data, frame->handle->nb_samples);
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  return len;
+}
+
+static int
+bare_ffmpeg_audio_fifo_read(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
+  int err;
+
+  int len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->data, nb_samples);
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  return len;
+}
+
+static int
+bare_ffmpeg_audio_fifo_peek(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t nb_samples
+) {
+  int err;
+
+  int len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->data, nb_samples);
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  return len;
+}
+
+static int
+bare_ffmpeg_audio_fifo_drain(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo,
+  int32_t nb_samples
+) {
+  int err;
+ 
+  int len = av_audio_fifo_drain(fifo->handle, nb_samples);
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+ 
+  return len;
+}
+
+static void
+bare_ffmpeg_audio_fifo_reset(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo
+) {
+  av_audio_fifo_reset(fifo->handle);
+}
+
+static int
+bare_ffmpeg_audio_fifo_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo
+) {
+  return av_audio_fifo_size(fifo->handle);
+}
+
+static int
+bare_ffmpeg_audio_fifo_space(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_audio_fifo_t, 1> fifo
+) {
+  return av_audio_fifo_space(fifo->handle);
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -1721,6 +1869,16 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
   V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
   V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
+
+  V("initAudioFifo", bare_ffmpeg_audio_fifo_init)
+  V("destroyAudioFifo", bare_ffmpeg_audio_fifo_destroy)
+  V("writeAudioFifo", bare_ffmpeg_audio_fifo_write)
+  V("readAudioFifo", bare_ffmpeg_audio_fifo_read)
+  V("peekAudioFifo", bare_ffmpeg_audio_fifo_peek)
+  V("drainAudioFifo", bare_ffmpeg_audio_fifo_drain)
+  V("resetAudioFifo", bare_ffmpeg_audio_fifo_reset)
+  V("getAudioFifoSize", bare_ffmpeg_audio_fifo_size)
+  V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
 #undef V
 
 #define V(name) \
