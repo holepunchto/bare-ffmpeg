@@ -1,9 +1,9 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-test('AudioFifo - write', (t) => {
+test('AudioFIFO - write', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
 
   const written = fifo.write(writeFrame)
@@ -12,9 +12,9 @@ test('AudioFifo - write', (t) => {
   t.is(fifo.space, 0)
 })
 
-test('AudioFifo - read', (t) => {
+test('AudioFIFO - read', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
   using readFrame = createAudioFrame({ nbSamples })
 
@@ -29,9 +29,9 @@ test('AudioFifo - read', (t) => {
   t.is(fifo.space, nbSamples)
 })
 
-test('AudioFifo - peek', (t) => {
+test('AudioFIFO - peek', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
   using peekFrame = createAudioFrame({ nbSamples })
 
@@ -42,9 +42,9 @@ test('AudioFifo - peek', (t) => {
   t.is(fifo.size, nbSamples)
 })
 
-test('AudioFifo - drain', (t) => {
+test('AudioFIFO - drain', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
 
   fifo.write(writeFrame)
@@ -54,9 +54,9 @@ test('AudioFifo - drain', (t) => {
   t.is(fifo.space, nbSamples / 2)
 })
 
-test('AudioFifo - grows capacity as needed', (t) => {
+test('AudioFIFO - grows capacity as needed', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
 
   const written1 = fifo.write(writeFrame)
@@ -68,9 +68,9 @@ test('AudioFifo - grows capacity as needed', (t) => {
   t.is(fifo.size, nbSamples * 2)
 })
 
-test('AudioFifo - reads only available samples', (t) => {
+test('AudioFIFO - reads only available samples', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples: nbSamples / 2 })
   using readFrame = createAudioFrame({ nbSamples })
 
@@ -83,7 +83,7 @@ test('AudioFifo - reads only available samples', (t) => {
 
 test('audio fifo with planar format', (t) => {
   const nbSamples = 1024
-  using fifo = createAudioFifo({ nbSamples })
+  using fifo = createAudioFIFO({ nbSamples })
   using writeFrame = createAudioFrame({ nbSamples })
   using readFrame = createAudioFrame({ nbSamples })
 
@@ -95,12 +95,12 @@ test('audio fifo with planar format', (t) => {
   t.is(read, nbSamples, 'reads all samples for planar')
 })
 
-function createAudioFifo({
+function createAudioFIFO({
   channels = 2,
   nbSamples = 1024,
   sampleFormat = ffmpeg.constants.sampleFormats.S16
 } = {}) {
-  return new ffmpeg.AudioFifo(sampleFormat, channels, nbSamples)
+  return new ffmpeg.AudioFIFO(sampleFormat, channels, nbSamples)
 }
 
 function createAudioFrame({

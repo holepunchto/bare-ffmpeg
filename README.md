@@ -803,12 +803,12 @@ Destroys the `Scaler` and frees all associated resources. Automatically called w
 
 **Returns**: `void`
 
-### `AudioFifo`
+### `AudioFIFO`
 
-The `AudioFifo` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.
+The `AudioFIFO` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.
 
 ```js
-const fifo = new ffmpeg.AudioFifo(sampleFormat, channels, nbSamples)
+const fifo = new ffmpeg.AudioFIFO(sampleFormat, channels, nbSamples)
 ```
 
 Parameters:
@@ -817,23 +817,23 @@ Parameters:
 - `channels` (`number`): Number of audio channels
 - `nbSamples` (`number`): Initial buffer size in samples
 
-**Returns**: A new `AudioFifo` instance
+**Returns**: A new `AudioFIFO` instance
 
 Example:
 
 ```js
-const fifo = new ffmpeg.AudioFifo(ffmpeg.constants.sampleFormats.S16, 2, 1024)
+const fifo = new ffmpeg.AudioFIFO(ffmpeg.constants.sampleFormats.S16, 2, 1024)
 ```
 
 #### Properties
 
-##### `AudioFifo.size`
+##### `AudioFIFO.size`
 
 Gets the number of samples currently in the FIFO.
 
 **Returns**: `number`
 
-##### `AudioFifo.space`
+##### `AudioFIFO.space`
 
 Gets the number of samples that can be written to the FIFO.
 
@@ -841,7 +841,7 @@ Gets the number of samples that can be written to the FIFO.
 
 #### Methods
 
-##### `AudioFifo.write(frame)`
+##### `AudioFIFO.write(frame)`
 
 Writes samples from a frame to the FIFO. The FIFO will automatically grow if needed.
 
@@ -851,7 +851,7 @@ Parameters:
 
 **Returns**: `number` of samples written
 
-##### `AudioFifo.read(frame, nbSamples)`
+##### `AudioFIFO.read(frame, nbSamples)`
 
 Reads samples from the FIFO into a frame.
 
@@ -862,7 +862,7 @@ Parameters:
 
 **Returns**: `number` of samples actually read
 
-##### `AudioFifo.peek(frame, nbSamples)`
+##### `AudioFIFO.peek(frame, nbSamples)`
 
 Reads samples from the FIFO without removing them.
 
@@ -873,7 +873,7 @@ Parameters:
 
 **Returns**: `number` of samples peeked
 
-##### `AudioFifo.drain(nbSamples)`
+##### `AudioFIFO.drain(nbSamples)`
 
 Removes samples from the FIFO without reading them.
 
@@ -883,15 +883,15 @@ Parameters:
 
 **Returns**: `void`
 
-##### `AudioFifo.reset()`
+##### `AudioFIFO.reset()`
 
 Resets the FIFO to empty state.
 
 **Returns**: `void`
 
-##### `AudioFifo.destroy()`
+##### `AudioFIFO.destroy()`
 
-Destroys the `AudioFifo` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
+Destroys the `AudioFIFO` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
 

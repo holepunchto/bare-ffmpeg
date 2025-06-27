@@ -1,4 +1,4 @@
-const AudioFifo = require('./lib/audio-fifo')
+const AudioFIFO = require('./lib/audio-fifo')
 const ChannelLayout = require('./lib/channel-layout')
 const Codec = require('./lib/codec')
 const CodecContext = require('./lib/codec-context')
@@ -22,7 +22,7 @@ const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
 const Resampler = require('./lib/resampler')
 
-exports.AudioFifo = AudioFifo
+exports.AudioFIFO = AudioFIFO
 exports.ChannelLayout = ChannelLayout
 exports.Codec = Codec
 exports.CodecContext = CodecContext
