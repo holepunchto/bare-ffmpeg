@@ -1635,13 +1635,6 @@ bare_ffmpeg_audio_fifo_init(
     nb_samples
   );
 
-  if (fifo->handle == NULL) {
-    err = js_throw_error(env, NULL, "Failed to allocate audio FIFO");
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
   return handle;
 }
 
