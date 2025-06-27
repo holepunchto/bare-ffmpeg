@@ -88,7 +88,10 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
+    --enable-libpulse
+    --enable-libjack
   )
+  target_link_libraries(avdevice INTERFACE pulse jack)
 elseif(ANDROID)
   list(APPEND args
     --target-os=android
