@@ -1724,12 +1724,15 @@ bare_ffmpeg_audio_fifo_drain(
   int32_t nb_samples
 ) {
   int err;
+ 
   int len = av_audio_fifo_drain(fifo->handle, nb_samples);
+
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
     throw js_pending_exception;
   }
+ 
   return len;
 }
 
