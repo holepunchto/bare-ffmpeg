@@ -50,7 +50,7 @@ test('decode .aiff', (t) => {
   t.comment('data', decoded.data)
 })
 
-test('decode .mp3', (t) => {
+test.solo('decode .mp3', (t) => {
   const audio = require('./fixtures/audio/sample.mp3', {
     with: { type: 'binary' }
   })
@@ -105,6 +105,7 @@ function decodeAudio(audio) {
   let result
 
   for (const stream of format.streams) {
+    console.log('stream', stream.timeBase)
     using packet = new ffmpeg.Packet()
     using raw = new ffmpeg.Frame()
 
@@ -119,11 +120,20 @@ function decodeAudio(audio) {
 
     using decoder = stream.decoder()
     const buffers = []
+    console.log('decoder', decoder.timeBase)
 
     while (format.readFrame(packet)) {
+      console.log('packet', packet.timeBase, 'dts', packet.dts)
       decoder.sendPacket(packet)
 
       while (decoder.receiveFrame(raw)) {
+        console.log(
+          'rawFrame',
+          raw.timeBase,
+          'pts',
+          raw.pts,
+          raw.ptsFor(stream.timeBase)
+        )
         using output = new ffmpeg.Frame()
         output.channelLayout = ffmpeg.constants.channelLayouts.STEREO
         output.format = ffmpeg.constants.sampleFormats.S16
@@ -134,9 +144,10 @@ function decodeAudio(audio) {
         samples.fill(output)
 
         resampler.convert(raw, output)
-        buffers.push(Buffer.from(samples.data))
-      }
 
+        buffers.push(Buffer.from(samples.data))
+        console.log('output', output.ptsFor(stream.timeBase))
+      }
       packet.unref()
     }
 
