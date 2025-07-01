@@ -1099,6 +1099,16 @@ bare_ffmpeg_frame_get_pts(
   return ts;
 }
 
+static void
+bare_ffmpeg_frame_set_pts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pts = value;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_get_time_base(
   js_env_t *env,
@@ -1118,13 +1128,24 @@ bare_ffmpeg_frame_get_time_base(
 
   return result;
 }
+static void
+bare_ffmpeg_frame_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int num,
+  int den
+) {
+  frame->handle->time_base.num = num;
+  frame->handle->time_base.den = den;
+}
 
 static int64_t
 bare_ffmpeg_frame_pts_for_timebase(
     js_env_t *env,
     js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-    int32_t stream_num,
-    int32_t stream_den
+    int32_t num,
+    int32_t den
 ) {
   int64_t ts = frame->handle->pts;
 
@@ -1132,11 +1153,9 @@ bare_ffmpeg_frame_pts_for_timebase(
 
   if (ts == AV_NOPTS_VALUE) return -1;
 
-  AVRational stream_time_base = { .num = stream_num, .den = stream_den };
+  AVRational target_base = { .num = num, .den = den };
 
-  AVRational micros = { .num = 1, .den = 1000 };
-
-  return av_rescale_q(ts, stream_time_base, micros);
+  return av_rescale_q(ts, frame->handle->time_base, target_base);
 }
 
 
@@ -1387,19 +1406,6 @@ bare_ffmpeg_packet_get_dts(
   if (ts == AV_NOPTS_VALUE) return -1;
 
   return ts;
-#if 0
-  // Audio Packet has dts of = new Date(ts * ((1. / 1000000) / (1. / 1000)))
-  AVRational js_serializable_timebase = { .num = 1, .den = 1000 };
-
-  // packet->handle->time_base is set to (0/ 1)
-  // where is it lost?
-
-  int64_t rs = av_rescale_q(ts, packet->handle->time_base, js_serializable_timebase);
-
-  assert(ts == 0 || rs != 0);
-
-  return rs;
-#endif
 }
 
 static void
@@ -1467,6 +1473,42 @@ bare_ffmpeg_packet_set_time_base(
 ) {
   packet->handle->time_base.num = num;
   packet->handle->time_base.den = den;
+}
+
+static int64_t
+bare_ffmpeg_packet_dts_for_timebase(
+    js_env_t *env,
+    js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+    int32_t num,
+    int32_t den
+) {
+  int64_t ts = packet->handle->dts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  AVRational target_base = { .num = num, .den = den };
+
+  return av_rescale_q(ts, packet->handle->time_base, target_base);
+}
+
+static int64_t
+bare_ffmpeg_packet_pts_for_timebase(
+    js_env_t *env,
+    js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+    int32_t num,
+    int32_t den
+) {
+  int64_t ts = packet->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  AVRational target_base = { .num = num, .den = den };
+
+  return av_rescale_q(ts, packet->handle->time_base, target_base);
 }
 
 static js_arraybuffer_t
@@ -1544,6 +1586,9 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
+  int err = av_frame_copy_props(target->handle, source->handle);
+  assert(err == 0);
+
   return sws_scale(
     scaler->handle,
     reinterpret_cast<const uint8_t *const *>(source->handle->data),
@@ -2019,7 +2064,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
   V("getFramePTS", bare_ffmpeg_frame_get_pts)
+  V("setFramePTS", bare_ffmpeg_frame_set_pts)
   V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
+  V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
   V("framePTSForTimeBase", bare_ffmpeg_frame_pts_for_timebase)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
@@ -2041,6 +2088,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketPTS", bare_ffmpeg_packet_set_pts);
   V("getPacketTimeBase", bare_ffmpeg_packet_get_time_base);
   V("setPacketTimeBase", bare_ffmpeg_packet_set_time_base);
+  V("packetPTSForTimeBase", bare_ffmpeg_packet_pts_for_timebase)
+  V("packetDTSForTimeBase", bare_ffmpeg_packet_dts_for_timebase)
   V("getPacketData", bare_ffmpeg_packet_get_data)
 
   V("initScaler", bare_ffmpeg_scaler_init)
