@@ -10,6 +10,7 @@ const {
   InputFormatContext,
   OutputFormatContext
 } = require('./lib/format-context')
+const FilterGraph = require('./lib/filter-graph')
 const Frame = require('./lib/frame')
 const Image = require('./lib/image')
 const IOContext = require('./lib/io-context')
@@ -30,6 +31,7 @@ exports.CodecParameters = CodecParameters
 exports.Decoder = Decoder
 exports.Dictionary = Dictionary
 exports.Encoder = Encoder
+exports.FilterGraph = FilterGraph
 exports.Frame = Frame
 exports.IOContext = IOContext
 exports.Image = Image
