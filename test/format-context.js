@@ -1,13 +1,8 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-let fallbackName
-let fallbackURL
-
-if (Bare.platform == 'linux' || Bare.platform == 'win32') {
-  fallbackName = 'lavfi'
-  fallbackURL = 'testsrc=size=640x480:rate=30'
-}
+const fallbackName = 'lavfi'
+const fallbackURL = 'testsrc=size=640x480:rate=30'
 
 test('InputFormatContext should be instantiate with IOContext', (t) => {
   const image = require('./fixtures/image/sample.jpeg', {

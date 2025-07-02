@@ -5,7 +5,6 @@ const ffmpeg = require('..')
 test('timebase is preserved between operations for video capture', async t => {
   const { defer, clean } = usingWorkaround()
 
-
   const FRAMERATE = 30
   const TIMEBASE_MS = new ffmpeg.Rational(1, 1000)
   const OUTPUT_WIDTH = 854
@@ -16,15 +15,21 @@ test('timebase is preserved between operations for video capture', async t => {
 
   const inputOptions = new ffmpeg.Dictionary()
   // defer(inputOptions) // ownership transferred format context?
-  inputOptions.set('framerate', String(FRAMERATE))
-  inputOptions.set('video_size', '1280x720')
 
-  const inputFormatContext = new ffmpeg.InputFormatContext(new ffmpeg.InputFormat(), inputOptions)
+  inputOptions.set('framerate', String(FRAMERATE))
+  inputOptions.set('video_size', '1920x1080')
+
+  const inputFormatContext = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat(),
+    inputOptions
+  )
   defer(inputFormatContext)
 
   const bestStream = inputFormatContext.getBestStream(
     ffmpeg.constants.mediaTypes.VIDEO
   )
+
+  t.is(bestStream.codecParameters.codecType, ffmpeg.constants.mediaTypes.VIDEO)
 
   const streamTimeBase = bestStream.timeBase
   t.ok(streamTimeBase, 'stream timebase set')
@@ -90,17 +95,26 @@ test('timebase is preserved between operations for video capture', async t => {
 
     const { dts: realDTS, pts: realPTS } = packet
 
-    const [msDTS, msPTS] = [packet.dtsFor(TIMEBASE_MS), packet.ptsFor(TIMEBASE_MS)]
+    const [msDTS, msPTS] = [
+      packet.dtsFor(TIMEBASE_MS),
+      packet.ptsFor(TIMEBASE_MS)
+    ]
 
     t.not(realDTS, -1, 'realtime dts is set')
     t.not(realPTS, -1, 'realtime pts is set')
+
+    // console.log('pre packet.timeBase', packet.timeBase, packet.dts, streamTimeBase)
+    console.log('packet.timeBase', packet.timeBase, packet.dts, streamTimeBase)
+
     t.alike(packet.timeBase, streamTimeBase, 'captured packet inherits timebase')
 
     // forward frame to decoder
     rawDecoder.sendPacket(packet)
     packet.unref()
 
+    console.log('pre frame timebase', rawFrame.timeBase, 'pts', rawFrame.pts)
     while (rawDecoder.receiveFrame(rawFrame)) {
+      console.log('frame timebase', rawFrame.timeBase, 'pts', rawFrame.pts)
       t.is(rawFrame.pts, realPTS)
       t.alike(rawFrame.timeBase, rawDecoder.timeBase, 'timebase inherited by decoder')
 
@@ -119,7 +133,11 @@ test('timebase is preserved between operations for video capture', async t => {
         t.not(packet.dts, realDTS, 'dts converted')
         t.not(packet.pts, realPTS, 'pts converted')
 
-        const [encMsDTS, encMsPTS] = [packet.dtsFor(TIMEBASE_MS), packet.ptsFor(TIMEBASE_MS)]
+        const [encMsDTS, encMsPTS] = [
+          packet.dtsFor(TIMEBASE_MS),
+          packet.ptsFor(TIMEBASE_MS)
+        ]
+
         t.is(encMsDTS, msDTS, 'dts rescales correctly')
         t.is(encMsPTS, msPTS, 'pts rescales correctly')
 
@@ -143,7 +161,9 @@ test('timebase is preserved between operations for video capture', async t => {
 
         while (decoder.receiveFrame(yuvDecoded)) {
           t.not(yuvDecoded.pts, -1)
+
           t.alike(yuvDecoded.timeBase, OUTPUT_TIMEBASE, 'packet has final timebase')
+
           console.log('render frame @', yuvDecoded.ptsFor(TIMEBASE_MS), 'ms')
         }
       }
