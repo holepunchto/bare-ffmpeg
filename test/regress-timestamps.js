@@ -1,7 +1,16 @@
 const test = require('brittle')
 
 const ffmpeg = require('..')
-
+/**
+ * UPDATE:
+ * packet.time_base and frame.time_base are experimental / mostly unused.
+ * we can a) Implement timebase converters that take ensure all values are rescaled
+ * b) continue to ignore those timebases and use 1 fixed stream_timebase
+ *
+ * AVInputFormatContext.streams[0].time_base; contains persisted/generated timebase
+ * AVCodecContext.pkt_timebase; specifies incoming packet's timebase during decoding
+ * AVCodecContext.time_base; specifies incoming packet's timebase during encoding
+ */
 test('timebase is preserved between operations for video capture', async t => {
   const { defer, clean } = usingWorkaround()
 
