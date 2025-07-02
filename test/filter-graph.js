@@ -66,10 +66,10 @@ test('FilterGraph class should expose a pullFrame method', (t) => {
 // Helpers
 
 function createFrame(width = 100, height = 100) {
-  const frame= new ffmpeg.Frame()
+  const frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
   frame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
   frame.alloc()
-  return frame;
+  return frame
 }
