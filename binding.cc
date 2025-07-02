@@ -1192,7 +1192,7 @@ bare_ffmpeg_image_read(
     dst_data,
     dst_linesize,
     &data[offset],
-    (enum AVPixelFormat) pixel_format,
+    static_cast<AVPixelFormat>(pixel_format),
     width,
     height,
     align
@@ -1202,9 +1202,9 @@ bare_ffmpeg_image_read(
   av_image_copy(
     dst_data,
     dst_linesize,
-    (const uint8_t *const *) frame->handle->data,
+    frame->handle->data,
     frame->handle->linesize,
-    (enum AVPixelFormat) pixel_format,
+    static_cast<AVPixelFormat>(pixel_format),
     width,
     height
   );
