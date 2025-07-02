@@ -106,7 +106,6 @@ bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
 
   avdevice_register_all();
-  // avfilter_register_all();
 }
 
 static js_arraybuffer_t
