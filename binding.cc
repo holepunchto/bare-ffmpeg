@@ -1875,7 +1875,7 @@ bare_ffmpeg_filtergraph_pull_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_filtergraph_t, 1> graph,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
-  return av_buffersink_get_frame(graph->src, frame->handle);
+  return av_buffersink_get_frame(graph->sink, frame->handle);
 }
 
 static js_value_t *
@@ -2004,8 +2004,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initFilterGraph", bare_ffmpeg_filtergraph_init)
   V("destroyFilterGraph", bare_ffmpeg_filtergraph_destroy)
-  V("pullFrameFilterGraph", bare_ffmpeg_filtergraph_pull_frame)
   V("pushFrameFilterGraph", bare_ffmpeg_filtergraph_push_frame)
+  V("pullFrameFilterGraph", bare_ffmpeg_filtergraph_pull_frame)
 #undef V
 
 #define V(name) \
