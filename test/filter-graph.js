@@ -86,7 +86,7 @@ test('negate filter should actually negate RGB values in the buffer', (t) => {
     100,
     100
   )
-  outputImage.extract(outputFrame)
+  outputImage.read(outputFrame)
 
   t.ok(outputImage.data.at(0) === 0)
   t.ok(outputImage.data.at(1) === 255)
@@ -110,13 +110,13 @@ function createRedImage(width = 100, height = 100) {
     width,
     height
   )
-  
+
   // Fill with red pixels (255, 0, 0)
   for (let i = 0; i < image.data.length; i += 3) {
-    image.data[i] = 255     // Red
-    image.data[i + 1] = 0   // Green
-    image.data[i + 2] = 0   // Blue
+    image.data[i] = 255 // Red
+    image.data[i + 1] = 0 // Green
+    image.data[i + 2] = 0 // Blue
   }
-  
+
   return image
 }

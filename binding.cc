@@ -1164,6 +1164,32 @@ bare_ffmpeg_image_fill(
   }
 }
 
+static void
+bare_ffmpeg_image_read(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t pixel_format,
+  int32_t width,
+  int32_t height,
+  int32_t dst_linesize0,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_t data,
+  uint64_t offset
+) {
+  uint8_t *dst_data[4] = {(uint8_t *) &data[offset], NULL, NULL, NULL};
+  int dst_linesize[4] = {dst_linesize0, 0, 0, 0};
+
+  av_image_copy(
+    dst_data,
+    dst_linesize,
+    (const uint8_t *const *) frame->handle->data,
+    frame->handle->linesize,
+    (enum AVPixelFormat) pixel_format,
+    width,
+    height
+  );
+}
+
 static int
 bare_ffmpeg_image_get_line_size(
   js_env_t *env,
@@ -1890,32 +1916,6 @@ bare_ffmpeg_filtergraph_pull_frame(
   return av_buffersink_get_frame(graph->sink, frame->handle);
 }
 
-static void
-bare_ffmpeg_image_extract(
-  js_env_t *env,
-  js_receiver_t,
-  int32_t pixel_format,
-  int32_t width,
-  int32_t height,
-  int32_t align,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  js_arraybuffer_span_t data,
-  uint64_t offset
-) {
-  // For RGB24, copy the frame data to the image buffer
-  if (pixel_format == AV_PIX_FMT_RGB24) {
-    int expected_size = width * height * 3; // RGB24 = 3 bytes per pixel
-
-    if (frame->handle->data[0] != NULL) {
-      memcpy(
-        &data[static_cast<size_t>(offset)],
-        frame->handle->data[0],
-        static_cast<size_t>(expected_size)
-      );
-    }
-  }
-}
-
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -2000,7 +2000,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
-  V("extractImage", bare_ffmpeg_image_extract)
+  V("readImage", bare_ffmpeg_image_read)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
   V("initSamples", bare_ffmpeg_samples_init)
