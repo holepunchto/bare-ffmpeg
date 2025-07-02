@@ -82,11 +82,7 @@ test('FilterGraph class should expose a pushFrame method', (t) => {
     aspectRatio
   )
 
-  const frame = new ffmpeg.Frame()
-  frame.width = 100
-  frame.height = 100
-  frame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
-  frame.alloc()
+  const frame = createFrame()
 
   t.ok(typeof graph.pushFrame(frame) === 'number')
 })
@@ -100,20 +96,21 @@ test('FilterGraph class should expose a pullFrame method', (t) => {
     timeBase,
     aspectRatio
   )
-
-  const frame = new ffmpeg.Frame()
-  frame.width = 100
-  frame.height = 100
-  frame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
-  frame.alloc()
+  const frame = createFrame()
+  const outputFrame = createFrame()
 
   graph.pushFrame(frame)
 
-  const outputFrame = new ffmpeg.Frame()
-  outputFrame.width = 100
-  outputFrame.height = 100
-  outputFrame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
-  outputFrame.alloc()
-
   t.ok(typeof graph.pullFrame(outputFrame) == 'number')
 })
+
+// Helpers
+
+function createFrame(width = 100, height = 100) {
+  const frame= new ffmpeg.Frame()
+  frame.width = width
+  frame.height = height
+  frame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
+  frame.alloc()
+  return frame;
+}
