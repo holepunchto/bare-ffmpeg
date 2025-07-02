@@ -763,6 +763,25 @@ bare_ffmpeg_codec_context_set_sample_rate(
   context->handle->sample_rate = sample_rate;
 }
 
+static int
+bare_ffmpeg_codec_context_get_gop_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->gop_size;
+}
+
+static void
+bare_ffmpeg_codec_context_set_gop_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int32_t gop_size
+) {
+  context->handle->gop_size = gop_size;
+}
+
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
@@ -1063,6 +1082,16 @@ bare_ffmpeg_frame_set_nb_samples(
   frame->handle->nb_samples = nb_samples;
 }
 
+
+static int32_t
+bare_ffmpeg_frame_get_pict_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->pict_type;
+}
+
 static void
 bare_ffmpeg_frame_alloc(
   js_env_t *env,
@@ -1307,6 +1336,15 @@ bare_ffmpeg_packet_get_data(
   memcpy(data, packet->handle->data, size);
 
   return handle;
+}
+
+static bool
+bare_ffmpeg_packet_is_keyframe(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  return packet->handle->flags & AV_PKT_FLAG_KEY;
 }
 
 static js_arraybuffer_t
@@ -1806,6 +1844,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextChannelLayout", bare_ffmpeg_codec_context_set_channel_layout);
   V("getCodecContextSampleRate", bare_ffmpeg_codec_context_get_sample_rate);
   V("setCodecContextSampleRate", bare_ffmpeg_codec_context_set_sample_rate);
+  V("getCodecContextGOPSize", bare_ffmpeg_codec_context_get_gop_size)
+  V("setCodecContextGOPSize", bare_ffmpeg_codec_context_set_gop_size)
+
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
   V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
@@ -1836,6 +1877,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameChannelLayout", bare_ffmpeg_frame_set_channel_layout)
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
+  V("getFramePictType", bare_ffmpeg_frame_get_pict_type)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
@@ -1850,6 +1892,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
+  V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
@@ -1932,6 +1975,15 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CH_LAYOUT_5POINT0)
   V(AV_CH_LAYOUT_5POINT1)
   V(AV_CH_LAYOUT_7POINT1)
+
+  V(AV_PICTURE_TYPE_NONE)
+  V(AV_PICTURE_TYPE_I)
+  V(AV_PICTURE_TYPE_P)
+  V(AV_PICTURE_TYPE_B)
+  V(AV_PICTURE_TYPE_S)
+  V(AV_PICTURE_TYPE_SI)
+  V(AV_PICTURE_TYPE_SP)
+  V(AV_PICTURE_TYPE_BI)
 #undef V
 
   return exports;
