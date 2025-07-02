@@ -1788,8 +1788,11 @@ bare_ffmpeg_filtergraph_init(
   graph->handle = avfilter_graph_alloc();
   assert(graph->handle != nullptr);
 
-  std::string args = std::format(
-    "video_size={}x{}:pix_fmt={}:time_base={}/{}:pixel_aspect={}/{}",
+  char args[512];
+  int printed_size = snprintf(
+    args,
+    sizeof(args),
+    "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
     width,
     height,
     pix_fmt,
@@ -1798,10 +1801,11 @@ bare_ffmpeg_filtergraph_init(
     aspect_ratio_num,
     aspect_ratio_den
   );
+  assert(printed_size > 0 && printed_size < static_cast<int>(sizeof(args)));
 
   AVFilterContext *buffer_src_ctx = nullptr;
   const AVFilter *buffer_src = avfilter_get_by_name("buffer");
-  err = avfilter_graph_create_filter(&buffer_src_ctx, buffer_src, "in", args.c_str(), nullptr, graph->handle);
+  err = avfilter_graph_create_filter(&buffer_src_ctx, buffer_src, "in", args, nullptr, graph->handle);
   assert(err == 0);
 
   graph->src = buffer_src_ctx;
