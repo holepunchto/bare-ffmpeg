@@ -984,10 +984,6 @@ bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   frame->handle = av_frame_alloc();
   frame->handle->opaque = (void *) frame;
 
-  // TEST
-  av_frame_get_buffer(frame->handle, 32);
-  av_frame_make_writable(frame->handle);
-
   return handle;
 }
 
@@ -1143,7 +1139,7 @@ bare_ffmpeg_image_fill(
   // For RGB24, we need to copy the data to the frame's allocated buffer
   if (pixel_format == AV_PIX_FMT_RGB24) {
     int expected_size = width * height * 3; // RGB24 = 3 bytes per pixel
-    
+
     if (frame->handle->data[0] != NULL) {
       memcpy(frame->handle->data[0], &data[static_cast<size_t>(offset)], static_cast<size_t>(expected_size));
     }
@@ -1880,7 +1876,7 @@ bare_ffmpeg_filtergraph_push_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   int result = av_buffersrc_add_frame(graph->src, frame->handle);
-  
+
   return result;
 }
 
@@ -1891,15 +1887,7 @@ bare_ffmpeg_filtergraph_pull_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_filtergraph_t, 1> graph,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
-  // Make sure the frame is writable
-  int err = av_frame_make_writable(frame->handle);
-  if (err < 0) {
-    return err;
-  }
-  
-  int result = av_buffersink_get_frame(graph->sink, frame->handle);
-  
-  return result;
+  return av_buffersink_get_frame(graph->sink, frame->handle);
 }
 
 static void
@@ -1917,9 +1905,13 @@ bare_ffmpeg_image_extract(
   // For RGB24, copy the frame data to the image buffer
   if (pixel_format == AV_PIX_FMT_RGB24) {
     int expected_size = width * height * 3; // RGB24 = 3 bytes per pixel
-    
+
     if (frame->handle->data[0] != NULL) {
-      memcpy(&data[static_cast<size_t>(offset)], frame->handle->data[0], static_cast<size_t>(expected_size));
+      memcpy(
+        &data[static_cast<size_t>(offset)],
+        frame->handle->data[0],
+        static_cast<size_t>(expected_size)
+      );
     }
   }
 }
