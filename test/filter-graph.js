@@ -42,46 +42,6 @@ test('FilterGraph class should expose a pushFrame method', (t) => {
     aspectRatio
   )
 
-  // Create a test frame
-  const frame = new ffmpeg.Frame()
-  frame.width = 100
-  frame.height = 100
-  frame.pixelFormat = ffmpeg.constants.pixelFormats.RGB24
-  frame.alloc()
-
-  // Create an image with known RGB values
-  const inputImage = new ffmpeg.Image(
-    ffmpeg.constants.pixelFormats.RGB24,
-    100,
-    100
-  )
-
-  // Fill with a specific RGB pattern: red (255, 0, 0)
-  for (let i = 0; i < inputImage.data.length; i += 3) {
-    inputImage.data[i] = 255 // R = 255
-    inputImage.data[i + 1] = 0 // G = 0
-    inputImage.data[i + 2] = 0 // B = 0
-  }
-
-  // Fill the frame with our test image
-  inputImage.fill(frame)
-
-  // Push the frame to the filter graph
-  t.execution(() => {
-    graph.pushFrame(frame)
-  })
-})
-
-test('FilterGraph class should expose a pushFrame method', (t) => {
-  using graph = new ffmpeg.FilterGraph(
-    'negate',
-    100,
-    100,
-    ffmpeg.constants.pixelFormats.RGB24,
-    timeBase,
-    aspectRatio
-  )
-
   const frame = createFrame()
 
   t.ok(typeof graph.pushFrame(frame) === 'number')
