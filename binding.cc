@@ -16,6 +16,7 @@ extern "C" {
 #include <libavdevice/avdevice.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/audio_fifo.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/dict.h>
 #include <libavutil/error.h>
@@ -26,7 +27,6 @@ extern "C" {
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libavutil/samplefmt.h>
-#include <libavutil/audio_fifo.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -1082,7 +1082,6 @@ bare_ffmpeg_frame_set_nb_samples(
   frame->handle->nb_samples = nb_samples;
 }
 
-
 static int32_t
 bare_ffmpeg_frame_get_pict_type(
   js_env_t *env,
@@ -1172,6 +1171,43 @@ bare_ffmpeg_image_fill(
 
     throw js_pending_exception;
   }
+}
+
+static void
+bare_ffmpeg_image_read(
+  js_env_t *env,
+  js_receiver_t,
+  int32_t pixel_format,
+  int32_t width,
+  int32_t height,
+  int32_t align,
+  js_arraybuffer_span_t data,
+  uint64_t offset,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  uint8_t *dst_data[4];
+  int dst_linesize[4];
+
+  int err = av_image_fill_arrays(
+    dst_data,
+    dst_linesize,
+    &data[offset],
+    (enum AVPixelFormat) pixel_format,
+    width,
+    height,
+    align
+  );
+  assert(err >= 0);
+
+  av_image_copy(
+    dst_data,
+    dst_linesize,
+    (const uint8_t *const *) frame->handle->data,
+    frame->handle->linesize,
+    (enum AVPixelFormat) pixel_format,
+    width,
+    height
+  );
 }
 
 static int
@@ -1755,7 +1791,7 @@ bare_ffmpeg_audio_fifo_drain(
   int32_t nb_samples
 ) {
   int err;
- 
+
   int len = av_audio_fifo_drain(fifo->handle, nb_samples);
 
   if (len < 0) {
@@ -1763,7 +1799,7 @@ bare_ffmpeg_audio_fifo_drain(
     assert(err == 0);
     throw js_pending_exception;
   }
- 
+
   return len;
 }
 
@@ -1882,6 +1918,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
+  V("readImage", bare_ffmpeg_image_read)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
   V("initSamples", bare_ffmpeg_samples_init)
