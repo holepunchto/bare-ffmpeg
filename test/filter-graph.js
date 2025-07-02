@@ -41,8 +41,7 @@ test('FilterGraph class should expose a pushFrame method', (t) => {
     timeBase,
     aspectRatio
   )
-
-  const frame = createFrame()
+  using frame = createFrame()
 
   t.ok(typeof graph.pushFrame(frame) === 'number')
 })
@@ -56,8 +55,8 @@ test('FilterGraph class should expose a pullFrame method', (t) => {
     timeBase,
     aspectRatio
   )
-  const frame = createFrame()
-  const outputFrame = createFrame()
+  using frame = createFrame()
+  using outputFrame = createFrame()
 
   graph.pushFrame(frame)
 
