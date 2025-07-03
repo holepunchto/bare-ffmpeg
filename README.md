@@ -895,6 +895,86 @@ Destroys the `AudioFIFO` and frees all associated resources. Automatically calle
 
 **Returns**: `void`
 
+### `FilterGraph`
+
+The `FilterGraph` API provides functionality to apply video and audio filters to frames. This allows for real-time processing of media data such as color correction, scaling, audio effects, and more.
+
+```js
+const graph = new ffmpeg.FilterGraph(
+  filterDescription,
+  width,
+  height,
+  pixelFormat,
+  timeBase,
+  aspectRatio
+)
+```
+
+Parameters:
+
+- `filterDescription` (`string`): FFmpeg filter graph description (e.g., `'negate'`, `'scale=640:480'`, `'null'`)
+- `width` (`number`): Frame width in pixels
+- `height` (`number`): Frame height in pixels
+- `pixelFormat` (`number`): Pixel format constant
+- `timeBase` (`Rational`): Time base for the frames
+- `aspectRatio` (`Rational`): Aspect ratio of the frames
+
+**Returns**: A new `FilterGraph` instance
+
+Example:
+
+```js
+const timeBase = new ffmpeg.Rational(1, 30)
+const aspectRatio = new ffmpeg.Rational(1, 1)
+
+using graph = new ffmpeg.FilterGraph(
+  'negate',
+  1,
+  1,
+  ffmpeg.constants.pixelFormats.RGB24,
+  timeBase,
+  aspectRatio
+)
+
+// Push a frame into the filter graph
+using inputFrame = new ffmpeg.Frame()
+graph.pushFrame(inputFrame)
+
+// Pull it back processed
+using outputFrame = new ffmpeg.Frame()
+outputFrame.alloc()
+
+const pullResult = graph.pullFrame(outputFrame)
+```
+
+#### Methods
+
+##### `FilterGraph.pushFrame(frame)`
+
+Pushes a frame into the filter graph for processing.
+
+Parameters:
+
+- `frame` (`Frame`): The frame to process
+
+**Returns**: `number` indicating success (>= 0) or error (< 0)
+
+##### `FilterGraph.pullFrame(frame)`
+
+Pulls a processed frame from the filter graph.
+
+Parameters:
+
+- `frame` (`Frame`): The frame to store the processed data
+
+**Returns**: `number` indicating success (>= 0) or error (< 0)
+
+##### `FilterGraph.destroy()`
+
+Destroys the `FilterGraph` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
+
+**Returns**: `void`
+
 ## License
 
 Apache-2.0
