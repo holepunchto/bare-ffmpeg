@@ -581,7 +581,7 @@ Parameters:
 
 - `frame` (`Frame`): The frame to read from
 
-**Returns**: void
+**Returns**: `void`
 
 ##### `Image.lineSize([plane])`
 
