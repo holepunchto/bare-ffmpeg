@@ -23,6 +23,7 @@ extern "C" {
 #include <libavutil/frame.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/log.h>
+#include <libavutil/mathematics.h>
 #include <libavutil/mem.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
@@ -92,6 +93,17 @@ typedef struct {
 } bare_ffmpeg_audio_fifo_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
+
+// Feature flagged
+#define AUTO_TIMEBASE
+
+#ifdef AUTO_TIMEBASE
+static inline bool
+unknown_timebase(const AVRational r) {
+  return r.den < 1 || // denominator invalid
+    av_q2d(r) == 0; // initial state (0 / 1)
+}
+#endif
 
 static void
 bare_ffmpeg__on_init(void) {
@@ -404,7 +416,32 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  // Copy format::stream timebase to packet
+  assert(unknown_timebase(packet->handle->time_base)); // was cleared
+
+  packet->handle->time_base = context->handle->streams[packet->handle->stream_index]->time_base;
+#endif
+
   return err == 0;
+}
+
+static int32_t
+bare_ffmpeg_stream_get_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->index;
+}
+
+static int32_t
+bare_ffmpeg_stream_get_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->id;
 }
 
 static int32_t
@@ -433,6 +470,26 @@ bare_ffmpeg_stream_get_codec_parameters(
   parameters->handle = stream->handle->codecpar;
 
   return handle;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_stream_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = stream->handle->time_base.num;
+  data[1] = stream->handle->time_base.den;
+
+  return result;
 }
 
 static js_arraybuffer_t
@@ -791,6 +848,12 @@ bare_ffmpeg_codec_context_send_packet(
 ) {
   int err;
 
+#ifdef AUTO_TIMEBASE
+  if (unknown_timebase(context->handle->time_base)) {
+    fprintf(stderr, "Warn: decoder.timeBase is invalid. timings will be lost\n");
+  }
+#endif
+
   err = avcodec_send_packet(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -819,6 +882,14 @@ bare_ffmpeg_codec_context_receive_packet(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  // cleared by encoder
+  assert(unknown_timebase(packet->handle->time_base));
+
+  // Copy encoder timebase to packet
+  packet->handle->time_base = context->handle->time_base;
+#endif
+
   return err == 0;
 }
 
@@ -830,6 +901,18 @@ bare_ffmpeg_codec_context_send_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   int err;
+
+#ifdef AUTO_TIMEBASE
+  auto src_tb = frame->handle->time_base;
+  auto dst_tb = context->handle->time_base;
+
+  // timebases must be known
+  if (!unknown_timebase(src_tb) && !unknown_timebase(dst_tb)) {
+    // Auto-convert frame timestamps to encoder timebase
+    frame->handle->pts = av_rescale_q(frame->handle->pts, src_tb, dst_tb);
+    frame->handle->time_base = dst_tb;
+  }
+#endif
 
   err = avcodec_send_frame(context->handle, frame->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
@@ -858,6 +941,13 @@ bare_ffmpeg_codec_context_receive_frame(
 
     throw js_pending_exception;
   }
+
+#ifdef AUTO_TIMEBASE
+  // Copy encoder timebase to frame
+  assert(unknown_timebase(frame->handle->time_base));
+  assert(!unknown_timebase(context->handle->time_base) && "DECODER TIME_BASE");
+  frame->handle->time_base = context->handle->time_base;
+#endif
 
   return err == 0;
 }
@@ -1089,6 +1179,80 @@ bare_ffmpeg_frame_get_pict_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   return frame->handle->pict_type;
+}
+
+static int64_t
+bare_ffmpeg_frame_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int64_t ts = frame->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_frame_set_pts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_frame_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = frame->handle->time_base.num;
+  data[1] = frame->handle->time_base.den;
+
+  return result;
+}
+static void
+bare_ffmpeg_frame_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int num,
+  int den
+) {
+  frame->handle->time_base.num = num;
+  frame->handle->time_base.den = den;
+}
+
+static int64_t
+bare_ffmpeg_frame_pts_for_timebase(
+  js_env_t *env,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t num,
+  int32_t den
+) {
+  int64_t ts = frame->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  AVRational target_base = {.num = num, .den = den};
+
+  return av_rescale_q(ts, frame->handle->time_base, target_base);
 }
 
 static void
@@ -1353,6 +1517,133 @@ bare_ffmpeg_packet_get_stream_index(
   return packet->handle->stream_index;
 }
 
+static void
+bare_ffmpeg_packet_set_stream_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t value
+) {
+  packet->handle->stream_index = value;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->dts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->dts = value;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->pts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_packet_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = packet->handle->time_base.num;
+  data[1] = packet->handle->time_base.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_packet_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int num,
+  int den
+) {
+  packet->handle->time_base.num = num;
+  packet->handle->time_base.den = den;
+}
+
+static int64_t
+bare_ffmpeg_packet_dts_for_timebase(
+  js_env_t *env,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t num,
+  int32_t den
+) {
+  int64_t ts = packet->handle->dts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  AVRational target_base = {.num = num, .den = den};
+
+  return av_rescale_q(ts, packet->handle->time_base, target_base);
+}
+
+static int64_t
+bare_ffmpeg_packet_pts_for_timebase(
+  js_env_t *env,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t num,
+  int32_t den
+) {
+  int64_t ts = packet->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  AVRational target_base = {.num = num, .den = den};
+
+  return av_rescale_q(ts, packet->handle->time_base, target_base);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_packet_get_data(
   js_env_t *env,
@@ -1437,6 +1728,9 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
+  int err = av_frame_copy_props(target->handle, source->handle);
+  assert(err == 0);
+
   return sws_scale(
     scaler->handle,
     reinterpret_cast<const uint8_t *const *>(source->handle->data),
@@ -1856,8 +2150,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
+  V("getStreamIndex", bare_ffmpeg_stream_get_index)
+  V("getStreamId", bare_ffmpeg_stream_get_id)
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
+  V("getStreamTimeBase", bare_ffmpeg_stream_get_time_base)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
@@ -1913,6 +2210,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameChannelLayout", bare_ffmpeg_frame_set_channel_layout)
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
+  V("getFramePTS", bare_ffmpeg_frame_get_pts)
+  V("setFramePTS", bare_ffmpeg_frame_set_pts)
+  V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
+  V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
+  V("framePTSForTimeBase", bare_ffmpeg_frame_pts_for_timebase)
   V("getFramePictType", bare_ffmpeg_frame_get_pict_type)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
@@ -1928,6 +2230,15 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
+  V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
+  V("getPacketDTS", bare_ffmpeg_packet_get_dts)
+  V("setPacketDTS", bare_ffmpeg_packet_set_dts)
+  V("getPacketPTS", bare_ffmpeg_packet_get_pts)
+  V("setPacketPTS", bare_ffmpeg_packet_set_pts)
+  V("getPacketTimeBase", bare_ffmpeg_packet_get_time_base)
+  V("setPacketTimeBase", bare_ffmpeg_packet_set_time_base)
+  V("packetPTSForTimeBase", bare_ffmpeg_packet_pts_for_timebase)
+  V("packetDTSForTimeBase", bare_ffmpeg_packet_dts_for_timebase)
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
 
