@@ -94,6 +94,17 @@ typedef struct {
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
+// Feature flagged
+#define AUTO_TIMEBASE
+
+#ifdef AUTO_TIMEBASE
+static inline bool
+unknown_timebase(const AVRational r) {
+  return r.den < 1 || // denominator invalid
+    av_q2d(r) == 0; // initial state (0 / 1)
+}
+#endif
+
 static void
 bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
@@ -405,9 +416,12 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
-  if (av_q2d(packet->handle->time_base) == 0) {
-    packet->handle->time_base = context->handle->streams[packet->handle->stream_index]->time_base;
-  }
+#ifdef AUTO_TIMEBASE
+  // Copy format::stream timebase to packet
+  assert(unknown_timebase(packet->handle->time_base)); // was cleared
+
+  packet->handle->time_base = context->handle->streams[packet->handle->stream_index]->time_base;
+#endif
 
   return err == 0;
 }
@@ -844,6 +858,14 @@ bare_ffmpeg_codec_context_receive_packet(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  // cleared by encoder
+  assert(unknown_timebase(packet->handle->time_base));
+
+  // Copy encoder timebase to packet
+  packet->handle->time_base = context->handle->time_base;
+#endif
+
   return err == 0;
 }
 
@@ -855,6 +877,18 @@ bare_ffmpeg_codec_context_send_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   int err;
+
+#ifdef AUTO_TIMEBASE
+  auto src_tb = frame->handle->time_base;
+  auto dst_tb = context->handle->time_base;
+
+  // timebases must be known
+  if (!unknown_timebase(src_tb) && !unknown_timebase(dst_tb)) {
+    // Auto-convert frame timestamps to encoder timebase
+    frame->handle->pts = av_rescale_q(frame->handle->pts, src_tb, dst_tb);
+    frame->handle->time_base = dst_tb;
+  }
+#endif
 
   err = avcodec_send_frame(context->handle, frame->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
@@ -884,9 +918,11 @@ bare_ffmpeg_codec_context_receive_frame(
     throw js_pending_exception;
   }
 
-  if (av_q2d(frame->handle->time_base) == 0) {
-    frame->handle->time_base = context->handle->time_base;
-  }
+#ifdef AUTO_TIMEBASE
+  // Copy encoder timebase to frame
+  assert(unknown_timebase(frame->handle->time_base));
+  frame->handle->time_base = context->handle->time_base;
+#endif
 
   return err == 0;
 }
