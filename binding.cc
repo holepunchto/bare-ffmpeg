@@ -1164,31 +1164,21 @@ bare_ffmpeg_image_fill(
 ) {
   int err;
 
-  // For RGB24, we need to copy the data to the frame's allocated buffer
-  if (pixel_format == AV_PIX_FMT_RGB24) {
-    int expected_size = width * height * 3; // RGB24 = 3 bytes per pixel
+  auto len = av_image_fill_arrays(
+    frame->handle->data,
+    frame->handle->linesize,
+    &data[static_cast<size_t>(offset)],
+    static_cast<AVPixelFormat>(pixel_format),
+    width,
+    height,
+    align
+  );
 
-    if (frame->handle->data[0] != NULL) {
-      memcpy(frame->handle->data[0], &data[static_cast<size_t>(offset)], static_cast<size_t>(expected_size));
-    }
-  } else {
-    // For other formats, use the original approach
-    auto len = av_image_fill_arrays(
-      frame->handle->data,
-      frame->handle->linesize,
-      &data[static_cast<size_t>(offset)],
-      static_cast<AVPixelFormat>(pixel_format),
-      width,
-      height,
-      align
-    );
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
 
-    if (len < 0) {
-      err = js_throw_error(env, NULL, av_err2str(len));
-      assert(err == 0);
-
-      throw js_pending_exception;
-    }
+    throw js_pending_exception;
   }
 }
 
