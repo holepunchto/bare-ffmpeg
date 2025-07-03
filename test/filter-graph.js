@@ -7,8 +7,8 @@ const aspectRatio = new ffmpeg.Rational(1, 1)
 test('it should expose a FilterGraph class', (t) => {
   using graph = new ffmpeg.FilterGraph(
     'null',
-    400,
-    400,
+    1,
+    1,
     ffmpeg.constants.pixelFormats.RGB24,
     timeBase,
     aspectRatio
@@ -20,8 +20,8 @@ test('it should expose a FilterGraph class', (t) => {
 test('FilterGraph class should expose a destroy method', (t) => {
   const graph = new ffmpeg.FilterGraph(
     'null',
-    400,
-    400,
+    1,
+    1,
     ffmpeg.constants.pixelFormats.RGB24,
     timeBase,
     aspectRatio
@@ -35,8 +35,8 @@ test('FilterGraph class should expose a destroy method', (t) => {
 test('FilterGraph class should expose a pushFrame method', (t) => {
   using graph = new ffmpeg.FilterGraph(
     'negate',
-    100,
-    100,
+    1,
+    1,
     ffmpeg.constants.pixelFormats.RGB24,
     timeBase,
     aspectRatio
@@ -49,8 +49,8 @@ test('FilterGraph class should expose a pushFrame method', (t) => {
 test('FilterGraph class should expose a pullFrame method', (t) => {
   using graph = new ffmpeg.FilterGraph(
     'negate',
-    100,
-    100,
+    1,
+    1,
     ffmpeg.constants.pixelFormats.RGB24,
     timeBase,
     aspectRatio
@@ -66,8 +66,8 @@ test('FilterGraph class should expose a pullFrame method', (t) => {
 test('negate filter should actually negate RGB values in the buffer', (t) => {
   using graph = new ffmpeg.FilterGraph(
     'negate',
-    100,
-    100,
+    1,
+    1,
     ffmpeg.constants.pixelFormats.RGB24,
     timeBase,
     aspectRatio
@@ -83,8 +83,8 @@ test('negate filter should actually negate RGB values in the buffer', (t) => {
 
   const outputImage = new ffmpeg.Image(
     ffmpeg.constants.pixelFormats.RGB24,
-    100,
-    100
+    1,
+    1
   )
   outputImage.read(outputFrame)
 
@@ -95,7 +95,7 @@ test('negate filter should actually negate RGB values in the buffer', (t) => {
 
 // Helpers
 
-function createFrame(width = 100, height = 100) {
+function createFrame(width = 1, height = 1) {
   const frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
@@ -104,7 +104,7 @@ function createFrame(width = 100, height = 100) {
   return frame
 }
 
-function createRedImage(width = 100, height = 100) {
+function createRedImage(width = 1, height = 1) {
   const image = new ffmpeg.Image(
     ffmpeg.constants.pixelFormats.RGB24,
     width,
