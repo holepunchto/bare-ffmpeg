@@ -408,6 +408,24 @@ bare_ffmpeg_format_context_read_frame(
 }
 
 static int32_t
+bare_ffmpeg_stream_get_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->index;
+}
+
+static int32_t
+bare_ffmpeg_stream_get_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->id;
+}
+
+static int32_t
 bare_ffmpeg_stream_get_codec(
   js_env_t *env,
   js_receiver_t,
@@ -1856,6 +1874,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
 
+  V("getStreamIndex", bare_ffmpeg_stream_get_index)
+  V("getStreamId", bare_ffmpeg_stream_get_id)
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
