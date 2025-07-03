@@ -573,6 +573,16 @@ Parameters:
 
 **Returns**: void
 
+##### `Image.read(frame)`
+
+Reads image data from a frame into the image buffer.
+
+Parameters:
+
+- `frame` (`Frame`): The frame to read from
+
+**Returns**: void
+
 ##### `Image.lineSize([plane])`
 
 Gets the line size for a specific plane.
