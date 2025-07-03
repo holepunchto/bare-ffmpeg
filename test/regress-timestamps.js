@@ -2,50 +2,16 @@ const test = require('brittle')
 
 const ffmpeg = require('..')
 
-test('packet & frame can convert timebase', async t => {
-  const { defer, clean } = usingWorkaround()
-
-  const ts = 9999999
-
-  const expected = Math.round(ts * ((1 / 1e6) / (1 / 1000))) // av_rescale_q(t, Ta, Tb)
-
-  // Packet
-
-  const packet = new ffmpeg.Packet(Buffer.alloc(8))
-  // defer(packet) // segfaults
-
-  packet.dts = ts
-  packet.timeBase = new ffmpeg.Rational(1, 1e6)
-
-  const target = new ffmpeg.Rational(1, 1000)
-
-
-  t.is(packet.dtsFor(target), expected)
-
-  packet.pts = ts
-
-  t.is(packet.ptsFor(target), expected)
-
-  // Frame
-
-  const frame = new ffmpeg.Frame()
-  // defer(frame) // segfaults
-
-  frame.timeBase = new ffmpeg.Rational(1, 1e6)
-
-  frame.pts = ts
-
-  t.is(packet.ptsFor(target), expected)
-
-  await clean()
-  console.log('clean')
-})
-
-const TIMEBASE_MS = new ffmpeg.Rational(1, 1000)
-
 /**
- * packet.time_base and frame.time_base are mostly unused
- * by encoders (assert guards have been installed)
+ *
+ * TL;DR; Researched what i can for now.
+ * need to rewrite muxer in order to finish this patch.
+ *
+ * The Problem:
+ * Format & Encoder contexts have/provide time_base.
+ *
+ * Packet.time_base and Frame.time_base are mostly unused
+ * by encoders (installed assert guards)
  *
  * The common way to implement ffmpeg timestamps:
  *  - Take `Ts` = InputFormat::Stream(n).time_base
@@ -55,14 +21,15 @@ const TIMEBASE_MS = new ffmpeg.Rational(1, 1000)
  *
  * Pros:
  *  - less headache during capture/prefilter
+ *  - raw timestamps
  * Cons:
- *  - Encoders that specify timebase to framerate receive invalid timing info.
  *  - Time unavailable inside pipeline
+ *  - Encoders that expect timebase to equal framerate receive invalid timestamps.
  *  - OutputFormat has to recreate time by matching packets to multiple streams' `Ts`
  *    in order to perform a synchroneous flush.
  *
  *
- * This patch introduces feature AUTO_TIMEBASE
+ * This patch introduces feature AUTO_TIMEBASE (experimental)
  * Where we simply set packet.time_base to `Ts` and
  * ensure that known information is never lost in-between pipeline-ops.
  *
@@ -70,8 +37,8 @@ const TIMEBASE_MS = new ffmpeg.Rational(1, 1000)
  *  - Each frame & packet always have valid timestamps (well defined TimeBase)
  *  - Reduce complexity when muxing streams
  * Cons:
+ *  - Precision loss
  *  - "when in doubt" ffmpeg resets time_base to (0 / 1).
- *  - pts/dts should not be used for identity (can be rescaled)
  *
  * AVInputFormatContext.streams[0].time_base; contains persisted/generated timebase
  * AVCodecContext.pkt_timebase; specifies incoming packet's timebase during decoding
@@ -169,6 +136,8 @@ test('timebase information is preserved between operations for video capture', a
   const decoder = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
   defer(decoder)
 
+  decoder.timeBase = encoder.timeBase
+
   decoder.open()
 
   const yuvDecoded = new ffmpeg.Frame()
@@ -218,6 +187,8 @@ test('timebase information is preserved between operations for video capture', a
        * So encoder.sendFrame now converts timestamps:
        *    frame.pts = frame.ptsFor(encoder.timebase)
        *    frame.timebase = encoder.timebase
+       *
+       * FIXME: precision loss
        */
       encoder.sendFrame(yuvFrame)
 
@@ -240,6 +211,7 @@ test('timebase information is preserved between operations for video capture', a
         const payload = {
           data: packet.data.slice(), // copy
           timeBase: packet.timeBase,
+          // NOTE want higher res here. (keep Audio/Video in sync)
           pts: packet.pts,
           dts: packet.dts
         }
@@ -247,19 +219,22 @@ test('timebase information is preserved between operations for video capture', a
 
         // BEGIN DECODING
         const decoderPacket = new ffmpeg.Packet(payload.data)
-        // decoderPacket.dts = payload.dts
-        // decoderPacket.pts = payload.pts
-        // decoderPacket.timeBase = packet.timeBase // set by inputformat
+        decoderPacket.dts = payload.dts
+        decoderPacket.pts = payload.pts
+        decoderPacket.timeBase = packet.timeBase // set by inputformat
 
         decoder.sendPacket(decoderPacket)
         decoderPacket.unref()
 
         while (decoder.receiveFrame(yuvDecoded)) {
-          t.not(yuvDecoded.pts, -1)
+          t.not(yuvDecoded.pts, -1, 'timestamp not lost by decoder')
+          t.alike(yuvDecoded.timeBase, payload.timeBase, 'timebase not lost by decoder')
 
-          t.alike(yuvDecoded.timeBase, OUTPUT_TIMEBASE, 'packet has final timebase')
+          // TODO:
+          // t.alike(yuvDecoded.timeBase, OUTPUT_TIMEBASE, 'packet has final timebase')
 
-          console.log('render frame @', yuvDecoded.ptsFor(TIMEBASE_MS), 'ms')
+          const msTimebase = new ffmpeg.Rational(1, 1000)
+          t.comment('render frame @', yuvDecoded.ptsFor(msTimebase), 'ms')
         }
       }
 
@@ -267,8 +242,54 @@ test('timebase information is preserved between operations for video capture', a
     }
   }
 
+  // TODO: redo loops/ encoder is not flushed at test end
+  t.comment('captured', nCaptured, 'encoded', nEncoded)
+
   await clean()
 })
+
+test('packet & frame can convert timebase', async t => {
+  const { defer, clean } = usingWorkaround()
+
+  const ts = 9999999
+
+  const expected = Math.round(ts * ((1 / 1e6) / (1 / 1000))) // av_rescale_q(t, Ta, Tb)
+
+  // Packet
+
+  const packet = new ffmpeg.Packet(Buffer.alloc(8))
+  // defer(packet) // segfaults (dummy packet)
+
+  packet.dts = ts
+  packet.timeBase = new ffmpeg.Rational(1, 1e6)
+
+  const target = new ffmpeg.Rational(1, 1000)
+
+
+  t.is(packet.dtsFor(target), expected)
+
+  packet.pts = ts
+
+  t.is(packet.ptsFor(target), expected)
+
+  // Frame
+
+  const frame = new ffmpeg.Frame()
+  frame.width = 240
+  frame.height = 160
+  frame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  // frame.alloc()
+  // defer(frame) // segfaults (dummy frame)
+
+  frame.timeBase = new ffmpeg.Rational(1, 1e6)
+
+  frame.pts = ts
+
+  t.is(packet.ptsFor(target), expected)
+
+  await clean()
+})
+
 
 
 // keyword 'using' breaks eslint

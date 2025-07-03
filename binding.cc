@@ -830,6 +830,12 @@ bare_ffmpeg_codec_context_send_packet(
 ) {
   int err;
 
+#ifdef AUTO_TIMEBASE
+  if (unknown_timebase(context->handle->time_base)) {
+    fprintf(stderr, "Warn: decoder.timeBase is invalid. timings will be lost\n");
+  }
+#endif
+
   err = avcodec_send_packet(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -921,6 +927,7 @@ bare_ffmpeg_codec_context_receive_frame(
 #ifdef AUTO_TIMEBASE
   // Copy encoder timebase to frame
   assert(unknown_timebase(frame->handle->time_base));
+  assert(!unknown_timebase(context->handle->time_base) && "DECODER TIME_BASE");
   frame->handle->time_base = context->handle->time_base;
 #endif
 
