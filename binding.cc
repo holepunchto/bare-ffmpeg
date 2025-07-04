@@ -369,8 +369,7 @@ static js_arraybuffer_t
 bare_ffmpeg_format_context_create_stream(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
 ) {
   int err;
 
@@ -380,7 +379,7 @@ bare_ffmpeg_format_context_create_stream(
   err = js_create_arraybuffer(env, stream, handle);
   assert(err == 0);
 
-  stream->handle = avformat_new_stream(context->handle, codec->handle);
+  stream->handle = avformat_new_stream(context->handle, NULL);
 
   return handle;
 }
@@ -423,6 +422,26 @@ bare_ffmpeg_stream_get_id(
   js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
 ) {
   return stream->handle->id;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_stream_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = stream->handle->time_base.num;
+  data[1] = stream->handle->time_base.den;
+
+  return result;
 }
 
 static int32_t
@@ -999,6 +1018,24 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
   return result;
 }
 
+static int32_t
+bare_ffmpeg_codec_parameters_get_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->width;
+}
+
+static int32_t
+bare_ffmpeg_codec_parameters_get_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->height;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
@@ -1369,6 +1406,16 @@ bare_ffmpeg_packet_get_stream_index(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   return packet->handle->stream_index;
+}
+
+static void
+bare_ffmpeg_packet_set_stream_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t value
+) {
+  packet->handle->stream_index = value;
 }
 
 static js_arraybuffer_t
@@ -1876,6 +1923,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("getStreamIndex", bare_ffmpeg_stream_get_index)
   V("getStreamId", bare_ffmpeg_stream_get_id)
+  V("getStreamTimeBase", bare_ffmpeg_stream_get_time_base)
   V("getStreamCodec", bare_ffmpeg_stream_get_codec)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
@@ -1918,6 +1966,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
+  V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
+  V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
@@ -1948,6 +1998,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
+  V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
 
