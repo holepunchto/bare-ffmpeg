@@ -67,7 +67,7 @@ jobs:
           node-version: lts/*
       - run: |
           sudo apt update
-          sudo apt install -y meson nasm
+          sudo apt install -y meson nasm libpulse-dev libjack-jackd2-dev
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: brew install meson nasm
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
