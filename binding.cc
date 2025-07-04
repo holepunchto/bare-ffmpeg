@@ -14,6 +14,9 @@ extern "C" {
 #include <libavcodec/codec_par.h>
 #include <libavcodec/packet.h>
 #include <libavdevice/avdevice.h>
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/audio_fifo.h>
@@ -90,6 +93,12 @@ typedef struct {
 typedef struct {
   AVAudioFifo *handle;
 } bare_ffmpeg_audio_fifo_t;
+
+typedef struct {
+  AVFilterGraph *handle;
+  AVFilterContext *src;
+  AVFilterContext *sink;
+} bare_ffmpeg_filtergraph_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -1830,6 +1839,121 @@ bare_ffmpeg_audio_fifo_space(
   return av_audio_fifo_space(fifo->handle);
 }
 
+js_arraybuffer_t
+bare_ffmpeg_filtergraph_init(
+  js_env_t *env,
+  js_receiver_t,
+  std::string filter_description,
+  int width,
+  int height,
+  int pix_fmt,
+  int time_base_num,
+  int time_base_den,
+  int aspect_ratio_num,
+  int aspect_ratio_den
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_filtergraph_t *graph;
+  err = js_create_arraybuffer(env, graph, handle);
+  assert(err == 0);
+
+  graph->handle = avfilter_graph_alloc();
+  assert(graph->handle != nullptr);
+
+  char args[512];
+  int printed_size = snprintf(
+    args,
+    sizeof(args),
+    "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+    width,
+    height,
+    pix_fmt,
+    time_base_num,
+    time_base_den,
+    aspect_ratio_num,
+    aspect_ratio_den
+  );
+  assert(printed_size > 0 && printed_size < static_cast<int>(sizeof(args)));
+
+  AVFilterContext *buffer_src_ctx = nullptr;
+  const AVFilter *buffer_src = avfilter_get_by_name("buffer");
+  err = avfilter_graph_create_filter(&buffer_src_ctx, buffer_src, "in", args, nullptr, graph->handle);
+  assert(err == 0);
+
+  graph->src = buffer_src_ctx;
+
+  AVFilterContext *buffer_sink_ctx = nullptr;
+  const AVFilter *buffer_sink = avfilter_get_by_name("buffersink");
+  err = avfilter_graph_create_filter(&buffer_sink_ctx, buffer_sink, "out", nullptr, nullptr, graph->handle);
+  assert(err == 0);
+
+  enum AVPixelFormat pix_fmts[] = {static_cast<AVPixelFormat>(pix_fmt), AV_PIX_FMT_NONE};
+  av_opt_set_int_list(buffer_sink_ctx, "pix_fmts", pix_fmts, -1, AV_OPT_SEARCH_CHILDREN);
+
+  graph->sink = buffer_sink_ctx;
+
+  AVFilterInOut *inputs = avfilter_inout_alloc();
+  assert(inputs != nullptr);
+  inputs->name = av_strdup("out");
+  inputs->filter_ctx = buffer_sink_ctx;
+  inputs->pad_idx = 0;
+  inputs->next = NULL;
+
+  AVFilterInOut *outputs = avfilter_inout_alloc();
+  assert(outputs != nullptr);
+  outputs->name = av_strdup("in");
+  outputs->filter_ctx = buffer_src_ctx;
+  outputs->pad_idx = 0;
+  outputs->next = NULL;
+
+  err = avfilter_graph_parse_ptr(graph->handle, filter_description.c_str(), &inputs, &outputs, NULL);
+  assert(err == 0);
+
+  err = avfilter_graph_config(graph->handle, NULL);
+  assert(err == 0);
+
+  avfilter_inout_free(&inputs);
+  avfilter_inout_free(&outputs);
+
+  return handle;
+}
+
+void
+bare_ffmpeg_filtergraph_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filtergraph_t, 1> graph
+) {
+  if (graph->handle) {
+    avfilter_graph_free(&graph->handle);
+    graph->handle = NULL;
+  }
+}
+
+int
+bare_ffmpeg_filtergraph_push_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filtergraph_t, 1> graph,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int result = av_buffersrc_add_frame(graph->src, frame->handle);
+
+  return result;
+}
+
+int
+bare_ffmpeg_filtergraph_pull_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filtergraph_t, 1> graph,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return av_buffersink_get_frame(graph->sink, frame->handle);
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -1959,6 +2083,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("resetAudioFifo", bare_ffmpeg_audio_fifo_reset)
   V("getAudioFifoSize", bare_ffmpeg_audio_fifo_size)
   V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
+
+  V("initFilterGraph", bare_ffmpeg_filtergraph_init)
+  V("destroyFilterGraph", bare_ffmpeg_filtergraph_destroy)
+  V("pushFrameFilterGraph", bare_ffmpeg_filtergraph_push_frame)
+  V("pullFrameFilterGraph", bare_ffmpeg_filtergraph_pull_frame)
 #undef V
 
 #define V(name) \
