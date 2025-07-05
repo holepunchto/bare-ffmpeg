@@ -39,7 +39,10 @@ test('write webm', async (t) => {
 
   // output
 
-  const io = new ffmpeg.IOContext()
+  const onwrite = buffer => {
+    console.log('on write', buffer.byteLength)
+  }
+  const io = new ffmpeg.IOContext(Buffer.alloc(4096), onwrite)
   defer(io)
 
   const format = new ffmpeg.OutputFormatContext(
@@ -48,22 +51,56 @@ test('write webm', async (t) => {
   )
   defer(format)
 
-  const outputStream = format.createStreamFrom(encoder)
+  const outputStream = format.createStream()
 
-  console.log('out', outputStream, outputStream.codecParameters)
+  // configure output stream to match encoder
+  outputStream.codecParameters.fromContext(encoder)
+  outputStream.timeBase = inputStream.timeBase
+  outputStream.id = 1911 // defined by user or arbitrary format spec
 
-  t.is(outputStream.id, 0, 'id initalized')
-  t.is(outputStream.codecParameters.codecType, ffmpeg.constants.mediaTypes.VIDEO, 'media type set from codec')
-  t.is(outputStream.codecParameters.codec_id, ffmpeg.Codec.AV1.id, 'codec set')
-  t.is(outputStream.codecParameters.width, width, 'width copied from encoder')
-  t.is(outputStream.codecParameters.height, height, 'height copied from encoder')
-  t.is(outputStream.timeBase, inputStream.timeBase, 'framerate copied from encoder')
+  // assert props
+  t.is(outputStream.id, 1911, 'id')
+  t.is(outputStream.index, 0, 'stream index')
+  t.alike(outputStream.timeBase, inputStream.timeBase, 'framerate')
+  t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
+
+  // assert param's props
+  t.is(outputStream.codecParameters.codecType, ffmpeg.constants.mediaTypes.VIDEO, 'media type')
+  t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.AV1.id, 'codec')
+  t.is(outputStream.codecParameters.width, width, 'width')
+  t.is(outputStream.codecParameters.height, height, 'height')
 
   // transcode
   const frame = new ffmpeg.Frame()
   const packet = new ffmpeg.Packet()
 
-  // await clean()
+  format.writeHeader()
+
+  const captured = 0
+  while (captured < 120) {
+    const status = inFormat.readFrame(packet)
+    if (!status) throw new Error('failed capturing frame')
+
+    console.log(packet)
+
+    decoder.sendPacket(packet)
+    packet.unref()
+
+    captured++
+  }
+
+  while (decoder.receiveFrame(frame)) {
+    encoder.sendFrame(frame)
+  }
+
+  while (encoder.receivePacket(packet)) {
+    format.writePacket(packet)
+    packet.unref()
+  }
+
+  format.writeEnd()
+
+  await clean()
 })
 
 function avsynctestInput () {

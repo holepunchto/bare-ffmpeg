@@ -32,7 +32,12 @@ extern "C" {
 }
 
 typedef struct {
+  using on_write_cb = js_function_t<void, js_arraybuffer_t>;
+
   AVIOContext *handle;
+
+  js_env_t *env;
+  js_persistent_t<on_write_cb> on_write;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -100,13 +105,37 @@ bare_ffmpeg__on_init(void) {
   avdevice_register_all();
 }
 
+static int
+io_context_write_packet (void *opaque, const uint8_t *chunk, int len) {
+  auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+  auto env = context->env;
+
+  bare_ffmpeg_io_context_t::on_write_cb callback;
+
+  int err = js_get_reference_value(env, context->on_write, callback);
+  assert(err == 0);
+
+  js_arraybuffer_t data;
+  err = js_create_arraybuffer(env, chunk, static_cast<size_t>(len), data);
+
+  assert(err == 0);
+
+  // TODO: running on js-stack during avformat_write_header()
+  // trace other invocations, pray singlethread.
+  err = js_call_function(env, callback, data);
+  assert(err == 0);
+
+  return err;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_io_context_init(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_t data,
   uint64_t offset,
-  uint64_t len
+  uint64_t len,
+  std::optional<bare_ffmpeg_io_context_t::on_write_cb> on_write
 ) {
   int err;
 
@@ -116,6 +145,10 @@ bare_ffmpeg_io_context_init(
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
+  context->env = env;
+
+  // TODO: for stream read support
+  // remove memcpy and provide read/seek callbacks below
   uint8_t *io;
   size_t size = static_cast<size_t>(len);
 
@@ -126,8 +159,24 @@ bare_ffmpeg_io_context_init(
     memcpy(io, &data[static_cast<size_t>(offset)], size);
   }
 
-  context->handle = avio_alloc_context(io, static_cast<int>(len), 0, NULL, NULL, NULL, NULL);
-  context->handle->opaque = (void *) context;
+  int write_flag = 0;
+
+  if (on_write) {
+    write_flag = 1;
+    err = js_create_reference(env, *on_write, context->on_write);
+    assert(err == 0);
+  }
+
+  context->handle = avio_alloc_context(
+    io,
+    static_cast<int>(len),
+    write_flag,
+    context,
+    NULL, // io_context_read_packet
+    io_context_write_packet,
+    NULL // io_context_seek
+  );
+  assert(context->handle->opaque == context);
 
   return handle;
 }
@@ -141,6 +190,8 @@ bare_ffmpeg_io_context_destroy(
   av_free(context->handle->buffer);
 
   avio_context_free(&context->handle);
+
+  context->on_write.reset();
 }
 
 static js_arraybuffer_t
@@ -406,6 +457,34 @@ bare_ffmpeg_format_context_read_frame(
   return err == 0;
 }
 
+static bool
+bare_ffmpeg_format_context_write_header(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1>> muxer_options
+) {
+  int err;
+
+  if (!muxer_options) {
+    err = avformat_write_header(context->handle, NULL);
+  } else {
+    auto dict = *muxer_options;
+
+    err = avformat_write_header(context->handle, &dict->handle);
+    // TODO: in js, throw if dict->non_empty() everywhere after use.
+  }
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return err;
+}
+
 static int32_t
 bare_ffmpeg_stream_get_index(
   js_env_t *env,
@@ -422,6 +501,28 @@ bare_ffmpeg_stream_get_id(
   js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
 ) {
   return stream->handle->id;
+}
+
+static void
+bare_ffmpeg_stream_set_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int32_t id
+) {
+  stream->handle->id = id;
+}
+
+static void
+bare_ffmpeg_stream_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int num,
+  int den
+) {
+  stream->handle->time_base.num = num;
+  stream->handle->time_base.den = den;
 }
 
 static js_arraybuffer_t
@@ -442,15 +543,6 @@ bare_ffmpeg_stream_get_time_base(
   data[1] = stream->handle->time_base.den;
 
   return result;
-}
-
-static int32_t
-bare_ffmpeg_stream_get_codec(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
-) {
-  return stream->handle->codecpar->codec_id;
 }
 
 static js_arraybuffer_t
@@ -996,6 +1088,15 @@ bare_ffmpeg_codec_parameters_get_codec_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->codec_type;
+}
+
+static int32_t
+bare_ffmpeg_codec_parameters_get_codec_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->codec_id;
 }
 
 static js_arraybuffer_t
@@ -1920,11 +2021,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
+  V("writeFormatContextHeader", bare_ffmpeg_format_context_write_header)
 
   V("getStreamIndex", bare_ffmpeg_stream_get_index)
   V("getStreamId", bare_ffmpeg_stream_get_id)
+  V("setStreamId", bare_ffmpeg_stream_set_id)
   V("getStreamTimeBase", bare_ffmpeg_stream_get_time_base)
-  V("getStreamCodec", bare_ffmpeg_stream_get_codec)
+  V("setStreamTimeBase", bare_ffmpeg_stream_set_time_base)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
@@ -1965,6 +2068,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
