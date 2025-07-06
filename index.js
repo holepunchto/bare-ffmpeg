@@ -21,6 +21,7 @@ const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const Rational = require('./lib/rational')
 const Resampler = require('./lib/resampler')
+const binding = require('./binding')
 
 exports.AudioFIFO = AudioFIFO
 exports.ChannelLayout = ChannelLayout
@@ -45,3 +46,13 @@ exports.Rational = Rational
 exports.Resampler = Resampler
 
 exports.constants = require('./lib/constants')
+
+Object.defineProperty(exports, 'logLevel', {
+  get() {
+    return binding.getLogLevel()
+  },
+
+  set(level) {
+    return binding.setLogLevel(level)
+  }
+})

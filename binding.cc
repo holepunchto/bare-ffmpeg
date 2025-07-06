@@ -31,13 +31,13 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-typedef struct {
-  using on_write_cb = js_function_t<void, js_arraybuffer_t>;
+using bare_ffmpeg_io_context_on_write_cb_t = js_function_t<void, js_arraybuffer_t>;
 
+typedef struct {
   AVIOContext *handle;
 
   js_env_t *env;
-  js_persistent_t<on_write_cb> on_write;
+  js_persistent_t<bare_ffmpeg_io_context_on_write_cb_t> on_write;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -105,12 +105,22 @@ bare_ffmpeg__on_init(void) {
   avdevice_register_all();
 }
 
+static int32_t
+bare_ffmpeg_log_get_level(js_env_t *) {
+  return av_log_get_level();
+}
+
+static void
+bare_ffmpeg_log_set_level(js_env_t *, int32_t level) {
+  av_log_set_level(level);
+}
+
 static int
 io_context_write_packet (void *opaque, const uint8_t *chunk, int len) {
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
   auto env = context->env;
 
-  bare_ffmpeg_io_context_t::on_write_cb callback;
+  bare_ffmpeg_io_context_on_write_cb_t callback;
 
   int err = js_get_reference_value(env, context->on_write, callback);
   assert(err == 0);
@@ -135,7 +145,7 @@ bare_ffmpeg_io_context_init(
   js_arraybuffer_span_t data,
   uint64_t offset,
   uint64_t len,
-  std::optional<bare_ffmpeg_io_context_t::on_write_cb> on_write
+  std::optional<bare_ffmpeg_io_context_on_write_cb_t> on_write
 ) {
   int err;
 
@@ -192,6 +202,33 @@ bare_ffmpeg_io_context_destroy(
   avio_context_free(&context->handle);
 
   context->on_write.reset();
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_io_context_open_url(
+  js_env_t *env,
+  js_receiver_t,
+  std::string url,
+  int32_t flags
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_io_context_t *context;
+  err = js_create_arraybuffer(env, context, handle);
+  assert(err == 0);
+
+  err = avio_open(&context->handle, url.c_str(), flags);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return handle;
 }
 
 static js_arraybuffer_t
@@ -472,7 +509,12 @@ bare_ffmpeg_format_context_write_header(
     auto dict = *muxer_options;
 
     err = avformat_write_header(context->handle, &dict->handle);
-    // TODO: in js, throw if dict->non_empty() everywhere after use.
+
+    const AVDictionaryEntry *option = NULL;
+
+    while ((option = av_dict_iterate(dict->handle, option))) {
+      printf("WARNING! Ignored option key='%s' value='%s'\n", option->key, option->value);
+    }
   }
 
   if (err < 0) {
@@ -483,6 +525,38 @@ bare_ffmpeg_format_context_write_header(
   }
 
   return err;
+}
+static void
+bare_ffmpeg_format_context_write_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  auto p = packet->handle;
+  printf("packet sidx=%i size=%i dts=%zu pts=%zu\n", p->stream_index, p->size, p->dts, p->pts);
+  // __builtin_debugtrap();
+  int err = 0; // av_interleaved_write_frame(context->handle, packet->handle);
+
+  if (err < 0) {
+
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_dump(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  bool is_output,
+  int32_t index,
+  std::string url
+) {
+  av_dump_format(context->handle, index, url.c_str(), is_output);
 }
 
 static int32_t
@@ -612,6 +686,13 @@ bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   return handle;
 }
 
+static std::string
+bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
+  auto name = avcodec_get_name((enum AVCodecID) id);
+
+  return std::string(name);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_init(
   js_env_t *env,
@@ -650,6 +731,7 @@ bare_ffmpeg_codec_context_open(
   int err;
 
   err = avcodec_open2(context->handle, context->handle->codec, NULL);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1000,7 +1082,9 @@ bare_ffmpeg_codec_parameters_from_context(
 ) {
   int err;
 
+  printf("params from ctx, params=%i xsize=%i\n", parameters->handle->extradata_size, context->handle->extradata_size);
   err = avcodec_parameters_from_context(parameters->handle, context->handle);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -2006,7 +2090,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   err = js_set_property<fn>(env, exports, name); \
   assert(err == 0);
 
+  V("getLogLevel", bare_ffmpeg_log_get_level);
+  V("setLogLevel", bare_ffmpeg_log_set_level);
+
   V("initIOContext", bare_ffmpeg_io_context_init)
+  V("openIOContextURL", bare_ffmpeg_io_context_open_url)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
@@ -2022,6 +2110,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
   V("writeFormatContextHeader", bare_ffmpeg_format_context_write_header)
+  V("writeFormatContextFrame", bare_ffmpeg_format_context_write_frame)
+  V("dumpFormatContext", bare_ffmpeg_format_context_dump)
 
   V("getStreamIndex", bare_ffmpeg_stream_get_index)
   V("getStreamId", bare_ffmpeg_stream_get_id)
@@ -2032,6 +2122,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
+  V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
@@ -2144,6 +2235,16 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     err = js_set_named_property(env, exports, #name, val); \
     assert(err == 0); \
   }
+
+  V(AV_LOG_QUIET)
+  V(AV_LOG_PANIC)
+  V(AV_LOG_FATAL)
+  V(AV_LOG_ERROR)
+  V(AV_LOG_WARNING)
+  V(AV_LOG_INFO)
+  V(AV_LOG_VERBOSE)
+  V(AV_LOG_DEBUG)
+  V(AV_LOG_TRACE)
 
   V(AV_CODEC_ID_MJPEG)
   V(AV_CODEC_ID_H264)

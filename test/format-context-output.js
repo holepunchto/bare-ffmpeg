@@ -1,8 +1,10 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
+ffmpeg.logLevel = ffmpeg.constants.logLevels.TRACE
+
 test('write webm', async (t) => {
-  const { defer, clean } = usingWorkaround()
+  const { defer, clean } = usingDefer()
 
   // input
 
@@ -10,10 +12,14 @@ test('write webm', async (t) => {
   defer(inFormat)
 
   const inputStream = inFormat.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  if (!inputStream) throw new Error('getStream failed')
+
   t.alike(inputStream.timeBase, new ffmpeg.Rational(1, 60))
 
-  const { width, height } = inputStream.codecParameters
+  const videoIdx = inputStream.index
+  t.is(videoIdx, 1, 'video stream index')
 
+  const { width, height } = inputStream.codecParameters
   t.is(width, 1280)
   t.is(height, 720)
 
@@ -24,6 +30,7 @@ test('write webm', async (t) => {
   t.alike(decoder.timeBase, inputStream.timeBase, 'decoder.timebase')
 
   t.is(decoder.pixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
+  decoder.open()
 
   // encoder
 
@@ -33,33 +40,28 @@ test('write webm', async (t) => {
   encoder.width = width
   encoder.height = height
   encoder.pixelFormat = decoder.pixelFormat
-  encoder.timeBase = decoder.timeBase
+  encoder.timeBase = inputStream.timeBase
 
   encoder.open()
 
   // output
 
-  const onwrite = buffer => {
-    console.log('on write', buffer.byteLength)
-  }
-  const io = new ffmpeg.IOContext(Buffer.alloc(4096), onwrite)
+  const io = ffmpeg.IOContext.initFileOutput('out.webm')
   defer(io)
 
-  const format = new ffmpeg.OutputFormatContext(
-    new ffmpeg.OutputFormat('webm'),
-    io
-  )
+  const format = new ffmpeg.OutputFormatContext('webm', io)
   defer(format)
 
   const outputStream = format.createStream()
 
   // configure output stream to match encoder
   outputStream.codecParameters.fromContext(encoder)
+
   outputStream.timeBase = inputStream.timeBase
-  outputStream.id = 1911 // defined by user or arbitrary format spec
+  outputStream.id = format.streams.length - 1 // 1911 // defined by user or arbitrary format spec
 
   // assert props
-  t.is(outputStream.id, 1911, 'id')
+  t.is(outputStream.id, 0, 'id')
   t.is(outputStream.index, 0, 'stream index')
   t.alike(outputStream.timeBase, inputStream.timeBase, 'framerate')
   t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
@@ -70,35 +72,52 @@ test('write webm', async (t) => {
   t.is(outputStream.codecParameters.width, width, 'width')
   t.is(outputStream.codecParameters.height, height, 'height')
 
+  const formatOptions = new ffmpeg.Dictionary()
+  defer(formatOptions)
+
+  console.log('=====')
+  format.dump(0) // print output format
+  console.log('=====')
+
+  format.writeHeader(formatOptions)
+
   // transcode
   const frame = new ffmpeg.Frame()
   const packet = new ffmpeg.Packet()
 
-  format.writeHeader()
+  let captured = 0
+  let encoded = 0
 
-  const captured = 0
   while (captured < 120) {
     const status = inFormat.readFrame(packet)
     if (!status) throw new Error('failed capturing frame')
 
-    console.log(packet)
+    const { streamIndex } = packet
 
-    decoder.sendPacket(packet)
-    packet.unref()
+    if (streamIndex === videoIdx) { // process video
+      decoder.sendPacket(packet)
+      packet.unref()
 
-    captured++
+      while (decoder.receiveFrame(frame)) {
+        encoder.sendFrame(frame)
+        captured++
+
+        while (encoder.receivePacket(packet)) {
+          // console.log('forwarding encoded packet', packet.streamIndex, encoded, packet.data)
+
+          // breakpoint set --file mux.c --line 1144
+          format.writeFrame(packet)
+          packet.unref()
+
+          encoded++
+        }
+      }
+    }
   }
 
-  while (decoder.receiveFrame(frame)) {
-    encoder.sendFrame(frame)
-  }
+  format.writeTrailer()
 
-  while (encoder.receivePacket(packet)) {
-    format.writePacket(packet)
-    packet.unref()
-  }
-
-  format.writeEnd()
+  t.is(captured, encoded, 'transcoding complete')
 
   await clean()
 })
@@ -112,20 +131,72 @@ function avsynctestInput () {
     options
   )
 
+  format.dump()
   return format
 }
 
-// keyword 'using' breaks eslint & breaks error reporting
-function usingWorkaround () {
+// TODO: trace brittle resources
+// there are quite a few bare-ffmpeg objects that throw or segfault
+// when destroyed unless fully initialized
+
+/**
+ * keyword 'using' introduced by:
+ * https://github.com/tc39/proposal-explicit-resource-management
+ *
+ * Issues:
+ * - breaks eslint
+ * - breaks error reporting (fixed): https://github.com/holepunchto/bare-inspect/commit/e7b94845a1cb9de82c1fa50a5821cef45c7b279b
+ * - introduces ownership
+ * @param {number} trace - 0: default disabled, 1: detect & throw doublefree , 2: log all dispose calls
+ */
+function usingDefer (trace = 0) {
   const resources = []
+  let cleaning = false
+
   return {
     defer (r) {
       if (typeof (r[Symbol.asyncDispose] || r[Symbol.dispose]) !== 'function') throw new Error('not a resource')
+
       resources.push(r)
+
+      if (!trace) return
+
+      // assume strict ownership
+
+      const stack = (new Error()).stack.split('\n').slice(1).join('\n')
+
+      const target = r[Symbol.dispose]
+      if (typeof target === 'function') {
+        r[Symbol.dispose] = () => {
+          if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
+
+          if (trace > 1) {
+            console.info('Destroying ', r, ' @ ', stack)
+          }
+
+          target.apply(r)
+        }
+      }
+
+      const targetAsync = r[Symbol.asyncDispose]
+      if (typeof targetAsync === 'function') {
+        r[Symbol.asyncDispose] = async () => {
+          if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
+
+          if (trace > 1) {
+            console.info('Destroying ', r, ' @ ', stack)
+          }
+
+          return targetAsync.apply(r)
+        }
+      }
     },
 
     async clean () {
-      for (const r of resources) {
+      console.log('freeing', resources.length, 'resources')
+      cleaning = true
+
+      for (const r of resources.reverse()) {
         try {
           await (r[Symbol.asyncDispose] || r[Symbol.dispose]).apply(r)
         } catch (error) {
@@ -133,6 +204,8 @@ function usingWorkaround () {
           throw error
         }
       }
+
+      cleaning = false
     }
   }
 }
