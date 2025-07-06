@@ -533,10 +533,21 @@ bare_ffmpeg_format_context_write_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
-  auto p = packet->handle;
-  printf("packet sidx=%i size=%i dts=%zu pts=%zu\n", p->stream_index, p->size, p->dts, p->pts);
-  // __builtin_debugtrap();
-  int err = 0; // av_interleaved_write_frame(context->handle, packet->handle);
+
+  { // debug
+    auto p = packet->handle;
+
+    printf("packet sidx=%i size=%i dts=%zu pts=%zu side_data_count=%i:", p->stream_index, p->size, p->dts, p->pts, p->side_data_elems );
+
+    for (int i = 0; i < p->side_data_elems; i++) {
+      printf(", (type=%i: len=%zu)", p->side_data[i].type, p->side_data[i].size);
+    }
+
+    printf("\n");
+    // __builtin_debugtrap();
+  }
+
+  int err = av_write_frame(context->handle, packet->handle); // av_interleaved_write_frame(context->handle, packet->handle);
 
   if (err < 0) {
 
@@ -556,6 +567,7 @@ bare_ffmpeg_format_context_dump(
   int32_t index,
   std::string url
 ) {
+
   av_dump_format(context->handle, index, url.c_str(), is_output);
 }
 
@@ -1584,6 +1596,17 @@ bare_ffmpeg_packet_unref(
   av_packet_unref(packet->handle);
 }
 
+static void
+bare_ffmpeg_packet_dump(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  bool include_payload,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> owner
+) {
+  av_pkt_dump2(stdout, packet->handle, include_payload, owner->handle);
+}
+
 static int32_t
 bare_ffmpeg_packet_get_stream_index(
   js_env_t *env,
@@ -2192,6 +2215,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
+  V("dumpPacket", bare_ffmpeg_packet_dump)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)

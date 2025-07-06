@@ -95,6 +95,7 @@ test('write webm', async (t) => {
     const { streamIndex } = packet
 
     if (streamIndex === videoIdx) { // process video
+      packet.dump(inputStream)
       decoder.sendPacket(packet)
       packet.unref()
 
@@ -103,13 +104,13 @@ test('write webm', async (t) => {
         captured++
 
         while (encoder.receivePacket(packet)) {
+          encoded++
+          packet.dump(inputStream, false)
           // console.log('forwarding encoded packet', packet.streamIndex, encoded, packet.data)
 
           // breakpoint set --file mux.c --line 1144
           format.writeFrame(packet)
           packet.unref()
-
-          encoded++
         }
       }
     }
