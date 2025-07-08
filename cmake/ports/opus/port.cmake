@@ -9,6 +9,7 @@ endif()
 set(args
   -DBUILD_SHARED_LIBS=OFF
   -DBUILD_TESTING=OFF
+  -DOPUS_DISABLE_INTRINSICS=OFF
 )
 
 declare_port(
