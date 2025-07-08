@@ -9,8 +9,11 @@ endif()
 set(args
   -DBUILD_SHARED_LIBS=OFF
   -DBUILD_TESTING=OFF
-  -DOPUS_DISABLE_INTRINSICS=ON
 )
+
+if(WIN32)
+  list(APPEND args -DOPUS_DISABLE_INTRINSICS=ON)
+endif()
 
 declare_port(
   "github:xiph/opus@v1.5.2"
