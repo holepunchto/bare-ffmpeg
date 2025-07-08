@@ -11,6 +11,10 @@ set(args
   -DBUILD_TESTING=OFF
 )
 
+if(WIN32)
+  list(APPEND args -DOPUS_DISABLE_INTRINSICS=ON)
+endif()
+
 declare_port(
   "github:xiph/opus@v1.5.2"
   opus
