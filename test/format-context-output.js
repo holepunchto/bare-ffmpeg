@@ -1,9 +1,11 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-ffmpeg.logLevel = ffmpeg.constants.logLevels.TRACE
+const { logLevels, codecFlags, formatFlags } = ffmpeg.constants
+ffmpeg.logLevel = logLevels.TRACE
 
 test('write webm', async (t) => {
+  const FRAMERATE = 60
   const { defer, clean } = usingDefer()
 
   // input
@@ -14,7 +16,7 @@ test('write webm', async (t) => {
   const inputStream = inFormat.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
   if (!inputStream) throw new Error('getStream failed')
 
-  t.alike(inputStream.timeBase, new ffmpeg.Rational(1, 60))
+  t.alike(inputStream.timeBase, new ffmpeg.Rational(1, FRAMERATE))
 
   const videoIdx = inputStream.index
   t.is(videoIdx, 1, 'video stream index')
@@ -32,6 +34,32 @@ test('write webm', async (t) => {
   t.is(decoder.pixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
   decoder.open()
 
+  // output
+  const fileStream = require('fs').createWriteStream('out_dump.webm')
+  const wreqs = []
+  const onwrite = buffer => {
+    const copy = Buffer.from(buffer).slice() // poor/unsafe interface
+
+    wreqs.push(
+      new Promise((resolve, reject) => {
+        fileStream.write(copy, err => {
+          console.log('written', copy.byteLength, err)
+          if (err) reject(err)
+          else resolve()
+        })
+      })
+    )
+  }
+
+  const io = new ffmpeg.IOContext(4096, onwrite)
+  defer(io)
+
+  const fmt = new ffmpeg.OutputFormat('webm')
+  const outContext = new ffmpeg.OutputFormatContext(fmt, io)
+  defer(outContext)
+
+  const outputStream = outContext.createStream()
+
   // encoder
 
   const encoder = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
@@ -42,23 +70,17 @@ test('write webm', async (t) => {
   encoder.pixelFormat = decoder.pixelFormat
   encoder.timeBase = inputStream.timeBase
 
+  if (fmt.flags & formatFlags.GLOBALHEADER) {
+    encoder.flags |= codecFlags.GLOBAL_HEADER
+  }
+
   encoder.open()
-
-  // output
-
-  const io = ffmpeg.IOContext.initFileOutput('out.webm')
-  defer(io)
-
-  const format = new ffmpeg.OutputFormatContext('webm', io)
-  defer(format)
-
-  const outputStream = format.createStream()
 
   // configure output stream to match encoder
   outputStream.codecParameters.fromContext(encoder)
 
   outputStream.timeBase = inputStream.timeBase
-  outputStream.id = format.streams.length - 1 // 1911 // defined by user or arbitrary format spec
+  outputStream.id = 0 // user defined
 
   // assert props
   t.is(outputStream.id, 0, 'id')
@@ -72,52 +94,70 @@ test('write webm', async (t) => {
   t.is(outputStream.codecParameters.width, width, 'width')
   t.is(outputStream.codecParameters.height, height, 'height')
 
-  const formatOptions = new ffmpeg.Dictionary()
-  defer(formatOptions)
+  outContext.dump(0) // print output format (logLevel.TRACE)
 
-  console.log('=====')
-  format.dump(0) // print output format
-  console.log('=====')
-
-  format.writeHeader(formatOptions)
+  outContext.writeHeader()
 
   // transcode
   const frame = new ffmpeg.Frame()
   const packet = new ffmpeg.Packet()
 
+  const n = FRAMERATE * 10
+
   let captured = 0
   let encoded = 0
+  let lastFrame = Date.now()
 
-  while (captured < 120) {
-    const status = inFormat.readFrame(packet)
+  while (captured < n) {
+    let status = inFormat.readFrame(packet)
     if (!status) throw new Error('failed capturing frame')
 
     const { streamIndex } = packet
 
     if (streamIndex === videoIdx) { // process video
-      packet.dump(inputStream)
-      decoder.sendPacket(packet)
+      status = decoder.sendPacket(packet)
+      if (!status) throw new Error('failed decoding packet')
+
       packet.unref()
 
       while (decoder.receiveFrame(frame)) {
-        encoder.sendFrame(frame)
         captured++
 
-        while (encoder.receivePacket(packet)) {
-          encoded++
-          packet.dump(inputStream, false)
-          // console.log('forwarding encoded packet', packet.streamIndex, encoded, packet.data)
+        const hasCapacity = encoder.sendFrame(frame)
+        if (!hasCapacity) throw new Error('encoder full')
 
-          // breakpoint set --file mux.c --line 1144
-          format.writeFrame(packet)
-          packet.unref()
-        }
+        outputEncoded()
       }
+    }
+
+    await chillout((1000 / FRAMERATE) - (Date.now() - lastFrame))
+
+    lastFrame = Date.now()
+  }
+
+  function outputEncoded() {
+    while (encoder.receivePacket(packet)) {
+      packet.dump(outputStream)
+
+      outContext.writeFrame(packet)
+      packet.unref()
+
+      encoded++
     }
   }
 
-  format.writeTrailer()
+  encoder.sendFrame(null) // end-of-stream
 
+  outputEncoded()
+
+  console.log('writing trailer')
+  outContext.writeTrailer()
+  console.log('closing filestream')
+  await Promise.all(wreqs)
+  console.log('all wreqs settled')
+  fileStream.destroy()
+
+  console.log(captured, encoded)
   t.is(captured, encoded, 'transcoding complete')
 
   await clean()
@@ -133,21 +173,19 @@ function avsynctestInput () {
   )
 
   format.dump()
+
   return format
 }
 
-// TODO: trace brittle resources
-// there are quite a few bare-ffmpeg objects that throw or segfault
-// when destroyed unless fully initialized
+function chillout (millis) {
+  return new Promise(resolve => setTimeout(resolve, millis))
+}
 
 /**
- * keyword 'using' introduced by:
- * https://github.com/tc39/proposal-explicit-resource-management
+ * TODO: trace brittle resources
+ * there are quite a few bare-ffmpeg objects that throw or segfault
+ * when destroyed unless fully initialized
  *
- * Issues:
- * - breaks eslint
- * - breaks error reporting (fixed): https://github.com/holepunchto/bare-inspect/commit/e7b94845a1cb9de82c1fa50a5821cef45c7b279b
- * - introduces ownership
  * @param {number} trace - 0: default disabled, 1: detect & throw doublefree , 2: log all dispose calls
  */
 function usingDefer (trace = 0) {
