@@ -1713,18 +1713,6 @@ bare_ffmpeg_packet_unref(
   av_packet_unref(packet->handle);
 }
 
-// TODO: remove & implement in js / Symbol.for('bare.inspect')
-static void
-bare_ffmpeg_packet_dump(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
-  bool include_payload,
-  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
-) {
-  av_pkt_dump2(stdout, packet->handle, include_payload, stream->handle);
-}
-
 static int32_t
 bare_ffmpeg_packet_get_stream_index(
   js_env_t *env,
@@ -1772,6 +1760,111 @@ bare_ffmpeg_packet_is_keyframe(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   return packet->handle->flags & AV_PKT_FLAG_KEY;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->dts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->dts = value;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->pts;
+
+  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->pts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_packet_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = packet->handle->time_base.num;
+  data[1] = packet->handle->time_base.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_packet_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int num,
+  int den
+) {
+  packet->handle->time_base.num = num;
+  packet->handle->time_base.den = den;
+}
+
+static int64_t
+bare_ffmpeg_packet_rescale_ts(
+  js_env_t *env,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t num,
+  int32_t den
+) {
+  AVRational src = packet->handle->time_base;
+  AVRational dst = {.num = num, .den = den};
+
+  if (
+    bad_timebase(src) ||
+    bad_timebase(dst) ||
+    packet->handle->dts == AV_NOPTS_VALUE ||
+    packet->handle->pts == AV_NOPTS_VALUE
+  ) {
+    return false;
+  }
+
+  av_packet_rescale_ts(packet->handle, src, dst);
+
+  return true;
 }
 
 static js_arraybuffer_t
@@ -2337,11 +2430,17 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
-  V("dumpPacket", bare_ffmpeg_packet_dump)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
+  V("getPacketDTS", bare_ffmpeg_packet_get_dts)
+  V("setPacketDTS", bare_ffmpeg_packet_set_dts)
+  V("getPacketPTS", bare_ffmpeg_packet_get_pts)
+  V("setPacketPTS", bare_ffmpeg_packet_set_pts)
+  V("getPacketTimeBase", bare_ffmpeg_packet_get_time_base)
+  V("setPacketTimeBase", bare_ffmpeg_packet_set_time_base)
+  V("rescalePacketTimestamps", bare_ffmpeg_packet_rescale_ts)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
