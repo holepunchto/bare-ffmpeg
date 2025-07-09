@@ -1460,6 +1460,83 @@ bare_ffmpeg_frame_get_pict_type(
   return frame->handle->pict_type;
 }
 
+static int64_t
+bare_ffmpeg_frame_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int64_t ts = frame->handle->pts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_frame_set_pts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pts = value;
+}
+
+static int64_t
+bare_ffmpeg_frame_get_pkt_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int64_t ts = frame->handle->pkt_dts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_frame_set_pkt_dts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pkt_dts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_frame_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = frame->handle->time_base.num;
+  data[1] = frame->handle->time_base.den;
+
+  return result;
+}
+static void
+bare_ffmpeg_frame_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int num,
+  int den
+) {
+  frame->handle->time_base.num = num;
+  frame->handle->time_base.den = den;
+}
+
 static void
 bare_ffmpeg_frame_alloc(
   js_env_t *env,
@@ -1770,7 +1847,6 @@ bare_ffmpeg_packet_get_dts(
 ) {
   int64_t ts = packet->handle->dts;
 
-  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
   if (ts == AV_NOPTS_VALUE) return -1;
 
   return ts;
@@ -1793,8 +1869,6 @@ bare_ffmpeg_packet_get_pts(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   int64_t ts = packet->handle->pts;
-
-  assert(ts >= 0 || ts == AV_NOPTS_VALUE);
 
   if (ts == AV_NOPTS_VALUE) return -1;
 
@@ -2417,6 +2491,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
   V("getFramePictType", bare_ffmpeg_frame_get_pict_type)
+  V("getFramePTS", bare_ffmpeg_frame_get_pts)
+  V("setFramePTS", bare_ffmpeg_frame_set_pts)
+  V("getFramePacketDTS", bare_ffmpeg_frame_get_pkt_dts)
+  V("setFramePacketDTS", bare_ffmpeg_frame_set_pkt_dts)
+  V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
+  V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)

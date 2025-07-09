@@ -61,9 +61,38 @@ test('frame expose a setter for nbSamples', (t) => {
   })
 })
 
-test('frame expose a getter for nbSamples', (t) => {
+test('frame expose a accessor for pts', (t) => {
   const fr = new ffmpeg.Frame()
-  fr.nbSamples = 1024
 
-  t.ok(fr.nbSamples == 1024)
+  t.is(fr.pts, -1)
+
+  fr.pts = 0
+
+  t.is(fr.pts, 0)
+})
+
+test('frame expose a accessor for pkt_dts', (t) => {
+  const fr = new ffmpeg.Frame()
+
+  t.is(fr.packetDTS, -1)
+
+  fr.packetDTS = 0
+
+  t.is(fr.packetDTS, 0)
+})
+
+test('frame expose a accessor for timeBase', (t) => {
+  const fr = new ffmpeg.Frame()
+
+  t.alike(fr.timeBase, new ffmpeg.Rational(0, 1))
+
+  const base = new ffmpeg.Rational(1, 1000)
+  fr.timeBase = base
+
+  t.alike(fr.timeBase, base)
+})
+
+test('frame expose getter for picture type', (t) => {
+  const fr = new ffmpeg.Frame()
+  t.is(fr.pictType, ffmpeg.constants.pictureType.NONE)
 })
