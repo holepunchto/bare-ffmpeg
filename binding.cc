@@ -99,13 +99,13 @@ typedef struct {
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
-// Feature flagged
+// TODO: safe to remove feature flag?
 #define AUTO_TIMEBASE
 
 #ifdef AUTO_TIMEBASE
 static inline bool
-unknown_timebase(const AVRational r) {
-  return r.den < 1 || // denominator invalid
+bad_timebase(const AVRational r) {
+  return r.den < 1 || // invalid denominator
     av_q2d(r) == 0; // initial state (0 / 1)
 }
 #endif
@@ -523,6 +523,14 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
+  auto stream = context->handle->streams[packet->handle->stream_index];
+
+  assert(bad_timebase(packet->handle->time_base) && "INITIAL TIMEBASE");
+
+  if (!bad_timebase(stream->time_base)) {
+    packet->handle->time_base = stream->time_base;
+  }
+
   return err == 0;
 }
 
@@ -566,7 +574,24 @@ bare_ffmpeg_format_context_write_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   auto stream = context->handle->streams[packet->handle->stream_index];
-  printf("ctx_write_packet ctx_tb=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n",
+
+
+#ifdef AUTO_TIMEBASE
+  auto srcTime = packet->handle->time_base;
+  auto dstTime = stream->time_base;
+  if (packet->handle->stream_index) {
+    printf("audio packet\n");
+  }
+
+  // TODO: expose as packet.convertTimebase(Rational)
+  if (!bad_timebase(srcTime) && !bad_timebase(dstTime)) {
+    av_packet_rescale_ts(packet->handle, srcTime, dstTime);
+    packet->handle->time_base = dstTime;
+  }
+#endif
+
+  printf("ctx_write_packet stream[%p]=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n",
+      stream,
       stream->time_base.num,
       stream->time_base.den,
       packet->handle->stream_index,
@@ -612,7 +637,7 @@ bare_ffmpeg_format_context_dump(
   av_dump_format(context->handle, index, url.c_str(), is_output);
   for (int i = 0; i < context->handle->nb_streams; i++) {
     auto stream = context->handle->streams[i];
-    printf("stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
+    printf("  - stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
   }
 }
 
@@ -673,6 +698,12 @@ bare_ffmpeg_stream_get_time_base(
   data[0] = stream->handle->time_base.num;
   data[1] = stream->handle->time_base.den;
 
+  printf("streamGetTimeBase<%s>[%p] %i / %i\n",
+    avcodec_get_name(stream->handle->codecpar->codec_id),
+    stream->handle,
+    stream->handle->time_base.num,
+    stream->handle->time_base.den
+  );
   return result;
 }
 
@@ -1085,6 +1116,16 @@ bare_ffmpeg_codec_context_send_packet(
 ) {
   int err;
 
+#ifdef AUTO_TIMEBASE
+  if (
+   !bad_timebase(packet->handle->time_base) &&
+    bad_timebase(context->handle->pkt_timebase)
+  ) {
+    // Auto init decoder time_base
+    context->handle->pkt_timebase = packet->handle->time_base;
+  }
+#endif
+
   err = avcodec_send_packet(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -1113,6 +1154,16 @@ bare_ffmpeg_codec_context_receive_packet(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  if (
+    err == 0 &&
+    !bad_timebase(context->handle->time_base) &&
+    bad_timebase(packet->handle->time_base)
+  ) {
+    packet->handle->time_base = context->handle->time_base;
+  }
+#endif
+
   return err == 0;
 }
 
@@ -1126,18 +1177,6 @@ bare_ffmpeg_codec_context_send_frame(
   int err;
 
   if (frame) {
-    printf("send_frame codec[%i]: tb=(%i / %i) frame: tb=(%i / %i) dur=%zi, pts=%zi format=%i nb_channels=%i nb_samples=%i\n",
-        context->handle->codec_id,
-        context->handle->time_base.num,
-        context->handle->time_base.den,
-        (*frame)->handle->time_base.num,
-        (*frame)->handle->time_base.den,
-        (*frame)->handle->duration,
-        (*frame)->handle->pts,
-        (*frame)->handle->format,
-        (*frame)->handle->ch_layout.nb_channels,
-        (*frame)->handle->nb_samples
-    );
     err = avcodec_send_frame(context->handle, (*frame)->handle);
   } else {
     err = avcodec_send_frame(context->handle, NULL); // End of stream
@@ -1171,22 +1210,17 @@ bare_ffmpeg_codec_context_receive_frame(
     throw js_pending_exception;
   }
 
-  if (unknown_timebase(frame->handle->time_base) && !unknown_timebase(context->handle->time_base)) {
+#ifdef AUTO_TIMEBASE
+  if (
+    err == 0 &&
+    !bad_timebase(context->handle->time_base) && // tb set on codec
+    bad_timebase(frame->handle->time_base) // tb empty on frame
+  ) {
+    // Copy time_base (no convertion)
     frame->handle->time_base = context->handle->time_base;
   }
+#endif
 
-  printf("recv_frame codec[%i]: tb=(%i / %i) frame: tb=(%i / %i) dur=%zi, pts=%zi format=%i nb_channels=%i nb_samples=%i\n",
-    context->handle->codec_id,
-    context->handle->time_base.num,
-    context->handle->time_base.den,
-    frame->handle->time_base.num,
-    frame->handle->time_base.den,
-    frame->handle->duration,
-    frame->handle->pts,
-    frame->handle->format,
-    frame->handle->ch_layout.nb_channels,
-    frame->handle->nb_samples
-  );
   return err == 0;
 }
 
@@ -1700,6 +1734,7 @@ bare_ffmpeg_packet_unref(
   av_packet_unref(packet->handle);
 }
 
+// TODO: remove & implement in js / Symbol.for('bare.inspect')
 static void
 bare_ffmpeg_packet_dump(
   js_env_t *env,
@@ -2221,7 +2256,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setLogLevel", bare_ffmpeg_log_set_level);
 
   V("initIOContext", bare_ffmpeg_io_context_init)
-  // V("openIOContextURL", bare_ffmpeg_io_context_open_url)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)

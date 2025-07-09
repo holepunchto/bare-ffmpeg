@@ -12,6 +12,187 @@ ffmpeg.logLevel = logLevels.ERROR
 const FRAMERATE = 50
 const SAMPLERATE = 48000
 
+test('write webm', async (t) => {
+  const { defer, clean } = usingDefer()
+
+  // Input
+
+  const inContext = avsynctestInput()
+  defer(inContext)
+
+  // Output IO
+
+  const fileStream = require('fs').createWriteStream('out_dump.webm')
+
+  const writeRequests = []
+  const onwrite = buffer => {
+    const done = new Promise((resolve, reject) => {
+      fileStream.write(buffer, err => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
+
+    writeRequests.push(done)
+  }
+
+  const io = new ffmpeg.IOContext(4096, onwrite)
+  // defer(io) // ownership taken by OutputFormatContext
+
+  // Output format
+
+  const outFormat = new ffmpeg.OutputFormat('webm')
+  const outContext = new ffmpeg.OutputFormatContext(outFormat, io)
+  defer(outContext)
+
+  const {
+    inputStream: audioInputStream,
+    decoder: audioDecoder,
+    encoder: audioEncoder
+  } = addAudioStream(t, outFormat, inContext, outContext)
+  defer(audioDecoder)
+  defer(audioEncoder)
+
+  const {
+    inputStream: videoInputStream,
+    decoder: videoDecoder,
+    encoder: videoEncoder
+  } = addVideoStream(t, outFormat, inContext, outContext)
+  defer(videoDecoder)
+  defer(videoEncoder)
+
+
+  outContext.dump(0) // print output format (logLevel.TRACE)
+
+  outContext.writeHeader()
+
+  // Transcode
+
+  const frame = new ffmpeg.Frame()
+  defer(frame)
+
+  const audioFrame = new ffmpeg.Frame()
+  defer(audioFrame)
+
+  const packet = new ffmpeg.Packet()
+
+  let captured = 0
+  let encoded = 0
+  const start = Date.now()
+  let lastFrame = start
+
+  // while (captured < 4) {
+  while (Date.now() - start < 15000) {
+    let status = inContext.readFrame(packet)
+    if (!status) throw new Error('failed capturing frame')
+
+    const { streamIndex } = packet
+
+    // transcode audio (samplerate > framerate)
+
+    if (streamIndex === audioInputStream.index) {
+      packet.streamIndex = videoInputStream.index
+
+      status = audioDecoder.sendPacket(packet)
+      if (!status) throw new Error('failed decoding packet')
+
+      packet.unref()
+
+      while (audioDecoder.receiveFrame(audioFrame)) {
+        const hasCapacity = audioEncoder.sendFrame(audioFrame)
+        if (!hasCapacity) throw new Error('audio encoder full')
+
+        pumpOutput()
+      }
+    }
+
+    // transcode video
+
+    if (streamIndex === videoInputStream.index) {
+      packet.streamIndex = videoInputStream.index
+      status = videoDecoder.sendPacket(packet)
+      if (!status) throw new Error('failed decoding packet')
+
+      packet.unref()
+
+      while (videoDecoder.receiveFrame(frame)) {
+        captured++
+
+        const hasCapacity = videoEncoder.sendFrame(frame)
+        if (!hasCapacity) throw new Error('video encoder full')
+
+        pumpOutput()
+      }
+    }
+
+    await delay((1000 / FRAMERATE) - (Date.now() - lastFrame))
+
+    lastFrame = Date.now()
+  }
+
+  function pumpOutput () {
+    while (audioEncoder.receivePacket(packet)) {
+      packet.streamIndex = audioInputStream.index
+
+      outContext.writeFrame(packet)
+      packet.unref()
+
+      encoded++
+    }
+
+    while (videoEncoder.receivePacket(packet)) {
+      packet.streamIndex = videoInputStream.index
+
+      outContext.writeFrame(packet)
+      packet.unref()
+
+      encoded++
+    }
+  }
+
+  videoEncoder.sendFrame(null) // end-of-stream
+
+  pumpOutput()
+
+  outContext.writeTrailer()
+  await Promise.all(writeRequests)
+
+  fileStream.destroy()
+
+  t.is(captured, encoded, 'transcoding complete')
+
+  await clean()
+})
+
+function avsynctestInput () {
+  const options = new ffmpeg.Dictionary()
+
+  const graph = `
+    avsynctest=
+      size=hd720:
+      framerate=${FRAMERATE}:
+      period=1:
+      samplerate=${SAMPLERATE}:
+      amplitude=0.4:
+      duration=20
+    [a][v];
+    [a]aformat=sample_fmts=s16[out0];
+    [v]copy[out1]
+  `.replace(/\s+/g, '')
+
+  options.set('graph', graph)
+  // options.set('graph', 'avsynctest=size=hd720:framerate=60:period=1:samplerate=48000:amplitude=0.4[out0][out1]')
+
+  const format = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat('lavfi'),
+    options
+  )
+
+  format.dump()
+
+  return format
+}
+
 /**
  * @param {ffmpeg.OutputFormat} format
  * @param {ffmpeg.OutputFormatContext} outContext
@@ -69,179 +250,6 @@ function addAudioStream (t, format, inContext, outContext) {
   t.is(outputStream.codecParameters.sampleRate, sampleRate, 'output samplerate')
 
   return { inputStream, decoder, encoder }
-}
-
-test('write webm', async (t) => {
-  const { defer, clean } = usingDefer()
-
-  // Input
-
-  const inContext = avsynctestInput()
-  defer(inContext)
-
-  // Output IO
-
-  const fileStream = require('fs').createWriteStream('out_dump.webm')
-
-  const writeRequests = []
-  const onwrite = buffer => {
-    const done = new Promise((resolve, reject) => {
-      fileStream.write(buffer, err => {
-        if (err) reject(err)
-        else resolve()
-      })
-    })
-
-    writeRequests.push(done)
-  }
-
-  const io = new ffmpeg.IOContext(4096, onwrite)
-  // defer(io) // ownership taken by OutputFormatContext
-
-  // Output format
-
-  const outFormat = new ffmpeg.OutputFormat('webm')
-  const outContext = new ffmpeg.OutputFormatContext(outFormat, io)
-  defer(outContext)
-
-  const {
-    inputStream: videoInputStream,
-    decoder,
-    encoder
-  } = addVideoStream(t, outFormat, inContext, outContext)
-  defer(decoder)
-  defer(encoder)
-
-  const {
-    inputStream: audioInputStream,
-    decoder: audioDecoder,
-    encoder: audioEncoder
-  } = addAudioStream(t, outFormat, inContext, outContext)
-  defer(audioDecoder)
-  defer(audioEncoder)
-
-  outContext.dump(0) // print output format (logLevel.TRACE)
-
-  outContext.writeHeader()
-
-  // Transcode
-
-  const frame = new ffmpeg.Frame()
-  defer(frame)
-
-  const audioFrame = new ffmpeg.Frame()
-  defer(audioFrame)
-
-  const packet = new ffmpeg.Packet()
-
-  const n = FRAMERATE * 1
-
-  let captured = 0
-  let encoded = 0
-  let lastFrame = Date.now()
-
-  while (captured < n) {
-    let status = inContext.readFrame(packet)
-    if (!status) throw new Error('failed capturing frame')
-
-    const { streamIndex } = packet
-
-    // transcode video
-
-    if (streamIndex === videoInputStream.index) {
-      status = decoder.sendPacket(packet)
-      if (!status) throw new Error('failed decoding packet')
-
-      packet.unref()
-
-      while (decoder.receiveFrame(frame)) {
-        captured++
-
-        const hasCapacity = encoder.sendFrame(frame)
-        if (!hasCapacity) throw new Error('video encoder full')
-
-        pumpOutput()
-      }
-    }
-
-    // transcode audio
-
-    if (streamIndex === audioInputStream.index) {
-      console.log('captured audio packet')
-      packet.dump(audioInputStream)
-
-      status = audioDecoder.sendPacket(packet)
-      if (!status) throw new Error('failed decoding packet')
-
-      packet.unref()
-
-      while (audioDecoder.receiveFrame(audioFrame)) {
-        const hasCapacity = audioEncoder.sendFrame(audioFrame)
-        //if (!hasCapacity) throw new Error('audio encoder full')
-
-        pumpOutput()
-      }
-    }
-
-    await delay((1000 / FRAMERATE) - (Date.now() - lastFrame))
-
-    lastFrame = Date.now()
-  }
-
-  function pumpOutput () {
-    while (encoder.receivePacket(packet)) {
-      // TODO: packet.duration is lost, addressed in PR#57
-      console.log('encoded packet')
-      packet.dump(packet.streamIndex === videoInputStream.index ? videoInputStream : audioInputStream)
-
-      outContext.writeFrame(packet)
-      packet.unref()
-
-      encoded++
-    }
-  }
-
-  encoder.sendFrame(null) // end-of-stream
-
-  pumpOutput()
-
-  outContext.writeTrailer()
-  await Promise.all(writeRequests)
-
-  fileStream.destroy()
-
-  t.is(captured, encoded, 'transcoding complete')
-
-  await clean()
-})
-
-function avsynctestInput () {
-  const options = new ffmpeg.Dictionary()
-
-  const graph = `
-    avsynctest=
-      size=hd720:
-      framerate=${FRAMERATE}:
-      period=1:
-      samplerate=${SAMPLERATE}:
-      amplitude=0.4:
-      duration=20
-    [a][v];
-    [a]aformat=sample_fmts=s16[out0];
-    [v]copy[out1]
-  `.replace(/\s+/g, '')
-
-  options.set('graph', graph)
-  // options.set('graph', 'avsynctest=size=hd720:framerate=60:period=1:samplerate=48000:amplitude=0.4[out0][out1]')
-
-  const format = new ffmpeg.InputFormatContext(
-    new ffmpeg.InputFormat('lavfi'),
-    options
-  )
-
-  format.dump()
-
-  return format
 }
 
 /**
