@@ -1,12 +1,12 @@
 const test = require('brittle')
 const ffmpeg = require('..')
-const { sampleFormats } = require('../lib/constants')
 
 const {
   logLevels,
   formatFlags,
   codecFlags
 } = ffmpeg.constants
+
 ffmpeg.logLevel = logLevels.ERROR
 
 const FRAMERATE = 50
@@ -14,7 +14,7 @@ const SAMPLERATE = 48000
 const DURATION = 3
 
 test('write webm', async (t) => {
-  const { defer, clean } = usingDefer()
+  const { defer, clean } = usingDefer(t)
 
   // Input
 
@@ -38,7 +38,7 @@ test('write webm', async (t) => {
   }
 
   const io = new ffmpeg.IOContext(4096, onwrite)
-  // defer(io) // ownership taken by OutputFormatContext
+  // defer(io) // TODO: ownership taken by OutputFormatContext (should not probably)
 
   // Output format
 
@@ -96,7 +96,7 @@ test('write webm', async (t) => {
     if (streamIndex === audioInputStream.index) {
       packet.streamIndex = videoInputStream.index
 
-      status = audioDecoder.sendPacket(packet)
+      const status = audioDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
 
       packet.unref()
@@ -113,7 +113,8 @@ test('write webm', async (t) => {
 
     if (streamIndex === videoInputStream.index) {
       packet.streamIndex = videoInputStream.index
-      status = videoDecoder.sendPacket(packet)
+
+      const status = videoDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
 
       packet.unref()
@@ -153,6 +154,7 @@ test('write webm', async (t) => {
     }
   }
 
+  audioEncoder.sendFrame(null) // end-of-stream
   videoEncoder.sendFrame(null) // end-of-stream
 
   pumpOutput()
@@ -162,7 +164,7 @@ test('write webm', async (t) => {
 
   fileStream.destroy()
 
-  t.is(captured, encoded, 'transcoding complete')
+  t.is(captured, encoded - 1, 'transcoding complete')
 
   await clean()
 })
@@ -196,7 +198,7 @@ function avsynctestInput () {
 }
 
 /**
- * @param {ffmpeg.OutputFormat} format
+ * @param {ffmpeg.OutputFormat} format - not used
  * @param {ffmpeg.OutputFormatContext} outContext
  * @param {ffmpeg.InputFormatContext} inContext
  */
@@ -326,13 +328,13 @@ function delay (millis) {
 }
 
 /**
- * TODO: trace brittle resources
- * there are quite a few bare-ffmpeg objects that throw or segfault
- * when destroyed unless fully initialized
+ * TODO: trace resources that are brittle
+ * there are a few bare-ffmpeg objects that throw or segfault
+ * when destroyed unless fully initialized or disposed twice
  *
  * @param {number} trace - 0: default disabled, 1: detect & throw doublefree , 2: log all dispose calls
  */
-function usingDefer (trace = 0) {
+function usingDefer (t, trace = 0) {
   const resources = []
   let cleaning = false
 
@@ -354,7 +356,7 @@ function usingDefer (trace = 0) {
           if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
 
           if (trace > 1) {
-            console.info('Destroying ', r, ' @ ', stack)
+            t.comment('Destroying ', r, ' @ ', stack)
           }
 
           target.apply(r)
@@ -367,7 +369,7 @@ function usingDefer (trace = 0) {
           if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
 
           if (trace > 1) {
-            console.info('Destroying ', r, ' @ ', stack)
+            t.comment('disposing ', r, ' @ ', stack)
           }
 
           return targetAsync.apply(r)
@@ -376,14 +378,14 @@ function usingDefer (trace = 0) {
     },
 
     async clean () {
-      console.log('freeing', resources.length, 'resources')
+      t.comment('freeing', resources.length, 'resources')
       cleaning = true
 
       for (const r of resources.reverse()) {
         try {
           await (r[Symbol.asyncDispose] || r[Symbol.dispose]).apply(r)
         } catch (error) {
-          console.log('resource dispose failed for', r)
+          t.comment('resource dispose failed for', r)
           throw error
         }
       }

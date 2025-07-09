@@ -554,7 +554,7 @@ bare_ffmpeg_format_context_write_header(
     const AVDictionaryEntry *option = NULL;
 
     while ((option = av_dict_iterate(dict->handle, option))) {
-      printf("WARNING! Ignored option key='%s' value='%s'\n", option->key, option->value);
+      av_log(context->handle, AV_LOG_WARNING, "Ignored option key='%s' value='%s'\n", option->key, option->value);
     }
   }
 
@@ -588,9 +588,9 @@ bare_ffmpeg_format_context_write_frame(
   }
 #endif
 
-  if (av_log_get_level() > AV_LOG_TRACE) {
-    printf("ctx_write_packet stream[%p]=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n", stream, stream->time_base.num, stream->time_base.den, packet->handle->stream_index, packet->handle->time_base.num, packet->handle->time_base.den, packet->handle->pts, packet->handle->duration);
-  }
+  // remove after identifying stream
+  // printf("ctx_write_packet stream[%p]=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n", stream, stream->time_base.num, stream->time_base.den, packet->handle->stream_index, packet->handle->time_base.num, packet->handle->time_base.den, packet->handle->pts, packet->handle->duration);
+
   int err = av_interleaved_write_frame(context->handle, packet->handle);
 
   if (err < 0) {
@@ -630,7 +630,7 @@ bare_ffmpeg_format_context_dump(
 
   for (int i = 0; i < context->handle->nb_streams; i++) {
     auto stream = context->handle->streams[i];
-    printf("  - stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
+    av_log(NULL, AV_LOG_INFO, "  - stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
   }
 }
 
@@ -784,13 +784,6 @@ bare_ffmpeg_codec_context_init(
 
   context->handle = avcodec_alloc_context3(codec->handle);
   context->handle->opaque = (void *) context;
-
-  // TEST
-  if (codec->handle->type == AVMEDIA_TYPE_AUDIO) {
-    printf("audio bitrate %zi\n", context->handle->bit_rate);
-  } else {
-    printf("video bitrate %zi\n", context->handle->bit_rate);
-  }
 
   return handle;
 }
