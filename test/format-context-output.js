@@ -11,6 +11,7 @@ ffmpeg.logLevel = logLevels.ERROR
 
 const FRAMERATE = 50
 const SAMPLERATE = 48000
+const DURATION = 3
 
 test('write webm', async (t) => {
   const { defer, clean } = usingDefer()
@@ -45,6 +46,7 @@ test('write webm', async (t) => {
   const outContext = new ffmpeg.OutputFormatContext(outFormat, io)
   defer(outContext)
 
+  // TODO: muxer/webm bug if you swap stream order [A,V] => [V,A]
   const {
     inputStream: audioInputStream,
     decoder: audioDecoder,
@@ -81,14 +83,15 @@ test('write webm', async (t) => {
   const start = Date.now()
   let lastFrame = start
 
-  // while (captured < 4) {
-  while (Date.now() - start < 15000) {
-    let status = inContext.readFrame(packet)
-    if (!status) throw new Error('failed capturing frame')
+  while (true /* && captured < 3 */) {
+    let eos = inContext.readFrame(packet)
+    if (!eos) break
+
+    captured++
 
     const { streamIndex } = packet
 
-    // transcode audio (samplerate > framerate)
+    // transcode audio
 
     if (streamIndex === audioInputStream.index) {
       packet.streamIndex = videoInputStream.index
@@ -116,8 +119,6 @@ test('write webm', async (t) => {
       packet.unref()
 
       while (videoDecoder.receiveFrame(frame)) {
-        captured++
-
         const hasCapacity = videoEncoder.sendFrame(frame)
         if (!hasCapacity) throw new Error('video encoder full')
 
@@ -125,9 +126,11 @@ test('write webm', async (t) => {
       }
     }
 
-    await delay((1000 / FRAMERATE) - (Date.now() - lastFrame))
+    const waitMs = (1000 / FRAMERATE) - (Date.now() - lastFrame)
 
     lastFrame = Date.now()
+
+    await delay(waitMs)
   }
 
   function pumpOutput () {
@@ -174,14 +177,13 @@ function avsynctestInput () {
       period=1:
       samplerate=${SAMPLERATE}:
       amplitude=0.4:
-      duration=20
+      duration=${DURATION}
     [a][v];
     [a]aformat=sample_fmts=s16[out0];
     [v]copy[out1]
   `.replace(/\s+/g, '')
 
   options.set('graph', graph)
-  // options.set('graph', 'avsynctest=size=hd720:framerate=60:period=1:samplerate=48000:amplitude=0.4[out0][out1]')
 
   const format = new ffmpeg.InputFormatContext(
     new ffmpeg.InputFormat('lavfi'),
@@ -207,16 +209,17 @@ function addAudioStream (t, format, inContext, outContext) {
   const audioIdx = inputStream.index
   t.is(audioIdx, 0, 'audio stream index')
 
-  const { sampleRate, channelLayout, bitrate } = inputStream.codecParameters
+  const { sampleRate, channelLayout, bitRate } = inputStream.codecParameters
   t.is(sampleRate, SAMPLERATE, 'samplerate')
   t.is(channelLayout.nbChannels, 1, 'mono input')
 
   const decoder = inputStream.decoder()
   t.is(decoder.sampleRate, sampleRate)
-  // t.is(decoder.channelLayout.id, channelLayout, 'channel layout') // .id not implemented
+  // t.is(decoder.channelLayout.id, channelLayout, 'channel layout') // TODO: .id not implemented
 
-  const stubBitRate = inputStream.codecParameters.bitsPerCodedSample * sampleRate
-  console.log('inputStream bitrate', bitrate, 'computed', stubBitRate)
+  const calcBitrate = inputStream.codecParameters.bitsPerCodedSample * sampleRate
+
+  t.is(bitRate, calcBitrate, 'bitrate')
 
   const outputStream = outContext.createStream()
 
@@ -228,7 +231,7 @@ function addAudioStream (t, format, inContext, outContext) {
   encoder.timeBase = inputStream.timeBase
 
   const encOpts = new ffmpeg.Dictionary()
-  encOpts.set('b', String(stubBitRate))
+  encOpts.set('b', String(bitRate))
   encOpts.set('frame_duration', '16.666')
   encoder.open()
 
@@ -237,10 +240,10 @@ function addAudioStream (t, format, inContext, outContext) {
 
   outputStream.timeBase = inputStream.timeBase
   outputStream.id = 1 // user defined
-  outputStream.codecParameters.bitRate = stubBitRate // inputStream.codecParameters.bitRate
+  outputStream.codecParameters.bitRate = bitRate
 
   t.is(outputStream.id, 1, 'id')
-  t.is(outputStream.index, 1, 'stream index')
+  t.is(outputStream.index, 0, 'stream index')
   t.alike(outputStream.timeBase, inputStream.timeBase, 'samplerate')
   t.is(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
 
@@ -305,7 +308,7 @@ function addVideoStream (t, format, inContext, outContext) {
 
   // assert props
   t.is(outputStream.id, 0, 'id')
-  t.is(outputStream.index, 0, 'stream index')
+  t.is(outputStream.index, 1, 'stream index')
   t.alike(outputStream.timeBase, inputStream.timeBase, 'framerate')
   t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
 
