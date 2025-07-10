@@ -1,4 +1,3 @@
-
 const test = require('brittle')
 const ffmpeg = require('..')
 
@@ -57,8 +56,5 @@ function getStream() {
     fallbackURL
   )
 
-  return inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
+  return inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 }
-
