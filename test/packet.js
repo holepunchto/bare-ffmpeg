@@ -69,7 +69,6 @@ test('packet should expose timeBase accessor', (t) => {
   t.alike(packet.timeBase, base)
 })
 
-
 test('rescale packet timestamps & timebase', (t) => {
   const packet = new ffmpeg.Packet()
 
