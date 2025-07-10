@@ -19,6 +19,8 @@ test('write webm', async (t) => {
 
   // Output IO
 
+  // TODO: buffer to memory then check
+  // that decodes with correct properties
   const fileStream = require('fs').createWriteStream('out_dump.webm')
 
   const writeRequests = []
