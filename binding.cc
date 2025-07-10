@@ -1997,6 +1997,9 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
+  int err = av_frame_copy_props(target->handle, source->handle);
+  assert(err == 0);
+
   return sws_scale(
     scaler->handle,
     reinterpret_cast<const uint8_t *const *>(source->handle->data),
