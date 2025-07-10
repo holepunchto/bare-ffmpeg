@@ -31,6 +31,19 @@ test('it should expose a codec parameters getter', (t) => {
   t.ok(stream.codecParameters instanceof ffmpeg.CodecParameters)
 })
 
+test('it should expose a timeBase getter', (t) => {
+  const stream = getStream()
+  t.ok(stream.timeBase instanceof ffmpeg.Rational)
+})
+
+test('it should expose a timeBase setter', (t) => {
+  const stream = getStream()
+  const newTimeBase = new ffmpeg.Rational(1, 30)
+  stream.timeBase = newTimeBase
+  t.ok(stream.timeBase.numerator === newTimeBase.numerator)
+  t.ok(stream.timeBase.denominator === newTimeBase.denominator)
+})
+
 // helpers
 
 function getStream() {
