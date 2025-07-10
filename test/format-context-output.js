@@ -1,11 +1,7 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-const {
-  logLevels,
-  formatFlags,
-  codecFlags
-} = ffmpeg.constants
+const { logLevels, formatFlags, codecFlags, mediaTypes } = ffmpeg.constants
 
 ffmpeg.logLevel = logLevels.ERROR
 
@@ -26,9 +22,9 @@ test('write webm', async (t) => {
   const fileStream = require('fs').createWriteStream('out_dump.webm')
 
   const writeRequests = []
-  const onwrite = buffer => {
+  const onwrite = (buffer) => {
     const done = new Promise((resolve, reject) => {
-      fileStream.write(buffer, err => {
+      fileStream.write(buffer, (err) => {
         if (err) reject(err)
         else resolve()
       })
@@ -62,7 +58,6 @@ test('write webm', async (t) => {
   } = addVideoStream(t, outFormat, inContext, outContext)
   defer(videoDecoder)
   defer(videoEncoder)
-
 
   outContext.dump(0) // print output format (logLevel.TRACE)
 
@@ -127,14 +122,14 @@ test('write webm', async (t) => {
       }
     }
 
-    const waitMs = (1000 / FRAMERATE) - (Date.now() - lastFrame)
+    const waitMs = 1000 / FRAMERATE - (Date.now() - lastFrame)
 
     lastFrame = Date.now()
 
     await delay(waitMs)
   }
 
-  function pumpOutput () {
+  function pumpOutput() {
     while (audioEncoder.receivePacket(packet)) {
       packet.streamIndex = audioInputStream.index
 
@@ -169,7 +164,7 @@ test('write webm', async (t) => {
   await clean()
 })
 
-function avsynctestInput () {
+function avsynctestInput() {
   const options = new ffmpeg.Dictionary()
 
   const graph = `
@@ -202,8 +197,8 @@ function avsynctestInput () {
  * @param {ffmpeg.OutputFormatContext} outContext
  * @param {ffmpeg.InputFormatContext} inContext
  */
-function addAudioStream (t, format, inContext, outContext) {
-  const inputStream = inContext.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
+function addAudioStream(t, format, inContext, outContext) {
+  const inputStream = inContext.getBestStream(mediaTypes.AUDIO)
   if (!inputStream) throw new Error('getStream failed')
 
   t.alike(inputStream.timeBase, new ffmpeg.Rational(1, SAMPLERATE))
@@ -219,7 +214,8 @@ function addAudioStream (t, format, inContext, outContext) {
   t.is(decoder.sampleRate, sampleRate)
   // t.is(decoder.channelLayout.id, channelLayout, 'channel layout') // TODO: .id not implemented
 
-  const calcBitrate = inputStream.codecParameters.bitsPerCodedSample * sampleRate
+  const calcBitrate =
+    inputStream.codecParameters.bitsPerCodedSample * sampleRate
 
   t.is(bitRate, calcBitrate, 'bitrate')
 
@@ -250,7 +246,7 @@ function addAudioStream (t, format, inContext, outContext) {
   t.is(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.codecType, ffmpeg.constants.mediaTypes.AUDIO, 'media type')
+  t.is(outputStream.codecParameters.codecType, mediaTypes.AUDIO, 'media type')
   t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.OPUS.id, 'codec')
   t.is(outputStream.codecParameters.sampleRate, sampleRate, 'output samplerate')
 
@@ -262,10 +258,10 @@ function addAudioStream (t, format, inContext, outContext) {
  * @param {ffmpeg.OutputFormatContext} outContext
  * @param {ffmpeg.InputFormatContext} inContext
  */
-function addVideoStream (t, format, inContext, outContext) {
+function addVideoStream(t, format, inContext, outContext) {
   // Decoder
 
-  const inputStream = inContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const inputStream = inContext.getBestStream(mediaTypes.VIDEO)
   if (!inputStream) throw new Error('getStream failed')
 
   t.alike(inputStream.timeBase, new ffmpeg.Rational(1, FRAMERATE))
@@ -315,7 +311,7 @@ function addVideoStream (t, format, inContext, outContext) {
   t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.codecType, ffmpeg.constants.mediaTypes.VIDEO, 'media type')
+  t.is(outputStream.codecParameters.codecType, mediaTypes.VIDEO, 'media type')
   t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.AV1.id, 'codec')
   t.is(outputStream.codecParameters.width, width, 'width')
   t.is(outputStream.codecParameters.height, height, 'height')
@@ -323,8 +319,8 @@ function addVideoStream (t, format, inContext, outContext) {
   return { inputStream, decoder, encoder }
 }
 
-function delay (millis) {
-  return new Promise(resolve => setTimeout(resolve, millis))
+function delay(millis) {
+  return new Promise((resolve) => setTimeout(resolve, millis))
 }
 
 /**
@@ -334,13 +330,15 @@ function delay (millis) {
  *
  * @param {number} trace - 0: default disabled, 1: detect & throw doublefree , 2: log all dispose calls
  */
-function usingDefer (t, trace = 0) {
+function usingDefer(t, trace = 0) {
   const resources = []
   let cleaning = false
 
   return {
-    defer (r) {
-      if (typeof (r[Symbol.asyncDispose] || r[Symbol.dispose]) !== 'function') throw new Error('not a resource')
+    defer(r) {
+      if (typeof (r[Symbol.asyncDispose] || r[Symbol.dispose]) !== 'function') {
+        throw new Error('not a resource')
+      }
 
       resources.push(r)
 
@@ -348,12 +346,16 @@ function usingDefer (t, trace = 0) {
 
       // assume strict ownership
 
-      const stack = (new Error()).stack.split('\n').slice(1).join('\n')
+      const stack = new Error().stack.split('\n').slice(1).join('\n')
 
       const target = r[Symbol.dispose]
       if (typeof target === 'function') {
         r[Symbol.dispose] = () => {
-          if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
+          if (!cleaning) {
+            throw new Error(
+              'Double dispose! resource free\'d outside of "clean()"'
+            )
+          }
 
           if (trace > 1) {
             t.comment('Destroying ', r, ' @ ', stack)
@@ -366,7 +368,11 @@ function usingDefer (t, trace = 0) {
       const targetAsync = r[Symbol.asyncDispose]
       if (typeof targetAsync === 'function') {
         r[Symbol.asyncDispose] = async () => {
-          if (!cleaning) throw new Error('Double dispose! resource free\'d outside of "clean()"')
+          if (!cleaning) {
+            throw new Error(
+              'Double dispose! resource free\'d outside of "clean()"'
+            )
+          }
 
           if (trace > 1) {
             t.comment('disposing ', r, ' @ ', stack)
@@ -377,7 +383,7 @@ function usingDefer (t, trace = 0) {
       }
     },
 
-    async clean () {
+    async clean() {
       t.comment('freeing', resources.length, 'resources')
       cleaning = true
 
