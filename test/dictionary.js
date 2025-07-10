@@ -20,6 +20,12 @@ test('multiple entries', (t) => {
   t.is(dict.get('c'), '3')
 })
 
+test('stringifies numbers', (t) => {
+  const dict = new ffmpeg.Dictionary()
+  dict.set('a', 1234)
+  t.is(dict.get('a'), '1234')
+})
+
 test('overwrite existing key', (t) => {
   const dict = new ffmpeg.Dictionary()
 

@@ -233,8 +233,8 @@ function addAudioStream (t, format, inContext, outContext) {
   encoder.timeBase = inputStream.timeBase
 
   const encOpts = new ffmpeg.Dictionary()
-  encOpts.set('b', String(bitRate))
-  encOpts.set('frame_duration', '16.666')
+  encOpts.set('b', bitRate)
+  encOpts.set('frame_duration', 16.666)
   encoder.open()
 
   // configure output stream to match encoder
