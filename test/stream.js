@@ -16,6 +16,16 @@ test('it should expose an ID setter', (t) => {
   t.ok(stream.id === 1)
 })
 
+test('it should expose an index getter', (t) => {
+  const stream = getStream()
+  t.ok(typeof stream.index === 'number')
+})
+
+test('it should expose an codec getter', (t) => {
+  const stream = getStream()
+  t.ok(stream.codec instanceof ffmpeg.Codec)
+})
+
 // helpers
 
 function getStream() {
