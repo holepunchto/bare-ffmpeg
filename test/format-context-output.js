@@ -7,7 +7,7 @@ ffmpeg.logLevel = logLevels.ERROR
 
 const FRAMERATE = 50
 const SAMPLERATE = 48000
-const DURATION = 3
+const DURATION = 2
 
 test('write webm', async (t) => {
   const { defer, clean } = usingDefer(t)
