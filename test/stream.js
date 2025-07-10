@@ -10,7 +10,9 @@ using inputFormatContext = new ffmpeg.InputFormatContext(
   options,
   'testsrc=size=640x480:rate=30'
 )
-const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+const stream = inputFormatContext.getBestStream(
+  ffmpeg.constants.mediaTypes.VIDEO
+)
 
 test('it should expose an ID getter', (t) => {
   t.ok(typeof stream.id === 'number')
@@ -43,4 +45,3 @@ test('it should expose a timeBase setter', (t) => {
   t.ok(stream.timeBase.numerator === newTimeBase.numerator)
   t.ok(stream.timeBase.denominator === newTimeBase.denominator)
 })
-
