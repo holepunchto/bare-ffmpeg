@@ -1938,6 +1938,8 @@ bare_ffmpeg_packet_rescale_ts(
 
   av_packet_rescale_ts(packet->handle, src, dst);
 
+  packet->handle->time_base = dst;
+
   return true;
 }
 
