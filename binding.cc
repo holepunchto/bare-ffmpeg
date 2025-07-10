@@ -215,37 +215,6 @@ bare_ffmpeg_io_context_destroy(
   context->on_write.reset();
 }
 
-// TODO: alternative IOContext constructor
-// @KiD Help please! IO in bare is > ffmpeg-IO, delete this?
-#if 0
-static js_arraybuffer_t
-bare_ffmpeg_io_context_open_url(
-  js_env_t *env,
-  js_receiver_t,
-  std::string url,
-  int32_t flags
-) {
-  int err;
-
-  js_arraybuffer_t handle;
-
-  bare_ffmpeg_io_context_t *context;
-  err = js_create_arraybuffer(env, context, handle);
-  assert(err == 0);
-
-  err = avio_open(&context->handle, url.c_str(), flags);
-
-  if (err < 0) {
-    err = js_throw_error(env, NULL, av_err2str(err));
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
-  return handle;
-}
-#endif
-
 static js_arraybuffer_t
 bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
