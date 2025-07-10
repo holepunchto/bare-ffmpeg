@@ -21,9 +21,14 @@ test('it should expose an index getter', (t) => {
   t.ok(typeof stream.index === 'number')
 })
 
-test('it should expose an codec getter', (t) => {
+test('it should expose a codec getter', (t) => {
   const stream = getStream()
   t.ok(stream.codec instanceof ffmpeg.Codec)
+})
+
+test('it should expose a codec parameters getter', (t) => {
+  const stream = getStream()
+  t.ok(stream.codecParameters instanceof ffmpeg.CodecParameters)
 })
 
 // helpers
