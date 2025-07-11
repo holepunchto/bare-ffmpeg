@@ -1,21 +1,16 @@
 const test = require('brittle')
 const ffmpeg = require('..')
-const {
-  codecs,
-  sampleFormats,
-  channelLayouts,
-  pixelFormats
-} = require('../lib/constants')
+const { sampleFormats, pixelFormats } = require('../lib/constants')
 
-const { logLevels, formatFlags, codecFlags, mediaTypes } = ffmpeg.constants
+const { formatFlags, codecFlags, mediaTypes } = ffmpeg.constants
 
-ffmpeg.logLevel = logLevels.INFO
+// ffmpeg.log.level = ffmpeg.log.INFO
 
 const FRAMERATE = 50
 const SAMPLERATE = 48000
 const DURATION = 1
 
-test.solo('write webm', async (t) => {
+test('write webm', async (t) => {
   // Input
   const inContext = avsynctestInput()
 
