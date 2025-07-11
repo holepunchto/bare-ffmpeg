@@ -1,37 +1,32 @@
 const test = require('brittle')
 const ffmpeg = require('..')
+const {
+  codecs,
+  sampleFormats,
+  channelLayouts,
+  pixelFormats
+} = require('../lib/constants')
 
 const { logLevels, formatFlags, codecFlags, mediaTypes } = ffmpeg.constants
 
-ffmpeg.logLevel = logLevels.ERROR
+ffmpeg.logLevel = logLevels.INFO
 
 const FRAMERATE = 50
 const SAMPLERATE = 48000
-const DURATION = 2
+const DURATION = 1
 
-test('write webm', async (t) => {
+test.solo('write webm', async (t) => {
   // Input
   const inContext = avsynctestInput()
 
   // Output IO
+  const buffers = []
 
-  // TODO: buffer to memory then check
-  // that decodes with correct properties
-  const fileStream = require('fs').createWriteStream('out_dump.webm')
+  const onwrite = (buffer) => buffers.push(buffer)
 
-  const writeRequests = []
-  const onwrite = (buffer) => {
-    const done = new Promise((resolve, reject) => {
-      fileStream.write(buffer, (err) => {
-        if (err) reject(err)
-        else resolve()
-      })
-    })
-
-    writeRequests.push(done)
-  }
-
-  const io = new ffmpeg.IOContext(4096, onwrite)
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite
+  })
 
   // Output format
 
@@ -145,9 +140,6 @@ test('write webm', async (t) => {
   pumpOutput()
 
   outContext.writeTrailer()
-  await Promise.all(writeRequests)
-
-  fileStream.destroy()
 
   t.is(captured, encoded - 1, 'transcoding complete')
 
@@ -159,6 +151,8 @@ test('write webm', async (t) => {
   audioDecoder.destroy()
   outContext.destroy()
   inContext.destroy()
+
+  validateOutput(t, Buffer.concat(buffers))
 })
 
 function avsynctestInput() {
@@ -318,4 +312,49 @@ function addVideoStream(t, format, inContext, outContext) {
 
 function delay(millis) {
   return new Promise((resolve) => setTimeout(resolve, millis))
+}
+
+function validateOutput(t, data) {
+  t.ok(data, 'webm encoded')
+  // require('fs').writeFileSync('out_dump.webm', data)
+
+  const io = new ffmpeg.IOContext(data)
+
+  const format = new ffmpeg.InputFormatContext(io)
+  t.is(format.streams.length, 2, 'contains audio+video')
+
+  // format.dump()
+
+  // verify audio
+
+  const audioStream = format.getBestStream(mediaTypes.AUDIO)
+
+  t.is(audioStream.index, 0)
+  t.alike(audioStream.timeBase, new ffmpeg.Rational(1, 1000))
+
+  t.is(audioStream.codec.name, 'opus', 'codec')
+
+  const ap = audioStream.codecParameters
+
+  t.is(ap.sampleRate, 48000, 'samplerate')
+  t.is(ap.format, sampleFormats.FLTP, 'sample format')
+
+  t.is(ap.nbChannels, 1, 'nbChannels')
+  t.alike(ap.channelLayout.nbChannels, 1, 'channelLayout')
+
+  // verify video
+
+  const videoStream = format.getBestStream(mediaTypes.VIDEO)
+
+  t.is(videoStream.index, 1)
+  t.alike(videoStream.timeBase, new ffmpeg.Rational(1, 1000))
+  t.is(videoStream.codec.name, 'av1', 'codec')
+
+  const vp = videoStream.codecParameters
+
+  t.is(vp.width, 1280, 'width')
+  t.is(vp.height, 720, 'height')
+  t.is(vp.format, pixelFormats.YUV420P, 'pixel format')
+
+  format.destroy()
 }
