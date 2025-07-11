@@ -309,7 +309,7 @@ function addVideoStream(t, format, inContext, outContext) {
   // assert props
   t.is(outputStream.id, 0, 'id')
   t.is(outputStream.index, 1, 'stream index')
-  t.alike(outputStream.timeBase, inputStream.timeBase, 'framerate')
+  t.alike(outputStream.timeBase, inputStream.timeBase, 'timeBase')
   t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
 
   // assert param's props
