@@ -10,12 +10,8 @@ const SAMPLERATE = 48000
 const DURATION = 2
 
 test('write webm', async (t) => {
-  const { defer, clean } = usingDefer(t)
-
   // Input
-
   const inContext = avsynctestInput()
-  defer(inContext)
 
   // Output IO
 
@@ -36,13 +32,11 @@ test('write webm', async (t) => {
   }
 
   const io = new ffmpeg.IOContext(4096, onwrite)
-  // defer(io) // TODO: ownership taken by OutputFormatContext (should not probably)
 
   // Output format
 
   const outFormat = new ffmpeg.OutputFormat('webm')
   const outContext = new ffmpeg.OutputFormatContext(outFormat, io)
-  defer(outContext)
 
   // TODO: muxer/webm bug if you swap stream order [A,V] => [V,A]
   const {
@@ -50,16 +44,12 @@ test('write webm', async (t) => {
     decoder: audioDecoder,
     encoder: audioEncoder
   } = addAudioStream(t, outFormat, inContext, outContext)
-  defer(audioDecoder)
-  defer(audioEncoder)
 
   const {
     inputStream: videoInputStream,
     decoder: videoDecoder,
     encoder: videoEncoder
   } = addVideoStream(t, outFormat, inContext, outContext)
-  defer(videoDecoder)
-  defer(videoEncoder)
 
   outContext.dump(0) // print output format (logLevel.TRACE)
 
@@ -68,10 +58,8 @@ test('write webm', async (t) => {
   // Transcode
 
   const frame = new ffmpeg.Frame()
-  defer(frame)
 
   const audioFrame = new ffmpeg.Frame()
-  defer(audioFrame)
 
   const packet = new ffmpeg.Packet()
 
@@ -81,7 +69,7 @@ test('write webm', async (t) => {
   let lastFrame = start
 
   while (true /* && captured < 3 */) {
-    let eos = inContext.readFrame(packet)
+    const eos = inContext.readFrame(packet)
     if (!eos) break
 
     captured++
@@ -163,7 +151,14 @@ test('write webm', async (t) => {
 
   t.is(captured, encoded - 1, 'transcoding complete')
 
-  await clean()
+  audioFrame.destroy()
+  frame.destroy()
+  videoEncoder.destroy()
+  videoDecoder.destroy()
+  audioEncoder.destroy()
+  audioDecoder.destroy()
+  outContext.destroy()
+  inContext.destroy()
 })
 
 function avsynctestInput() {
@@ -323,82 +318,4 @@ function addVideoStream(t, format, inContext, outContext) {
 
 function delay(millis) {
   return new Promise((resolve) => setTimeout(resolve, millis))
-}
-
-/**
- * TODO: trace resources that are brittle
- * there are a few bare-ffmpeg objects that throw or segfault
- * when destroyed unless fully initialized or disposed twice
- *
- * @param {number} trace - 0: default disabled, 1: detect & throw doublefree , 2: log all dispose calls
- */
-function usingDefer(t, trace = 0) {
-  const resources = []
-  let cleaning = false
-
-  return {
-    defer(r) {
-      if (typeof (r[Symbol.asyncDispose] || r[Symbol.dispose]) !== 'function') {
-        throw new Error('not a resource')
-      }
-
-      resources.push(r)
-
-      if (!trace) return
-
-      // assume strict ownership
-
-      const stack = new Error().stack.split('\n').slice(1).join('\n')
-
-      const target = r[Symbol.dispose]
-      if (typeof target === 'function') {
-        r[Symbol.dispose] = () => {
-          if (!cleaning) {
-            throw new Error(
-              'Double dispose! resource free\'d outside of "clean()"'
-            )
-          }
-
-          if (trace > 1) {
-            t.comment('Destroying ', r, ' @ ', stack)
-          }
-
-          target.apply(r)
-        }
-      }
-
-      const targetAsync = r[Symbol.asyncDispose]
-      if (typeof targetAsync === 'function') {
-        r[Symbol.asyncDispose] = async () => {
-          if (!cleaning) {
-            throw new Error(
-              'Double dispose! resource free\'d outside of "clean()"'
-            )
-          }
-
-          if (trace > 1) {
-            t.comment('disposing ', r, ' @ ', stack)
-          }
-
-          return targetAsync.apply(r)
-        }
-      }
-    },
-
-    async clean() {
-      t.comment('freeing', resources.length, 'resources')
-      cleaning = true
-
-      for (const r of resources.reverse()) {
-        try {
-          await (r[Symbol.asyncDispose] || r[Symbol.dispose]).apply(r)
-        } catch (error) {
-          t.comment('resource dispose failed for', r)
-          throw error
-        }
-      }
-
-      cleaning = false
-    }
-  }
 }
