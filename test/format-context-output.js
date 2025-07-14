@@ -28,17 +28,18 @@ test('write webm', async (t) => {
   const outFormat = new ffmpeg.OutputFormat('webm')
   const outContext = new ffmpeg.OutputFormatContext(outFormat, io)
 
-  // TODO: muxer/webm bug if you swap stream order [A,V] => [V,A]
   const {
     inputStream: audioInputStream,
     decoder: audioDecoder,
-    encoder: audioEncoder
+    encoder: audioEncoder,
+    outputStream: audioOutputStream
   } = addAudioStream(t, outFormat, inContext, outContext)
 
   const {
     inputStream: videoInputStream,
     decoder: videoDecoder,
-    encoder: videoEncoder
+    encoder: videoEncoder,
+    outputStream: videoOutputStream
   } = addVideoStream(t, outFormat, inContext, outContext)
 
   outContext.dump(0) // print output format (logLevel.TRACE)
@@ -69,7 +70,7 @@ test('write webm', async (t) => {
     // transcode audio
 
     if (streamIndex === audioInputStream.index) {
-      packet.streamIndex = videoInputStream.index
+      packet.streamIndex = audioOutputStream.index
 
       const status = audioDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
@@ -87,7 +88,7 @@ test('write webm', async (t) => {
     // transcode video
 
     if (streamIndex === videoInputStream.index) {
-      packet.streamIndex = videoInputStream.index
+      packet.streamIndex = videoOutputStream.index
 
       const status = videoDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
@@ -236,7 +237,7 @@ function addAudioStream(t, format, inContext, outContext) {
   t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.OPUS.id, 'codec')
   t.is(outputStream.codecParameters.sampleRate, sampleRate, 'output samplerate')
 
-  return { inputStream, decoder, encoder }
+  return { inputStream, decoder, encoder, outputStream }
 }
 
 /**
@@ -302,7 +303,7 @@ function addVideoStream(t, format, inContext, outContext) {
   t.is(outputStream.codecParameters.width, width, 'width')
   t.is(outputStream.codecParameters.height, height, 'height')
 
-  return { inputStream, decoder, encoder }
+  return { inputStream, decoder, encoder, outputStream }
 }
 
 function delay(millis) {
