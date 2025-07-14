@@ -228,7 +228,7 @@ function addAudioStream(t, format, inContext, outContext) {
 
   t.is(outputStream.id, 1, 'id')
   t.is(outputStream.index, 0, 'stream index')
-  t.alike(outputStream.timeBase, inputStream.timeBase, 'samplerate')
+  t.alike(outputStream.timeBase, inputStream.timeBase, 'time base')
   t.is(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
 
   // assert param's props
