@@ -70,8 +70,6 @@ test('write webm', async (t) => {
     // transcode audio
 
     if (streamIndex === audioInputStream.index) {
-      packet.streamIndex = audioOutputStream.index
-
       const status = audioDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
 
@@ -88,8 +86,6 @@ test('write webm', async (t) => {
     // transcode video
 
     if (streamIndex === videoInputStream.index) {
-      packet.streamIndex = videoOutputStream.index
-
       const status = videoDecoder.sendPacket(packet)
       if (!status) throw new Error('failed decoding packet')
 
@@ -112,7 +108,7 @@ test('write webm', async (t) => {
 
   function pumpOutput() {
     while (audioEncoder.receivePacket(packet)) {
-      packet.streamIndex = audioInputStream.index
+      packet.streamIndex = audioOutputStream.index
 
       outContext.writeFrame(packet)
       packet.unref()
@@ -121,7 +117,7 @@ test('write webm', async (t) => {
     }
 
     while (videoEncoder.receivePacket(packet)) {
-      packet.streamIndex = videoInputStream.index
+      packet.streamIndex = videoOutputStream.index
 
       outContext.writeFrame(packet)
       packet.unref()
