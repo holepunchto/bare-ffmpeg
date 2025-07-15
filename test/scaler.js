@@ -41,4 +41,3 @@ test('it should preseve line number in case of downscale', (t) => {
     t.ok(lines == targetHeight)
   }
 })
-
