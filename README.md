@@ -8,7 +8,7 @@ npm i bare-ffmpeg
 
 ## API
 
-![](ffmpeg-mentalmap-Page-2.drawio.png)
+![](ffmpeg-mentalmap.drawio.png)
 
 ### `IOContext`
 
