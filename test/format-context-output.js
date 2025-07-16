@@ -1,13 +1,8 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-const {
-  formatFlags,
-  codecFlags,
-  mediaTypes,
-  sampleFormats,
-  pixelFormats
-} = ffmpeg.constants
+const { formatFlags, codecFlags, mediaTypes, sampleFormats, pixelFormats } =
+  ffmpeg.constants
 
 // ffmpeg.log.level = ffmpeg.log.INFO
 
