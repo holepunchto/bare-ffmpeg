@@ -2196,6 +2196,15 @@ bare_ffmpeg_channel_layout_get_nb_channels(
   return layout->handle.nb_channels;
 }
 
+static uint64_t
+bare_ffmpeg_channel_layout_get_mask(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  return layout->handle.u.mask;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_channel_layout_from_mask(
   js_env_t *env,
@@ -2510,6 +2519,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
   V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
+  V("getChannelLayoutMask", bare_ffmpeg_channel_layout_get_mask)
   V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
 
   V("initAudioFifo", bare_ffmpeg_audio_fifo_init)
