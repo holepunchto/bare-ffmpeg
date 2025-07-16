@@ -8,6 +8,8 @@ npm i bare-ffmpeg
 
 ## API
 
+![](ffmpeg-mentalmap-Page-2.drawio.png)
+
 ### `IOContext`
 
 The `IOContext` API provides functionality to create input/output contexts for media files.
