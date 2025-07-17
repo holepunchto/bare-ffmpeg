@@ -195,7 +195,7 @@ function addAudioStream(t, format, inContext, outContext) {
 
   const decoder = inputStream.decoder()
   t.is(decoder.sampleRate, sampleRate)
-  // t.is(decoder.channelLayout.id, channelLayout, 'channel layout') // TODO: .id not implemented
+  t.is(decoder.channelLayout.mask, channelLayout.mask, 'channel layout')
 
   const calcBitrate =
     inputStream.codecParameters.bitsPerCodedSample * sampleRate
