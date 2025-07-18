@@ -3,11 +3,15 @@
   "version": "1.0.0-15",
   "description": "Low-level FFmpeg bindings for Bare",
   "exports": {
-    ".": "./index.js",
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
     "./package": "./package.json"
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "binding.cc",
     "binding.js",
     "CMakeLists.txt",
@@ -30,11 +34,20 @@
   },
   "homepage": "https://github.com/holepunchto/bare-ffmpeg#readme",
   "devDependencies": {
+    "bare-buffer": "^3.2.0",
     "brittle": "^3.4.0",
     "cmake-bare": "^1.1.2",
     "cmake-harden": "^1.0.2",
     "cmake-ports": "^1.5.0",
     "prettier": "^3.3.3",
     "prettier-config-standard": "^7.0.0"
+  },
+  "peerDependencies": {
+    "bare-buffer": "*"
+  },
+  "peerDependenciesMeta": {
+    "bare-buffer": {
+      "optional": true
+    }
   }
 }
