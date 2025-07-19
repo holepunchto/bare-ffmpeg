@@ -38,6 +38,20 @@ test('packet should copy and expose its data', (t) => {
   t.ok(buffer[3] == 0x44)
 })
 
+test('packet set data', (t) => {
+  const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
+  const packet = new ffmpeg.Packet(inputBuffer)
+
+  packet.data = Buffer.from([0x45, 0x46, 0x47, 0x48])
+
+  const buffer = packet.data
+
+  t.ok(buffer[0] == 0x45)
+  t.ok(buffer[1] == 0x46)
+  t.ok(buffer[2] == 0x47)
+  t.ok(buffer[3] == 0x48)
+})
+
 test('packet should expose dts acessor', (t) => {
   const packet = new ffmpeg.Packet()
 

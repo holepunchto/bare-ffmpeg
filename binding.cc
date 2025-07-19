@@ -1796,6 +1796,26 @@ bare_ffmpeg_packet_get_data(
   return handle;
 }
 
+static void
+bare_ffmpeg_packet_set_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  js_arraybuffer_span_t data,
+  uint32_t offset,
+  uint32_t len
+) {
+  int err;
+  assert(offset + len <= data.size());
+
+  av_packet_unref(packet->handle);
+
+  err = av_new_packet(packet->handle, static_cast<int>(len));
+  assert(err == 0);
+
+  memcpy(packet->handle->data, &data[offset], len);
+}
+
 static bool
 bare_ffmpeg_packet_is_keyframe(
   js_env_t *,
@@ -2493,6 +2513,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
+  V("setPacketData", bare_ffmpeg_packet_set_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
   V("getPacketDTS", bare_ffmpeg_packet_get_dts)
   V("setPacketDTS", bare_ffmpeg_packet_set_dts)
