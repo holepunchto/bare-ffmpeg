@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cstdint>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -31,8 +32,13 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+using bare_ffmpeg_io_context_on_write_cb_t = js_function_t<void, js_arraybuffer_t>;
+
 typedef struct {
   AVIOContext *handle;
+
+  js_env_t *env;
+  js_persistent_t<bare_ffmpeg_io_context_on_write_cb_t> on_write;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -93,6 +99,17 @@ typedef struct {
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
+// TODO: safe to remove feature flag?
+#define AUTO_TIMEBASE
+
+#ifdef AUTO_TIMEBASE
+static inline bool
+bad_timebase(const AVRational r) {
+  return r.den < 1 ||    // invalid denominator
+         av_q2d(r) == 0; // detect initial state: (0 / 1)
+}
+#endif
+
 static void
 bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
@@ -100,13 +117,45 @@ bare_ffmpeg__on_init(void) {
   avdevice_register_all();
 }
 
+static int32_t
+bare_ffmpeg_log_get_level(js_env_t *) {
+  return av_log_get_level();
+}
+
+static void
+bare_ffmpeg_log_set_level(js_env_t *, int32_t level) {
+  av_log_set_level(level);
+}
+
+static int
+io_context_write_packet(void *opaque, const uint8_t *chunk, int len) {
+  auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+  auto env = context->env;
+
+  bare_ffmpeg_io_context_on_write_cb_t callback;
+
+  int err = js_get_reference_value(env, context->on_write, callback);
+  assert(err == 0);
+
+  js_arraybuffer_t data;
+  err = js_create_arraybuffer(env, chunk, static_cast<size_t>(len), data);
+
+  assert(err == 0);
+
+  // TODO: running on js-stack during avformat_write_header()
+  // trace other invocations, pray singlethread.
+  err = js_call_function(env, callback, data);
+  return err;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_io_context_init(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_t data,
+  std::optional<js_arraybuffer_span_t> data,
   uint64_t offset,
-  uint64_t len
+  uint64_t len,
+  std::optional<bare_ffmpeg_io_context_on_write_cb_t> on_write
 ) {
   int err;
 
@@ -116,18 +165,40 @@ bare_ffmpeg_io_context_init(
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
 
-  uint8_t *io;
-  size_t size = static_cast<size_t>(len);
+  context->env = env;
 
-  if (len == 0) io = NULL;
-  else {
-    io = reinterpret_cast<uint8_t *>(av_malloc(size));
+  int write_flag = 0;
 
-    memcpy(io, &data[static_cast<size_t>(offset)], size);
+  if (on_write) {
+    write_flag = 1;
+    err = js_create_reference(env, *on_write, context->on_write);
+    assert(err == 0);
   }
 
-  context->handle = avio_alloc_context(io, static_cast<int>(len), 0, NULL, NULL, NULL, NULL);
-  context->handle->opaque = (void *) context;
+  size_t size = static_cast<size_t>(len);
+
+  uint8_t *io = NULL;
+
+  if (size) {
+    io = reinterpret_cast<uint8_t *>(av_malloc(size));
+  }
+
+  if (data) {
+    memcpy(io, &data.value()[static_cast<size_t>(offset)], size);
+  }
+
+  // TODO: for stream read support provide read/seek callbacks
+
+  context->handle = avio_alloc_context(
+    io,
+    static_cast<int>(len),
+    write_flag,
+    context,
+    NULL, // io_context_read_packet
+    io_context_write_packet,
+    NULL // io_context_seek
+  );
+  assert(context->handle->opaque == context);
 
   return handle;
 }
@@ -141,6 +212,7 @@ bare_ffmpeg_io_context_destroy(
   av_free(context->handle->buffer);
 
   avio_context_free(&context->handle);
+  context->on_write.reset();
 }
 
 static js_arraybuffer_t
@@ -167,6 +239,15 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   return handle;
 }
 
+static int32_t
+bare_ffmpeg_output_format_get_flags(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format
+) {
+  return format->handle->flags;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
@@ -189,6 +270,15 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   context->handle = format;
 
   return handle;
+}
+
+static int32_t
+bare_ffmpeg_input_format_get_flags(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format
+) {
+  return format->handle->flags;
 }
 
 static js_arraybuffer_t
@@ -369,8 +459,7 @@ static js_arraybuffer_t
 bare_ffmpeg_format_context_create_stream(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
 ) {
   int err;
 
@@ -380,7 +469,7 @@ bare_ffmpeg_format_context_create_stream(
   err = js_create_arraybuffer(env, stream, handle);
   assert(err == 0);
 
-  stream->handle = avformat_new_stream(context->handle, codec->handle);
+  stream->handle = avformat_new_stream(context->handle, NULL);
 
   return handle;
 }
@@ -404,16 +493,171 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
+  auto stream = context->handle->streams[packet->handle->stream_index];
+
+  assert(bad_timebase(packet->handle->time_base) && "INITIAL TIMEBASE");
+
+  if (!bad_timebase(stream->time_base)) {
+    packet->handle->time_base = stream->time_base;
+  }
+
   return err == 0;
 }
 
+static bool
+bare_ffmpeg_format_context_write_header(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1>> muxer_options
+) {
+  int err;
+
+  if (!muxer_options) {
+    err = avformat_write_header(context->handle, NULL);
+  } else {
+    auto dict = *muxer_options;
+    err = avformat_write_header(context->handle, &dict->handle);
+
+    const AVDictionaryEntry *option = NULL;
+    while ((option = av_dict_iterate(dict->handle, option))) {
+      av_log(context->handle, AV_LOG_WARNING, "Ignored option key='%s' value='%s'\n", option->key, option->value);
+    }
+  }
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return err;
+}
+static void
+bare_ffmpeg_format_context_write_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  auto stream = context->handle->streams[packet->handle->stream_index];
+
+#ifdef AUTO_TIMEBASE
+  auto srcTime = packet->handle->time_base;
+  auto dstTime = stream->time_base; // TODO: which stream is this?
+                                    // It is not one returned by avformat_new_stream()
+
+  // TODO: expose as packet.convertTimebase(Rational)
+  if (!bad_timebase(srcTime) && !bad_timebase(dstTime)) {
+    av_packet_rescale_ts(packet->handle, srcTime, dstTime);
+    packet->handle->time_base = dstTime;
+  }
+#endif
+
+  // remove after identifying stream
+  // printf("ctx_write_packet stream[%p]=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n", stream, stream->time_base.num, stream->time_base.den, packet->handle->stream_index, packet->handle->time_base.num, packet->handle->time_base.den, packet->handle->pts, packet->handle->duration);
+
+  int err = av_interleaved_write_frame(context->handle, packet->handle);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_write_trailer(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int err = av_write_trailer(context->handle);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_dump(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  bool is_output,
+  int32_t index,
+  std::string url
+) {
+  av_dump_format(context->handle, index, url.c_str(), is_output);
+
+  for (int i = 0; i < context->handle->nb_streams; i++) {
+    auto stream = context->handle->streams[i];
+    av_log(NULL, AV_LOG_INFO, "  - stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
+  }
+}
+
 static int32_t
-bare_ffmpeg_stream_get_codec(
+bare_ffmpeg_stream_get_index(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
 ) {
-  return stream->handle->codecpar->codec_id;
+  return stream->handle->index;
+}
+
+static int32_t
+bare_ffmpeg_stream_get_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  return stream->handle->id;
+}
+
+static void
+bare_ffmpeg_stream_set_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int32_t id
+) {
+  stream->handle->id = id;
+}
+
+static void
+bare_ffmpeg_stream_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int num,
+  int den
+) {
+  stream->handle->time_base.num = num;
+  stream->handle->time_base.den = den;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_stream_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = stream->handle->time_base.num;
+  data[1] = stream->handle->time_base.den;
+
+  return result;
 }
 
 static js_arraybuffer_t
@@ -483,6 +727,13 @@ bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   return handle;
 }
 
+static std::string
+bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
+  auto name = avcodec_get_name((enum AVCodecID) id);
+
+  return std::string(name);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_init(
   js_env_t *env,
@@ -521,6 +772,7 @@ bare_ffmpeg_codec_context_open(
   int err;
 
   err = avcodec_open2(context->handle, context->handle->codec, NULL);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -529,6 +781,25 @@ bare_ffmpeg_codec_context_open(
   }
 
   return err == 0;
+}
+
+static int32_t
+bare_ffmpeg_codec_context_get_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->flags;
+}
+
+static void
+bare_ffmpeg_codec_context_set_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int32_t value
+) {
+  context->handle->flags = value;
 }
 
 static int64_t
@@ -791,6 +1062,16 @@ bare_ffmpeg_codec_context_send_packet(
 ) {
   int err;
 
+#ifdef AUTO_TIMEBASE
+  if (
+    !bad_timebase(packet->handle->time_base) &&
+    bad_timebase(context->handle->pkt_timebase)
+  ) {
+    // Auto init decoder time_base
+    context->handle->pkt_timebase = packet->handle->time_base;
+  }
+#endif
+
   err = avcodec_send_packet(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -819,6 +1100,16 @@ bare_ffmpeg_codec_context_receive_packet(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  if (
+    err == 0 &&
+    !bad_timebase(context->handle->time_base) &&
+    bad_timebase(packet->handle->time_base)
+  ) {
+    packet->handle->time_base = context->handle->time_base;
+  }
+#endif
+
   return err == 0;
 }
 
@@ -827,11 +1118,16 @@ bare_ffmpeg_codec_context_send_frame(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1>> frame
 ) {
   int err;
 
-  err = avcodec_send_frame(context->handle, frame->handle);
+  if (frame) {
+    err = avcodec_send_frame(context->handle, (*frame)->handle);
+  } else {
+    err = avcodec_send_frame(context->handle, NULL); // End of stream
+  }
+
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -859,6 +1155,17 @@ bare_ffmpeg_codec_context_receive_frame(
     throw js_pending_exception;
   }
 
+#ifdef AUTO_TIMEBASE
+  if (
+    err == 0 &&
+    !bad_timebase(context->handle->time_base) && // tb set on codec
+    bad_timebase(frame->handle->time_base)       // tb empty on frame
+  ) {
+    // Copy time_base (no convertion)
+    frame->handle->time_base = context->handle->time_base;
+  }
+#endif
+
   return err == 0;
 }
 
@@ -872,6 +1179,7 @@ bare_ffmpeg_codec_parameters_from_context(
   int err;
 
   err = avcodec_parameters_from_context(parameters->handle, context->handle);
+
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -961,6 +1269,15 @@ bare_ffmpeg_codec_parameters_get_codec_type(
   return parameters->handle->codec_type;
 }
 
+static int32_t
+bare_ffmpeg_codec_parameters_get_codec_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->codec_id;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_parameters_get_channel_layout(
   js_env_t *env,
@@ -979,6 +1296,24 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
   assert(err == 0);
 
   return result;
+}
+
+static int32_t
+bare_ffmpeg_codec_parameters_get_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->width;
+}
+
+static int32_t
+bare_ffmpeg_codec_parameters_get_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->height;
 }
 
 static js_arraybuffer_t
@@ -1089,6 +1424,83 @@ bare_ffmpeg_frame_get_pict_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
   return frame->handle->pict_type;
+}
+
+static int64_t
+bare_ffmpeg_frame_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int64_t ts = frame->handle->pts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_frame_set_pts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pts = value;
+}
+
+static int64_t
+bare_ffmpeg_frame_get_pkt_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int64_t ts = frame->handle->pkt_dts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_frame_set_pkt_dts(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int64_t value
+) {
+  frame->handle->pkt_dts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_frame_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = frame->handle->time_base.num;
+  data[1] = frame->handle->time_base.den;
+
+  return result;
+}
+static void
+bare_ffmpeg_frame_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int num,
+  int den
+) {
+  frame->handle->time_base.num = num;
+  frame->handle->time_base.den = den;
 }
 
 static void
@@ -1353,6 +1765,16 @@ bare_ffmpeg_packet_get_stream_index(
   return packet->handle->stream_index;
 }
 
+static void
+bare_ffmpeg_packet_set_stream_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t value
+) {
+  packet->handle->stream_index = value;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_packet_get_data(
   js_env_t *env,
@@ -1374,6 +1796,26 @@ bare_ffmpeg_packet_get_data(
   return handle;
 }
 
+static void
+bare_ffmpeg_packet_set_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  js_arraybuffer_span_t data,
+  uint32_t offset,
+  uint32_t len
+) {
+  int err;
+  assert(offset + len <= data.size());
+
+  av_packet_unref(packet->handle);
+
+  err = av_new_packet(packet->handle, static_cast<int>(len));
+  assert(err == 0);
+
+  memcpy(packet->handle->data, &data[offset], len);
+}
+
 static bool
 bare_ffmpeg_packet_is_keyframe(
   js_env_t *,
@@ -1381,6 +1823,110 @@ bare_ffmpeg_packet_is_keyframe(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   return packet->handle->flags & AV_PKT_FLAG_KEY;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->dts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_dts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->dts = value;
+}
+
+static int64_t
+bare_ffmpeg_packet_get_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int64_t ts = packet->handle->pts;
+
+  if (ts == AV_NOPTS_VALUE) return -1;
+
+  return ts;
+}
+
+static void
+bare_ffmpeg_packet_set_pts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->pts = value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_packet_get_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = packet->handle->time_base.num;
+  data[1] = packet->handle->time_base.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_packet_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int num,
+  int den
+) {
+  packet->handle->time_base.num = num;
+  packet->handle->time_base.den = den;
+}
+
+static int64_t
+bare_ffmpeg_packet_rescale_ts(
+  js_env_t *env,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t num,
+  int32_t den
+) {
+  AVRational src = packet->handle->time_base;
+  AVRational dst = {.num = num, .den = den};
+
+  if (
+    bad_timebase(src) ||
+    bad_timebase(dst) ||
+    packet->handle->dts == AV_NOPTS_VALUE ||
+    packet->handle->pts == AV_NOPTS_VALUE
+  ) {
+    return false;
+  }
+
+  av_packet_rescale_ts(packet->handle, src, dst);
+
+  packet->handle->time_base = dst;
+
+  return true;
 }
 
 static js_arraybuffer_t
@@ -1437,6 +1983,9 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
+  int err = av_frame_copy_props(target->handle, source->handle);
+  assert(err == 0);
+
   return sws_scale(
     scaler->handle,
     reinterpret_cast<const uint8_t *const *>(source->handle->data),
@@ -1667,6 +2216,15 @@ bare_ffmpeg_channel_layout_get_nb_channels(
   return layout->handle.nb_channels;
 }
 
+static uint64_t
+bare_ffmpeg_channel_layout_get_mask(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  return layout->handle.u.mask;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_channel_layout_from_mask(
   js_env_t *env,
@@ -1840,11 +2398,16 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   err = js_set_property<fn>(env, exports, name); \
   assert(err == 0);
 
+  V("getLogLevel", bare_ffmpeg_log_get_level);
+  V("setLogLevel", bare_ffmpeg_log_set_level);
+
   V("initIOContext", bare_ffmpeg_io_context_init)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
+  V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
+  V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
   V("openInputFormatContextWithFormat", bare_ffmpeg_format_context_open_input_with_format)
@@ -1855,17 +2418,28 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
+  V("writeFormatContextHeader", bare_ffmpeg_format_context_write_header)
+  V("writeFormatContextFrame", bare_ffmpeg_format_context_write_frame)
+  V("writeFormatContextTrailer", bare_ffmpeg_format_context_write_trailer)
+  V("dumpFormatContext", bare_ffmpeg_format_context_dump)
 
-  V("getStreamCodec", bare_ffmpeg_stream_get_codec)
+  V("getStreamIndex", bare_ffmpeg_stream_get_index)
+  V("getStreamId", bare_ffmpeg_stream_get_id)
+  V("setStreamId", bare_ffmpeg_stream_set_id)
+  V("getStreamTimeBase", bare_ffmpeg_stream_get_time_base)
+  V("setStreamTimeBase", bare_ffmpeg_stream_set_time_base)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
+  V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
   V("openCodecContext", bare_ffmpeg_codec_context_open)
   V("openCodecContextWithOptions", bare_ffmpeg_codec_context_open_with_options)
+  V("getCodecContextFlags", bare_ffmpeg_codec_context_get_flags)
+  V("setCodecContextFlags", bare_ffmpeg_codec_context_set_flags)
   V("getCodecContextPixelFormat", bare_ffmpeg_codec_context_get_pixel_format)
   V("setCodecContextPixelFormat", bare_ffmpeg_codec_context_set_pixel_format)
   V("getCodecContextWidth", bare_ffmpeg_codec_context_get_width)
@@ -1897,7 +2471,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
+  V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
+  V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
@@ -1914,6 +2491,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameNbSamples", bare_ffmpeg_frame_get_nb_samples)
   V("setFrameNbSamples", bare_ffmpeg_frame_set_nb_samples)
   V("getFramePictType", bare_ffmpeg_frame_get_pict_type)
+  V("getFramePTS", bare_ffmpeg_frame_get_pts)
+  V("setFramePTS", bare_ffmpeg_frame_set_pts)
+  V("getFramePacketDTS", bare_ffmpeg_frame_get_pkt_dts)
+  V("setFramePacketDTS", bare_ffmpeg_frame_set_pkt_dts)
+  V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
+  V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
@@ -1928,8 +2511,17 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
+  V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
+  V("setPacketData", bare_ffmpeg_packet_set_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
+  V("getPacketDTS", bare_ffmpeg_packet_get_dts)
+  V("setPacketDTS", bare_ffmpeg_packet_set_dts)
+  V("getPacketPTS", bare_ffmpeg_packet_get_pts)
+  V("setPacketPTS", bare_ffmpeg_packet_set_pts)
+  V("getPacketTimeBase", bare_ffmpeg_packet_get_time_base)
+  V("setPacketTimeBase", bare_ffmpeg_packet_set_time_base)
+  V("rescalePacketTimestamps", bare_ffmpeg_packet_rescale_ts)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
@@ -1948,6 +2540,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
   V("getChannelLayoutNbChannels", bare_ffmpeg_channel_layout_get_nb_channels)
+  V("getChannelLayoutMask", bare_ffmpeg_channel_layout_get_mask)
   V("channelLayoutFromMask", bare_ffmpeg_channel_layout_from_mask)
 
   V("initAudioFifo", bare_ffmpeg_audio_fifo_init)
@@ -1970,11 +2563,36 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
     assert(err == 0); \
   }
 
+  V(AV_LOG_QUIET)
+  V(AV_LOG_PANIC)
+  V(AV_LOG_FATAL)
+  V(AV_LOG_ERROR)
+  V(AV_LOG_WARNING)
+  V(AV_LOG_INFO)
+  V(AV_LOG_VERBOSE)
+  V(AV_LOG_DEBUG)
+  V(AV_LOG_TRACE)
+
   V(AV_CODEC_ID_MJPEG)
   V(AV_CODEC_ID_H264)
   V(AV_CODEC_ID_AAC)
   V(AV_CODEC_ID_OPUS)
   V(AV_CODEC_ID_AV1)
+
+  V(AV_CODEC_FLAG_COPY_OPAQUE)
+  V(AV_CODEC_FLAG_FRAME_DURATION)
+  V(AV_CODEC_FLAG_PASS1)
+  V(AV_CODEC_FLAG_PASS2)
+  V(AV_CODEC_FLAG_LOOP_FILTER)
+  V(AV_CODEC_FLAG_GRAY)
+  V(AV_CODEC_FLAG_PSNR)
+  V(AV_CODEC_FLAG_INTERLACED_DCT)
+  V(AV_CODEC_FLAG_LOW_DELAY)
+  V(AV_CODEC_FLAG_GLOBAL_HEADER)
+  V(AV_CODEC_FLAG_BITEXACT)
+  V(AV_CODEC_FLAG_AC_PRED)
+  V(AV_CODEC_FLAG_INTERLACED_ME)
+  V(AV_CODEC_FLAG_CLOSED_GOP)
 
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_RGB24)
@@ -2022,6 +2640,29 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PICTURE_TYPE_SI)
   V(AV_PICTURE_TYPE_SP)
   V(AV_PICTURE_TYPE_BI)
+
+  // InputFormat flags
+  V(AVFMT_SHOW_IDS)
+  V(AVFMT_GENERIC_INDEX)
+  V(AVFMT_TS_DISCONT)
+  V(AVFMT_NOBINSEARCH)
+  V(AVFMT_NOGENSEARCH)
+  V(AVFMT_NO_BYTE_SEEK)
+  V(AVFMT_SEEK_TO_PTS)
+
+  // OutputFormat flags
+  V(AVFMT_GLOBALHEADER)
+  V(AVFMT_VARIABLE_FPS)
+  V(AVFMT_NODIMENSIONS)
+  V(AVFMT_NOSTREAMS)
+  V(AVFMT_TS_NONSTRICT)
+  V(AVFMT_TS_NEGATIVE)
+
+  // Common format flags
+  V(AVFMT_NOFILE)
+  V(AVFMT_NEEDNUMBER)
+  V(AVFMT_NOTIMESTAMPS)
+
 #undef V
 
   return exports;
