@@ -94,5 +94,5 @@ test('frame expose a accessor for timeBase', (t) => {
 
 test('frame expose getter for picture type', (t) => {
   const fr = new ffmpeg.Frame()
-  t.is(fr.pictType, ffmpeg.constants.pictureType.NONE)
+  t.is(fr.pictType, ffmpeg.constants.pictureTypes.NONE)
 })
