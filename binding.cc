@@ -495,11 +495,13 @@ bare_ffmpeg_format_context_read_frame(
 
   auto stream = context->handle->streams[packet->handle->stream_index];
 
+#ifdef AUTO_TIMEBASE
   assert(bad_timebase(packet->handle->time_base) && "INITIAL TIMEBASE");
 
   if (!bad_timebase(stream->time_base)) {
     packet->handle->time_base = stream->time_base;
   }
+#endif
 
   return err == 0;
 }
@@ -1929,6 +1931,45 @@ bare_ffmpeg_packet_rescale_ts(
   return true;
 }
 
+static int64_t
+bare_ffmpeg_packet_get_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  return packet->handle->duration;
+}
+
+static void
+bare_ffmpeg_packet_set_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int64_t value
+) {
+  packet->handle->duration = value;
+}
+
+static int32_t
+bare_ffmpeg_packet_get_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  return packet->handle->flags;
+}
+
+static void
+bare_ffmpeg_packet_set_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t value
+) {
+  packet->handle->flags = value;
+}
+
+
 static js_arraybuffer_t
 bare_ffmpeg_scaler_init(
   js_env_t *env,
@@ -2522,6 +2563,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getPacketTimeBase", bare_ffmpeg_packet_get_time_base)
   V("setPacketTimeBase", bare_ffmpeg_packet_set_time_base)
   V("rescalePacketTimestamps", bare_ffmpeg_packet_rescale_ts)
+  V("getPacketDuration", bare_ffmpeg_packet_get_duration)
+  V("setPacketDuration", bare_ffmpeg_packet_set_duration)
+  V("getPacketFlags", bare_ffmpeg_packet_get_flags)
+  V("setPacketFlags", bare_ffmpeg_packet_set_flags)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
@@ -2578,6 +2623,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_AAC)
   V(AV_CODEC_ID_OPUS)
   V(AV_CODEC_ID_AV1)
+  V(AV_CODEC_ID_FLAC)
+  V(AV_CODEC_ID_MP3)
 
   V(AV_CODEC_FLAG_COPY_OPAQUE)
   V(AV_CODEC_FLAG_FRAME_DURATION)

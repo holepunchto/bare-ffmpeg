@@ -83,6 +83,26 @@ test('packet should expose timeBase accessor', (t) => {
   t.alike(packet.timeBase, base)
 })
 
+test('packet should expose duration accessor', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  t.is(packet.duration, 0)
+
+  packet.duration = 16
+
+  t.is(packet.duration, 16)
+})
+
+test('packet should expose flags accessor', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  t.is(packet.flags, 0)
+
+  packet.flags = 1
+
+  t.is(packet.flags, 1)
+})
+
 test('rescale packet timestamps & timebase', (t) => {
   const packet = new ffmpeg.Packet()
 
