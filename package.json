@@ -21,7 +21,8 @@
   ],
   "addon": true,
   "scripts": {
-    "test": "prettier . --check && bare test.js"
+    "test": "prettier . --check && bare test.js",
+    "format": "prettier . --write && clang-format -i binding.cc"
   },
   "repository": {
     "type": "git",
