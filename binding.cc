@@ -2448,6 +2448,30 @@ bare_ffmpeg_audio_fifo_space(
   return av_audio_fifo_space(fifo->handle);
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_rational_d2q(
+  js_env_t *env,
+  js_receiver_t,
+  double num
+) {
+  constexpr int safe_max = 1 << 26;
+
+  auto rational = av_d2q(num, safe_max);
+
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = rational.num;
+  data[1] = rational.den;
+
+  return result;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -2621,6 +2645,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("resetAudioFifo", bare_ffmpeg_audio_fifo_reset)
   V("getAudioFifoSize", bare_ffmpeg_audio_fifo_size)
   V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
+
+  V("rationalD2Q", bare_ffmpeg_rational_d2q)
 #undef V
 
 #define V(name) \
