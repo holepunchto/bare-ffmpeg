@@ -163,7 +163,6 @@ bare_ffmpeg_io_context_init(
   context->env = env;
 
   int write_flag = 0;
-
   if (on_write) {
     write_flag = 1;
     err = js_create_reference(env, *on_write, context->on_write);
