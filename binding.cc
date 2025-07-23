@@ -100,15 +100,13 @@ typedef struct {
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 // TODO: safe to remove feature flag?
-#define AUTO_TIMEBASE
+// #define AUTO_TIMEBASE
 
-#ifdef AUTO_TIMEBASE
 static inline bool
 bad_timebase(const AVRational r) {
   return r.den < 1 ||    // invalid denominator
          av_q2d(r) == 0; // detect initial state: (0 / 1)
 }
-#endif
 
 static void
 bare_ffmpeg__on_init(void) {
@@ -493,9 +491,10 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
-  auto stream = context->handle->streams[packet->handle->stream_index];
 
 #ifdef AUTO_TIMEBASE
+  auto stream = context->handle->streams[packet->handle->stream_index];
+
   assert(bad_timebase(packet->handle->time_base) && "INITIAL TIMEBASE");
 
   if (!bad_timebase(stream->time_base)) {
@@ -543,22 +542,19 @@ bare_ffmpeg_format_context_write_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
+#ifdef AUTO_TIMEBASE
+  // controversial; automatically converts
   auto stream = context->handle->streams[packet->handle->stream_index];
 
-#ifdef AUTO_TIMEBASE
   auto srcTime = packet->handle->time_base;
   auto dstTime = stream->time_base; // TODO: which stream is this?
                                     // It is not one returned by avformat_new_stream()
 
-  // TODO: expose as packet.convertTimebase(Rational)
   if (!bad_timebase(srcTime) && !bad_timebase(dstTime)) {
     av_packet_rescale_ts(packet->handle, srcTime, dstTime);
     packet->handle->time_base = dstTime;
   }
 #endif
-
-  // remove after identifying stream
-  // printf("ctx_write_packet stream[%p]=(%i / %i) packet: stream=%i tb=(%i / %i) pts=%zi duration=%zi\n", stream, stream->time_base.num, stream->time_base.den, packet->handle->stream_index, packet->handle->time_base.num, packet->handle->time_base.den, packet->handle->pts, packet->handle->duration);
 
   int err = av_interleaved_write_frame(context->handle, packet->handle);
 
