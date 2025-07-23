@@ -1,6 +1,6 @@
 {
   "name": "bare-ffmpeg",
-  "version": "1.0.0-15",
+  "version": "1.0.0-16",
   "description": "Low-level FFmpeg bindings for Bare",
   "exports": {
     ".": {
