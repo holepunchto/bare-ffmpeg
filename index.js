@@ -11,16 +11,16 @@ const {
   OutputFormatContext
 } = require('./lib/format-context')
 const Frame = require('./lib/frame')
-const Image = require('./lib/image')
 const IOContext = require('./lib/io-context')
+const Image = require('./lib/image')
 const InputFormat = require('./lib/input-format')
 const OutputFormat = require('./lib/output-format')
 const Packet = require('./lib/packet')
+const Rational = require('./lib/rational')
+const Resampler = require('./lib/resampler')
 const Samples = require('./lib/samples')
 const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
-const Rational = require('./lib/rational')
-const Resampler = require('./lib/resampler')
 const log = require('./lib/log')
 
 exports.AudioFIFO = AudioFIFO
