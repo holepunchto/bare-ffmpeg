@@ -630,18 +630,6 @@ bare_ffmpeg_stream_set_id(
   stream->handle->id = id;
 }
 
-static void
-bare_ffmpeg_stream_set_time_base(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
-  int num,
-  int den
-) {
-  stream->handle->time_base.num = num;
-  stream->handle->time_base.den = den;
-}
-
 static js_arraybuffer_t
 bare_ffmpeg_stream_get_time_base(
   js_env_t *env,
@@ -660,6 +648,50 @@ bare_ffmpeg_stream_get_time_base(
   data[1] = stream->handle->time_base.den;
 
   return result;
+}
+
+static void
+bare_ffmpeg_stream_set_time_base(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int num,
+  int den
+) {
+  stream->handle->time_base.num = num;
+  stream->handle->time_base.den = den;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_stream_get_avg_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = stream->handle->time_base.num;
+  data[1] = stream->handle->time_base.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_stream_set_avg_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int num,
+  int den
+) {
+  stream->handle->time_base.num = num;
+  stream->handle->time_base.den = den;
 }
 
 static js_arraybuffer_t
@@ -2520,6 +2552,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setStreamId", bare_ffmpeg_stream_set_id)
   V("getStreamTimeBase", bare_ffmpeg_stream_get_time_base)
   V("setStreamTimeBase", bare_ffmpeg_stream_set_time_base)
+  V("getStreamAverageFramerate", bare_ffmpeg_stream_get_avg_framerate)
+  V("setStreamAverageFramerate", bare_ffmpeg_stream_set_avg_framerate)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)

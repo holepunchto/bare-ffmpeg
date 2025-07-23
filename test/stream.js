@@ -68,6 +68,21 @@ test('it should expose a timeBase setter', (t) => {
   t.ok(stream.timeBase.denominator === newTimeBase.denominator)
 })
 
+test('it should expose avgFramerate', (t) => {
+  using inputFormatContext = getInputFormatContext()
+  const stream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaTypes.VIDEO
+  )
+
+  const initial = new ffmpeg.Rational(1, 30)
+  t.alike(stream.avgFramerate, initial, 'inital avgFramerate')
+
+  const updated = new ffmpeg.Rational(1, 60)
+  stream.avgFramerate = updated
+
+  t.alike(stream.avgFramerate, updated, 'avgFramerate set')
+})
+
 // Helpers
 
 function getInputFormatContext() {
