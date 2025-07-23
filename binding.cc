@@ -99,9 +99,6 @@ typedef struct {
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
-// TODO: safe to remove feature flag?
-// #define AUTO_TIMEBASE
-
 static inline bool
 bad_timebase(const AVRational r) {
   return r.den < 1 ||    // invalid denominator
@@ -491,17 +488,6 @@ bare_ffmpeg_format_context_read_frame(
     throw js_pending_exception;
   }
 
-
-#ifdef AUTO_TIMEBASE
-  auto stream = context->handle->streams[packet->handle->stream_index];
-
-  assert(bad_timebase(packet->handle->time_base) && "INITIAL TIMEBASE");
-
-  if (!bad_timebase(stream->time_base)) {
-    packet->handle->time_base = stream->time_base;
-  }
-#endif
-
   return err == 0;
 }
 
@@ -542,20 +528,6 @@ bare_ffmpeg_format_context_write_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
-#ifdef AUTO_TIMEBASE
-  // controversial; automatically converts
-  auto stream = context->handle->streams[packet->handle->stream_index];
-
-  auto srcTime = packet->handle->time_base;
-  auto dstTime = stream->time_base; // TODO: which stream is this?
-                                    // It is not one returned by avformat_new_stream()
-
-  if (!bad_timebase(srcTime) && !bad_timebase(dstTime)) {
-    av_packet_rescale_ts(packet->handle, srcTime, dstTime);
-    packet->handle->time_base = dstTime;
-  }
-#endif
-
   int err = av_interleaved_write_frame(context->handle, packet->handle);
 
   if (err < 0) {
@@ -1124,16 +1096,6 @@ bare_ffmpeg_codec_context_send_packet(
 ) {
   int err;
 
-#ifdef AUTO_TIMEBASE
-  if (
-    !bad_timebase(packet->handle->time_base) &&
-    bad_timebase(context->handle->pkt_timebase)
-  ) {
-    // Auto init decoder time_base
-    context->handle->pkt_timebase = packet->handle->time_base;
-  }
-#endif
-
   err = avcodec_send_packet(context->handle, packet->handle);
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -1161,16 +1123,6 @@ bare_ffmpeg_codec_context_receive_packet(
 
     throw js_pending_exception;
   }
-
-#ifdef AUTO_TIMEBASE
-  if (
-    err == 0 &&
-    !bad_timebase(context->handle->time_base) &&
-    bad_timebase(packet->handle->time_base)
-  ) {
-    packet->handle->time_base = context->handle->time_base;
-  }
-#endif
 
   return err == 0;
 }
@@ -1216,17 +1168,6 @@ bare_ffmpeg_codec_context_receive_frame(
 
     throw js_pending_exception;
   }
-
-#ifdef AUTO_TIMEBASE
-  if (
-    err == 0 &&
-    !bad_timebase(context->handle->time_base) && // tb set on codec
-    bad_timebase(frame->handle->time_base)       // tb empty on frame
-  ) {
-    // Copy time_base (no convertion)
-    frame->handle->time_base = context->handle->time_base;
-  }
-#endif
 
   return err == 0;
 }

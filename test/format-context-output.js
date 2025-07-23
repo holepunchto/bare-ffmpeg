@@ -258,7 +258,7 @@ function addVideoStream(t, format, inContext, outContext) {
 
   const decoder = inputStream.decoder()
 
-  decoder.timeBase = inputStream.timeBase // TODO: remove after PR#57 merge
+  decoder.timeBase = inputStream.timeBase
   t.alike(decoder.timeBase, inputStream.timeBase, 'decoder.timebase')
 
   t.is(decoder.pixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
