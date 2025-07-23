@@ -643,8 +643,8 @@ bare_ffmpeg_stream_get_avg_framerate(
   err = js_create_arraybuffer(env, 2, data, result);
   assert(err == 0);
 
-  data[0] = stream->handle->time_base.num;
-  data[1] = stream->handle->time_base.den;
+  data[0] = stream->handle->avg_frame_rate.num;
+  data[1] = stream->handle->avg_frame_rate.den;
 
   return result;
 }
@@ -657,8 +657,8 @@ bare_ffmpeg_stream_set_avg_framerate(
   int num,
   int den
 ) {
-  stream->handle->time_base.num = num;
-  stream->handle->time_base.den = den;
+  stream->handle->avg_frame_rate.num = num;
+  stream->handle->avg_frame_rate.den = den;
 }
 
 static js_arraybuffer_t
