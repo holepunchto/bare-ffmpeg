@@ -74,10 +74,10 @@ test('it should expose avgFramerate', (t) => {
     ffmpeg.constants.mediaTypes.VIDEO
   )
 
-  const initial = new ffmpeg.Rational(1, 30)
+  const initial = new ffmpeg.Rational(30, 1)
   t.alike(stream.avgFramerate, initial, 'inital avgFramerate')
 
-  const updated = new ffmpeg.Rational(1, 60)
+  const updated = new ffmpeg.Rational(60, 1)
   stream.avgFramerate = updated
 
   t.alike(stream.avgFramerate, updated, 'avgFramerate set')
