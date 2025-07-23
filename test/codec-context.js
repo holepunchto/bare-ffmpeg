@@ -123,6 +123,20 @@ test('receivePacket should return false when no frame has been sent', (t) => {
   t.absent(codecCtx.receivePacket(packet))
 })
 
+test('codec context should expose framerate', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.H264.encoder)
+
+  t.ok(codecCtx.frameRate.uninitialized, 'empty timebase')
+
+  setDefaultOptions(codecCtx)
+  const fps = new ffmpeg.Rational(1, 30)
+  codecCtx.frameRate = fps
+
+  codecCtx.open()
+
+  t.alike(codecCtx.frameRate, fps)
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P

@@ -1055,6 +1055,38 @@ bare_ffmpeg_codec_context_set_gop_size(
   context->handle->gop_size = gop_size;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_codec_context_get_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = context->handle->framerate.num;
+  data[1] = context->handle->framerate.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_codec_context_set_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int num,
+  int den
+) {
+  context->handle->framerate.num = num;
+  context->handle->framerate.den = den;
+}
+
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
@@ -1316,6 +1348,26 @@ bare_ffmpeg_codec_parameters_get_height(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->height;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_codec_parameters_get_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  int err;
+
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = parameters->handle->framerate.num;
+  data[1] = parameters->handle->framerate.den;
+
+  return result;
 }
 
 static js_arraybuffer_t
@@ -1969,7 +2021,6 @@ bare_ffmpeg_packet_set_flags(
   packet->handle->flags = value;
 }
 
-
 static js_arraybuffer_t
 bare_ffmpeg_scaler_init(
   js_env_t *env,
@@ -2497,6 +2548,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextSampleRate", bare_ffmpeg_codec_context_set_sample_rate);
   V("getCodecContextGOPSize", bare_ffmpeg_codec_context_get_gop_size)
   V("setCodecContextGOPSize", bare_ffmpeg_codec_context_set_gop_size)
+  V("getCodecContextFramerate", bare_ffmpeg_codec_context_get_framerate)
+  V("setCodecContextFramerate", bare_ffmpeg_codec_context_set_framerate)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
@@ -2516,6 +2569,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
+  V("getCodecParametersFramerate", bare_ffmpeg_codec_parameters_get_framerate)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
