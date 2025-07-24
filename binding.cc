@@ -1339,6 +1339,62 @@ bare_ffmpeg_codec_parameters_get_framerate(
 }
 
 static js_arraybuffer_t
+bare_ffmpeg_codec_parameters_get_extra_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  int err;
+
+  js_arraybuffer_t buffer;
+
+  assert(parameters->handle->extradata_size >= 0);
+
+  err = js_create_arraybuffer(
+    env,
+    parameters->handle->extradata,
+    static_cast<size_t>(parameters->handle->extradata_size),
+    buffer
+  );
+  assert(err == 0);
+
+  return buffer;
+}
+
+void
+bare_ffmpeg_codec_parameters_set_extra_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  js_arraybuffer_t buffer,
+  uint32_t offset,
+  uint32_t len
+) {
+  int err;
+
+  std::span<uint8_t> view;
+
+  err = js_get_arraybuffer_info(env, buffer, view);
+  assert(err == 0);
+
+  if (parameters->handle->extradata_size) {
+    assert(parameters->handle->extradata_size > 0);
+    assert(parameters->handle->extradata);
+
+    av_free(parameters->handle->extradata);
+  }
+
+  size_t min_size = len + AV_INPUT_BUFFER_PADDING_SIZE;
+
+  parameters->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(min_size));
+  memset(parameters->handle->extradata, 0, min_size);
+
+  memcpy(parameters->handle->extradata, &view[offset], len);
+
+  parameters->handle->extradata_size = static_cast<int>(len);
+}
+
+static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
 
@@ -2564,6 +2620,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
   V("getCodecParametersFramerate", bare_ffmpeg_codec_parameters_get_framerate)
+  V("getCodecParametersExtraData", bare_ffmpeg_codec_parameters_get_extra_data)
+  V("setCodecParametersExtraData", bare_ffmpeg_codec_parameters_set_extra_data)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
