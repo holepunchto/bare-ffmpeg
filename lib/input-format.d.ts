@@ -1,5 +1,9 @@
 declare class FFmpegInputFormat {
-  constructor(name?: string)
+  readonly name: string
+  readonly longName: string
+  readonly flags: number
+
+  constructor(name?: string, handle?: ArrayBuffer)
 }
 
 export = FFmpegInputFormat
