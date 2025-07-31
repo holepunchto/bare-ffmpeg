@@ -233,6 +233,24 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   return handle;
 }
 
+static std::string
+bare_ffmpeg_output_format_get_name(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format
+) {
+  return format->handle->name;
+}
+
+static std::string
+bare_ffmpeg_output_format_get_long_name(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format
+) {
+  return format->handle->long_name;
+}
+
 static int32_t
 bare_ffmpeg_output_format_get_flags(
   js_env_t *,
@@ -264,6 +282,24 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   context->handle = format;
 
   return handle;
+}
+
+static std::string
+bare_ffmpeg_input_format_get_name(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format
+) {
+  return format->handle->name;
+}
+
+static std::string
+bare_ffmpeg_input_format_get_long_name(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format
+) {
+  return format->handle->long_name;
 }
 
 static int32_t
@@ -464,6 +500,38 @@ bare_ffmpeg_format_context_create_stream(
   assert(err == 0);
 
   stream->handle = avformat_new_stream(context->handle, NULL);
+
+  return handle;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int64_t duration = context->handle->duration;
+
+  if (duration == -0x8000000000000000) return 0;
+
+  return duration;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_format_context_get_input_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_input_format_t *format;
+  err = js_create_arraybuffer(env, format, handle);
+  assert(err == 0);
+
+  format->handle = context->handle->iformat;
 
   return handle;
 }
@@ -2498,8 +2566,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
-  V("initInputFormat", bare_ffmpeg_input_format_init)
   V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
+  V("getOutputFormatName", bare_ffmpeg_output_format_get_name)
+  V("getOutputFormatLongName", bare_ffmpeg_output_format_get_long_name)
+  V("initInputFormat", bare_ffmpeg_input_format_init)
+  V("getInputFormatName", bare_ffmpeg_input_format_get_name)
+  V("getInputFormatLongName", bare_ffmpeg_input_format_get_long_name)
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
@@ -2510,6 +2582,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
+  V("getFormatContextDuration", bare_ffmpeg_format_context_get_duration)
+  V("getFormatContextInputFormat", bare_ffmpeg_format_context_get_input_format)
+
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
   V("writeFormatContextHeader", bare_ffmpeg_format_context_write_header)
   V("writeFormatContextFrame", bare_ffmpeg_format_context_write_frame)

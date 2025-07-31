@@ -9,6 +9,8 @@ import FFmpegDictionary from './dictionary'
 declare class FFmpegFormatContext {
   readonly io: FFmpegIOContext
   readonly streams: FFmpegStream[]
+  readonly duration: number
+  readonly inputFormat: FFmpegInputFormat
 
   constructor(io: FFmpegIOContext)
 
@@ -26,7 +28,7 @@ declare class FFmpegInputFormatContext extends FFmpegFormatContext {
   constructor(io: FFmpegIOContext)
   constructor(input: FFmpegInputFormat, option?: FFmpegDictionary, url?: string)
 
-  destroy(): void
+  dump(printIdx?: number, printUrl?: string): void
 }
 
 declare class FFmpegOutputFormatContext extends FFmpegFormatContext {
@@ -34,7 +36,11 @@ declare class FFmpegOutputFormatContext extends FFmpegFormatContext {
 
   createStream(codec: FFmpegCodec): FFmpegStream
 
-  destroy(): void
+  writeHeader(options?: FFmpegDictionary): void
+  writeFrame(packet: FFmpegPacket): void
+  writeTrailer(): void
+
+  dump(printIdx?: number, printUrl?: string): void
 }
 
 export {
