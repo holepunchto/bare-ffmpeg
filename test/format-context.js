@@ -58,7 +58,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
   t.is(bestStream, null)
 })
 
-test('duration', (t) => {
+test('InputFormatContext should expose a duration getter', (t) => {
   using imageFormatContext = getInputFormatContext('jpeg')
   using aiffFormatContext = getInputFormatContext('aiff')
   using mp3FormatContext = getInputFormatContext('mp3')
@@ -68,7 +68,7 @@ test('duration', (t) => {
   t.is(mp3FormatContext.duration, 0)
 })
 
-test('inputFormat getter', (t) => {
+test('InputFormatContext should expose a inputFormat getter', (t) => {
   using context = getInputFormatContext('jpeg')
 
   t.ok(context.inputFormat)
