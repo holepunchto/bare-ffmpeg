@@ -1355,6 +1355,15 @@ bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
 }
 
 static void
+bare_ffmpeg_frame_unref(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  av_frame_unref(frame->handle);
+}
+
+static void
 bare_ffmpeg_frame_destroy(
   js_env_t *env,
   js_receiver_t,
@@ -2567,6 +2576,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
+  V("unrefFrame", bare_ffmpeg_frame_unref)
   V("getFrameWidth", bare_ffmpeg_frame_get_width)
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
   V("getFrameHeight", bare_ffmpeg_frame_get_height)
