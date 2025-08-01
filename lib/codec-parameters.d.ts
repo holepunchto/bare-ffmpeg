@@ -10,6 +10,7 @@ declare class FFmpegCodecParameters {
   readonly nbChannels: number
   readonly codecType: number
   readonly channelLayout: FFmpegChannelLayout
+  extraData: Buffer
 
   constructor(handle: ArrayBuffer)
 
