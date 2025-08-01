@@ -4,7 +4,7 @@ const ffmpeg = require('..')
 test('CodecParameters class should expose a extraData getter', (t) => {
   const codecParam = getCodecParameters()
 
-  t.ok(codecParam.extraData instanceof Buffer) 
+  t.ok(codecParam.extraData instanceof Buffer)
 })
 
 test('CodecParameters class should expose a extraData setter', (t) => {
