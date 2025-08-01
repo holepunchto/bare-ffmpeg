@@ -636,6 +636,36 @@ Gets the denominator.
 
 **Returns**: `number`
 
+##### `Rational.valid`
+
+Returns if true if rational describes a non-zero & non-negative quantity.
+
+**Returns**: `number`
+
+##### `Rational.uninitialized`
+
+Returns if true when is not set.
+
+**Returns**: `number`
+
+##### `Rational.toNumber()`
+
+see `av_q2d()`
+
+**Returns**: `number`
+
+##### `static Rational.from(number)`
+
+see `av_d2q()`
+
+**Returns**: `Rational`
+
+##### `Rational.rescaleQ(number, timebaseA, timebaseB)`
+
+see `av_rescale_q()`
+
+**Returns**: `number`
+
 ### `Stream`
 
 The `Stream` API provides functionality to access media stream information and create decoders/encoders.
