@@ -339,6 +339,12 @@ Gets the sample rate for audio codecs.
 
 **Returns**: `number`
 
+##### `CodecParameters.extraData`
+
+Out-of-band global headers that may be used by some codecs.
+
+**Returns**: `Buffer`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`
