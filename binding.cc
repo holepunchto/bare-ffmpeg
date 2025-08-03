@@ -1387,7 +1387,7 @@ bare_ffmpeg_codec_parameters_set_extra_data(
   size_t min_size = len + AV_INPUT_BUFFER_PADDING_SIZE;
 
   parameters->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(min_size));
-  memset(parameters->handle->extradata, 0, min_size);
+  memset(&parameters->handle->extradata[len], 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
   memcpy(parameters->handle->extradata, &view[offset], len);
 
