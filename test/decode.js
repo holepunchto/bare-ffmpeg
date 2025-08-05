@@ -9,9 +9,9 @@ test('decode .heic', (t) => {
 
   const decoded = decodeImage(image)
 
-  t.comment('width', decoded.width)
-  t.comment('height', decoded.height)
-  t.comment('data', decoded.data)
+  t.is(decoded.width, 332)
+  t.is(decoded.height, 332)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .avif', (t) => {
@@ -21,9 +21,9 @@ test('decode .avif', (t) => {
 
   const decoded = decodeImage(image)
 
-  t.comment('width', decoded.width)
-  t.comment('height', decoded.height)
-  t.comment('data', decoded.data)
+  t.is(decoded.width, 332)
+  t.is(decoded.height, 332)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .jpeg', (t) => {
@@ -33,9 +33,9 @@ test('decode .jpeg', (t) => {
 
   const decoded = decodeImage(image)
 
-  t.comment('width', decoded.width)
-  t.comment('height', decoded.height)
-  t.comment('data', decoded.data)
+  t.is(decoded.width, 332)
+  t.is(decoded.height, 332)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .aiff', (t) => {
@@ -45,10 +45,10 @@ test('decode .aiff', (t) => {
 
   const decoded = decodeAudio(audio)
 
-  t.comment('hz', decoded.hz)
-  t.comment('channels', decoded.channels)
-  t.comment('format', decoded.format)
-  t.comment('data', decoded.data)
+  t.is(decoded.hz, 8000)
+  t.is(decoded.channels, 2)
+  t.is(decoded.format, 'S16')
+  t.is(decoded.data.length, 94080)
 })
 
 test('decode .mp3', (t) => {
@@ -58,10 +58,10 @@ test('decode .mp3', (t) => {
 
   const decoded = decodeAudio(audio)
 
-  t.comment('hz', decoded.hz)
-  t.comment('channels', decoded.channels)
-  t.comment('format', decoded.format)
-  t.comment('data', decoded.data)
+  t.is(decoded.hz, 44100)
+  t.is(decoded.channels, 2)
+  t.is(decoded.format, 'S16')
+  t.is(decoded.data.length, 520960)
 })
 
 test('decode .mp4', (t) => {
@@ -71,8 +71,8 @@ test('decode .mp4', (t) => {
 
   const decoded = decodeVideo(video)
 
-  t.comment('video data', decoded.video)
-  t.comment('audio data', decoded.audio)
+  t.is(decoded.video.length, 140102, 'video data')
+  t.is(decoded.audio.length, 34914, 'audio data')
 })
 
 test('decode .webm', (t) => {
@@ -82,8 +82,8 @@ test('decode .webm', (t) => {
 
   const decoded = decodeVideo(video)
 
-  t.comment('video data', decoded.video)
-  t.comment('audio data', decoded.audio)
+  t.is(decoded.video.length, 145416, 'video data')
+  t.is(decoded.audio.length, 42419, 'audio data')
 })
 
 function decodeImage(image) {
@@ -158,8 +158,6 @@ function decodeAudio(audio) {
 
         resampler.convert(raw, output)
         buffers.push(Buffer.from(samples.data))
-
-        raw.unref()
       }
 
       packet.unref()
@@ -219,7 +217,7 @@ function decodeVideo(video) {
 
     decoder.sendPacket(packet)
 
-    while (decoder.receiveFrame(frame)) frame.unref()
+    while (decoder.receiveFrame(frame)) {}
 
     if (stream.codecParameters.codecType === constants.mediaTypes.VIDEO) {
       result.video.push(packet.data)
@@ -231,6 +229,9 @@ function decodeVideo(video) {
   }
 
   for (const { decoder } of streams) decoder.destroy()
+
+  result.video = Buffer.concat(result.video)
+  result.audio = Buffer.concat(result.audio)
 
   return result
 }
