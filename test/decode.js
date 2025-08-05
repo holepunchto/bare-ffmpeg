@@ -2,8 +2,6 @@ const test = require('brittle')
 const ffmpeg = require('..')
 const constants = require('../lib/constants')
 
-const shouldTestSnapshot = Bare.platform === 'darwin' && Bare.arch === 'arm64'
-
 test('decode .heic', (t) => {
   const image = require('./fixtures/image/sample.heic', {
     with: { type: 'binary' }
@@ -13,8 +11,7 @@ test('decode .heic', (t) => {
 
   t.is(decoded.width, 332)
   t.is(decoded.height, 332)
-
-  if (shouldTestSnapshot) t.snapshot(decoded.data)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .avif', (t) => {
@@ -26,8 +23,7 @@ test('decode .avif', (t) => {
 
   t.is(decoded.width, 332)
   t.is(decoded.height, 332)
-
-  if (shouldTestSnapshot) t.snapshot(decoded.data)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .jpeg', (t) => {
@@ -39,8 +35,7 @@ test('decode .jpeg', (t) => {
 
   t.is(decoded.width, 332)
   t.is(decoded.height, 332)
-
-  if (shouldTestSnapshot) t.snapshot(decoded.data)
+  t.is(decoded.data.length, 440896)
 })
 
 test('decode .aiff', (t) => {
@@ -53,8 +48,7 @@ test('decode .aiff', (t) => {
   t.is(decoded.hz, 8000)
   t.is(decoded.channels, 2)
   t.is(decoded.format, 'S16')
-
-  if (shouldTestSnapshot) t.snapshot(decoded.data)
+  t.is(decoded.data.length, 94080)
 })
 
 test('decode .mp3', (t) => {
@@ -67,8 +61,7 @@ test('decode .mp3', (t) => {
   t.is(decoded.hz, 44100)
   t.is(decoded.channels, 2)
   t.is(decoded.format, 'S16')
-
-  if (shouldTestSnapshot) t.snapshot(decoded.data)
+  t.is(decoded.data.length, 520960)
 })
 
 test('decode .mp4', (t) => {
@@ -78,8 +71,8 @@ test('decode .mp4', (t) => {
 
   const decoded = decodeVideo(video)
 
-  if (shouldTestSnapshot) t.snapshot(decoded.video, 'video snapshot')
-  if (shouldTestSnapshot) t.snapshot(decoded.audio, 'audio snapshot')
+  t.is(decoded.video.length, 140102, 'video data')
+  t.is(decoded.audio.length, 34914, 'audio data')
 })
 
 test('decode .webm', (t) => {
@@ -89,8 +82,8 @@ test('decode .webm', (t) => {
 
   const decoded = decodeVideo(video)
 
-  if (shouldTestSnapshot) t.snapshot(decoded.video, 'video snapshot')
-  if (shouldTestSnapshot) t.snapshot(decoded.audio, 'audio snapshot')
+  t.is(decoded.video.length, 145416, 'video data')
+  t.is(decoded.audio.length, 42419, 'audio data')
 })
 
 function decodeImage(image) {
