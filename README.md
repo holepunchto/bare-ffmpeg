@@ -363,6 +363,18 @@ Out-of-band global headers that may be used by some codecs.
 
 **Returns**: `Buffer`
 
+##### `CodecParameters.codecProfile`
+
+Codec-specific bitstream restrictions that the stream conforms to.
+
+**Returns**: `number`
+
+##### `CodecParameters.codecLevel`
+
+Codec-specific bitstream restrictions that the stream conforms to.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`

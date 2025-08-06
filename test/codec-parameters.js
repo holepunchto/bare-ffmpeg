@@ -37,6 +37,18 @@ test('CodecParameters class should expose a bitsPerRawSample getter', (t) => {
   t.ok(typeof codecParam.bitsPerRawSample === 'number')
 })
 
+test('CodecParameters class should expose a codecLevel getter', (t) => {
+  const codecParam = getCodecParameters()
+
+  t.ok(typeof codecParam.codecLevel === 'number')
+})
+
+test('CodecParameters class should expose a codecProfile getter', (t) => {
+  const codecParam = getCodecParameters()
+
+  t.ok(typeof codecParam.codecProfile === 'number')
+})
+
 test('CodecParameters class should expose a extraData getter', (t) => {
   const codecParam = getCodecParameters()
 

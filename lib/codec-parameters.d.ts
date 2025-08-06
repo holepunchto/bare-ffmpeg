@@ -11,6 +11,8 @@ declare class FFmpegCodecParameters {
   readonly codecType: number
   readonly codecTag: number
   readonly codecId: number
+  readonly codecProfile: number
+  readonly codecLevel: number
   readonly channelLayout: FFmpegChannelLayout
   extraData: Buffer
 
