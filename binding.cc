@@ -7,6 +7,7 @@
 #include <bare.h>
 #include <js.h>
 #include <jstl.h>
+#include <sys/_types/_u_int32_t.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -1269,6 +1270,15 @@ bare_ffmpeg_codec_parameters_get_codec_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->codec_type;
+}
+
+static u_int32_t
+bare_ffmpeg_codec_parameters_get_codec_tag(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->codec_tag;
 }
 
 static int32_t
@@ -2624,6 +2634,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("getCodecParametersCodecTag", bare_ffmpeg_codec_parameters_get_codec_tag)
   V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)

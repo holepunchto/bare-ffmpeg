@@ -315,6 +315,12 @@ const params = stream.codecParameters // Get from stream
 
 #### Properties
 
+##### `CodecParameters.codecTag`
+
+Additional information about the codec (corresponds to the AVI FOURCC).
+
+**Returns**: `number`
+
 ##### `CodecParameters.bitRate`
 
 Gets the bit rate.

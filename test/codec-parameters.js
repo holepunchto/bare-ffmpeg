@@ -1,6 +1,12 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
+test('CodecParameters class should expose a codecTag getter', (t) => {
+  const codecParam = getCodecParameters()
+
+  t.ok(typeof codecParam.codecTag === 'number')
+})
+
 test('CodecParameters class should expose a extraData getter', (t) => {
   const codecParam = getCodecParameters()
 
