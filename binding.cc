@@ -7,7 +7,6 @@
 #include <bare.h>
 #include <js.h>
 #include <jstl.h>
-#include <sys/_types/_u_int32_t.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
