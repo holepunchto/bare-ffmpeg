@@ -49,6 +49,12 @@ test('CodecParameters class should expose a codecProfile getter', (t) => {
   t.ok(typeof codecParam.codecProfile === 'number')
 })
 
+test('CodecParameters class should expose a codecFormat getter', (t) => {
+  const codecParam = getCodecParameters()
+
+  t.ok(typeof codecParam.codecFormat === 'number')
+})
+
 test('CodecParameters class should expose a extraData getter', (t) => {
   const codecParam = getCodecParameters()
 

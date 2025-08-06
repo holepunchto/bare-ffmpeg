@@ -375,6 +375,13 @@ Codec-specific bitstream restrictions that the stream conforms to.
 
 **Returns**: `number`
 
+##### `CodecParameters.codecFormat`
+
+Video: the pixel format, the value corresponds to AVPixelFormat.
+Audio: the sample format, the value corresponds to AVSampleFormat.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`
