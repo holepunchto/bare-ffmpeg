@@ -1271,7 +1271,7 @@ bare_ffmpeg_codec_parameters_get_codec_type(
   return parameters->handle->codec_type;
 }
 
-static u_int32_t
+static uint32_t
 bare_ffmpeg_codec_parameters_get_codec_tag(
   js_env_t *env,
   js_receiver_t,
