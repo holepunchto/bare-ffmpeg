@@ -1290,7 +1290,7 @@ bare_ffmpeg_codec_parameters_get_codec_id(
   return parameters->handle->codec_id;
 }
 
-static int32_t
+static int
 bare_ffmpeg_codec_parameters_get_codec_level(
   js_env_t *env,
   js_receiver_t,
@@ -1299,7 +1299,7 @@ bare_ffmpeg_codec_parameters_get_codec_level(
   return parameters->handle->level;
 }
 
-static int32_t
+static int
 bare_ffmpeg_codec_parameters_get_codec_profile(
   js_env_t *env,
   js_receiver_t,
@@ -1308,7 +1308,7 @@ bare_ffmpeg_codec_parameters_get_codec_profile(
   return parameters->handle->profile;
 }
 
-static int32_t
+static int
 bare_ffmpeg_codec_parameters_get_codec_format(
   js_env_t *env,
   js_receiver_t,
