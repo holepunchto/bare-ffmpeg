@@ -315,6 +315,12 @@ const params = stream.codecParameters // Get from stream
 
 #### Properties
 
+##### `CodecParameters.codecType`
+
+General type of the encoded data.
+
+**Returns**: `number`
+
 ##### `CodecParameters.codecTag`
 
 Additional information about the codec (corresponds to the AVI FOURCC).
