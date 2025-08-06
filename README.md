@@ -321,6 +321,12 @@ General type of the encoded data.
 
 **Returns**: `number`
 
+##### `CodecParameters.codecId`
+
+Specific type of the encoded data (the codec used).
+
+**Returns**: `number`
+
 ##### `CodecParameters.codecTag`
 
 Additional information about the codec (corresponds to the AVI FOURCC).
