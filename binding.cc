@@ -1444,7 +1444,7 @@ bare_ffmpeg_frame_get_data(
     throw js_pending_exception;
   }
 
-  uint8_t* src = frame->handle->data[plane];
+  uint8_t *src = frame->handle->data[plane];
   int linesize = frame->handle->linesize[plane];
   size_t copy_size = 0;
 
@@ -1459,7 +1459,7 @@ bare_ffmpeg_frame_get_data(
     // Audio frame
     // Assume planar if each plane exists separately.
     if (av_sample_fmt_is_planar((AVSampleFormat) frame->handle->format)) {
-      int bytes_per_sample = av_get_bytes_per_sample((AVSampleFormat)frame->handle->format);
+      int bytes_per_sample = av_get_bytes_per_sample((AVSampleFormat) frame->handle->format);
       copy_size = frame->handle->nb_samples * bytes_per_sample;
     } else {
       // Packed audio, everything is in data[0]
