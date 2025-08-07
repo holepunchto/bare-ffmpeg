@@ -6,6 +6,15 @@ declare const constants: {
     OPUS: number
     AV1: number
   }
+  tags: {
+    H264: number
+  }
+  profiles: {
+    H264_MAIN: number
+  }
+  levels: {
+    UNKNOWN: number
+  }
   pixelFormats: {
     RGBA: number
     RGB24: number

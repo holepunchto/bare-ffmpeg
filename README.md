@@ -315,6 +315,24 @@ const params = stream.codecParameters // Get from stream
 
 #### Properties
 
+##### `CodecParameters.codecType`
+
+General type of the encoded data.
+
+**Returns**: `number`
+
+##### `CodecParameters.codecId`
+
+Specific type of the encoded data (the codec used).
+
+**Returns**: `number`
+
+##### `CodecParameters.codecTag`
+
+Additional information about the codec (corresponds to the AVI FOURCC).
+
+**Returns**: `number`
+
 ##### `CodecParameters.bitRate`
 
 Gets the bit rate.
@@ -344,6 +362,25 @@ Gets the sample rate for audio codecs.
 Out-of-band global headers that may be used by some codecs.
 
 **Returns**: `Buffer`
+
+##### `CodecParameters.codecProfile`
+
+Codec-specific bitstream restrictions that the stream conforms to.
+
+**Returns**: `number`
+
+##### `CodecParameters.codecLevel`
+
+Codec-specific bitstream restrictions that the stream conforms to.
+
+**Returns**: `number`
+
+##### `CodecParameters.codecFormat`
+
+Video: the pixel format, the value corresponds to AVPixelFormat.
+Audio: the sample format, the value corresponds to AVSampleFormat.
+
+**Returns**: `number`
 
 #### Methods
 

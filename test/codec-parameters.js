@@ -1,15 +1,99 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
-test('CodecParameters class should expose a extraData getter', (t) => {
-  const codecParam = getCodecParameters()
+let inputFormatContext
+let codecParam
 
+test.hook('setup', () => {
+  const options = new ffmpeg.Dictionary()
+  options.set('framerate', '30')
+  options.set('video_size', '1280x720')
+  options.set('pixel_format', 'uyvy422')
+  inputFormatContext = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat('lavfi'),
+    options,
+    'testsrc=size=640x480:rate=30'
+  )
+  const stream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaTypes.VIDEO
+  )
+
+  codecParam = stream.codecParameters
+})
+
+test('CodecParameters class should expose a codecTag getter', (t) => {
+  t.ok(typeof codecParam.codecTag === 'number')
+})
+
+test('CodecParameters class should expose a codecTag setter', (t) => {
+  codecParam.codecTag = ffmpeg.constants.tags.H264
+  t.ok(codecParam.codecTag === ffmpeg.constants.tags.H264)
+})
+
+test('CodecParameters class should expose a codecType getter', (t) => {
+  t.ok(codecParam.codecType === ffmpeg.constants.mediaTypes.VIDEO)
+})
+
+test('CodecParameters class should expose a codecType setter', (t) => {
+  codecParam.codecType = ffmpeg.constants.mediaTypes.UNKNOWN
+  t.ok(codecParam.codecType === ffmpeg.constants.mediaTypes.UNKNOWN)
+})
+
+test('CodecParameters class should expose a codecId getter', (t) => {
+  t.ok(typeof codecParam.codecId === 'number')
+})
+
+test('CodecParameters class should expose a codecId setter', (t) => {
+  codecParam.codecId = ffmpeg.constants.codecs.H264
+  t.ok(codecParam.codecId === ffmpeg.constants.codecs.H264)
+})
+
+test('CodecParameters class should expose a bitRate getter', (t) => {
+  t.ok(typeof codecParam.bitRate === 'number')
+})
+
+test('CodecParameters class should expose a bitsPerCodedSample getter', (t) => {
+  t.ok(typeof codecParam.bitsPerCodedSample === 'number')
+})
+
+test('CodecParameters class should expose a bitsPerRawSample getter', (t) => {
+  t.ok(typeof codecParam.bitsPerRawSample === 'number')
+})
+
+test('CodecParameters class should expose a codecLevel getter', (t) => {
+  t.ok(codecParam.codecLevel === ffmpeg.constants.levels.UNKNOWN)
+})
+
+test('CodecParameters class should expose a codecLevel setter', (t) => {
+  // Note: FFmpeg does not expose levels
+  // https://github.com/FFmpeg/FFmpeg/blob/fa458c7243a5462726a6929034f28c14d111c684/libavcodec/defs.h#L206
+  codecParam.codecLevel = 1
+  t.ok(codecParam.codecLevel === 1)
+})
+
+test('CodecParameters class should expose a codecProfile getter', (t) => {
+  t.ok(typeof codecParam.codecProfile === 'number')
+})
+
+test('CodecParameters class should expose a codecProfile setter', (t) => {
+  codecParam.codecProfile = ffmpeg.constants.profiles.H264_MAIN
+  t.ok(codecParam.codecProfile === ffmpeg.constants.profiles.H264_MAIN)
+})
+
+test('CodecParameters class should expose a codecFormat getter', (t) => {
+  t.ok(typeof codecParam.codecFormat === 'number')
+})
+
+test('CodecParameters class should expose a codecFormat setter', (t) => {
+  codecParam.codecFormat = ffmpeg.constants.pixelFormats.RGBA
+  t.ok(codecParam.codecFormat === ffmpeg.constants.pixelFormats.RGBA)
+})
+
+test('CodecParameters class should expose a extraData getter', (t) => {
   t.ok(codecParam.extraData instanceof Buffer)
 })
 
 test('CodecParameters class should expose a extraData setter', (t) => {
-  const codecParam = getCodecParameters()
-
   const buf = Buffer.from('test')
   codecParam.extraData = buf
 
@@ -19,21 +103,6 @@ test('CodecParameters class should expose a extraData setter', (t) => {
   t.ok(codecParam.extraData[3] == 't'.charCodeAt(0))
 })
 
-// Helpers
-
-function getCodecParameters() {
-  const options = new ffmpeg.Dictionary()
-  options.set('framerate', '30')
-  options.set('video_size', '1280x720')
-  options.set('pixel_format', 'uyvy422')
-  using inputFormatContext = new ffmpeg.InputFormatContext(
-    new ffmpeg.InputFormat('lavfi'),
-    options,
-    'testsrc=size=640x480:rate=30'
-  )
-  const stream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
-
-  return stream.codecParameters
-}
+test.hook('teardown', () => {
+  inputFormatContext.destroy()
+})
