@@ -1429,6 +1429,70 @@ bare_ffmpeg_frame_destroy(
 }
 
 static int32_t
+bare_ffmpeg_frame_get_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t plane
+) {
+  int err;
+
+  if (plane < 0 || plane >= AV_NUM_DATA_POINTERS || !frame->handle->data[plane]) {
+    err = js_throw_errorf(env, NULL, "Invalid or empty plane %d", plane);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  uint8_t* src = frame->handle->data[plane];
+  int linesize = frame->handle->linesize[plane];
+  size_t copy_size = 0;
+
+  if (frame->handle->format < 0) {
+    err = js_throw_errorf(env, NULL, "Unknown format %d", frame->handle->format);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  if (frame->handle->channels > 0 && frame->handle->nb_samples > 0) {
+    // Audio frame
+    // Assume planar if each plane exists separately.
+    if (av_sample_fmt_is_planar((AVSampleFormat) frame->handle->format)) {
+      int bytes_per_sample = av_get_bytes_per_sample((AVSampleFormat)frame->handle->format);
+      copy_size = frame->handle->nb_samples * bytes_per_sample;
+    } else {
+      // Packed audio, everything is in data[0]
+      if (plane != 0) {
+        err = js_throw_error(env, NULL, "Packed audio has only plane 0");
+        assert(err == 0);
+
+        throw js_pending_exception;
+      }
+      copy_size = frame->handle->linesize[0];
+    }
+  } else {
+    // TODO: Add support for video frames.
+    err = js_throw_error(env, NULL, "Video frames are not supported yet");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  auto size = static_cast<size_t>(frame->handle->size);
+
+  js_arraybuffer_t handle;
+
+  uint8_t *data;
+  err = js_create_arraybuffer(env, copy_size, data, handle);
+  assert(err == 0);
+
+  memcpy(data, src, copy_size);
+
+  return handle;
+}
+
+static int32_t
 bare_ffmpeg_frame_get_width(
   js_env_t *env,
   js_receiver_t,
@@ -2635,6 +2699,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
   V("unrefFrame", bare_ffmpeg_frame_unref)
+  V("getFrameData", bare_ffmpeg_frame_get_data)
   V("getFrameWidth", bare_ffmpeg_frame_get_width)
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
   V("getFrameHeight", bare_ffmpeg_frame_get_height)

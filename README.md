@@ -476,6 +476,12 @@ Destroys the `Frame` and frees all associated resources. Automatically called wh
 
 **Returns**: `void`
 
+##### `Frame.data(plane)`
+
+Gets the frame data buffer for the given plane.
+
+**Returns**: `Buffer`
+
 ### `Packet`
 
 This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.
