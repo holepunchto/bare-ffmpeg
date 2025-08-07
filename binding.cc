@@ -1428,7 +1428,7 @@ bare_ffmpeg_frame_destroy(
   av_frame_free(&frame->handle);
 }
 
-static int32_t
+static js_arraybuffer_t
 bare_ffmpeg_frame_get_data(
   js_env_t *env,
   js_receiver_t,
@@ -1444,10 +1444,6 @@ bare_ffmpeg_frame_get_data(
     throw js_pending_exception;
   }
 
-  uint8_t *src = frame->handle->data[plane];
-  int linesize = frame->handle->linesize[plane];
-  size_t copy_size = 0;
-
   if (frame->handle->format < 0) {
     err = js_throw_errorf(env, NULL, "Unknown format %d", frame->handle->format);
     assert(err == 0);
@@ -1455,12 +1451,13 @@ bare_ffmpeg_frame_get_data(
     throw js_pending_exception;
   }
 
-  if (frame->handle->channels > 0 && frame->handle->nb_samples > 0) {
+  size_t copy_size = 0;
+  if (frame->handle->ch_layout.nb_channels > 0 && frame->handle->nb_samples > 0) {
     // Audio frame
     // Assume planar if each plane exists separately.
     if (av_sample_fmt_is_planar((AVSampleFormat) frame->handle->format)) {
       int bytes_per_sample = av_get_bytes_per_sample((AVSampleFormat) frame->handle->format);
-      copy_size = frame->handle->nb_samples * bytes_per_sample;
+      copy_size = (size_t) frame->handle->nb_samples * (size_t) bytes_per_sample;
     } else {
       // Packed audio, everything is in data[0]
       if (plane != 0) {
@@ -1469,7 +1466,7 @@ bare_ffmpeg_frame_get_data(
 
         throw js_pending_exception;
       }
-      copy_size = frame->handle->linesize[0];
+      copy_size = (size_t) frame->handle->linesize[0];
     }
   } else {
     // TODO: Add support for video frames.
@@ -1479,15 +1476,13 @@ bare_ffmpeg_frame_get_data(
     throw js_pending_exception;
   }
 
-  auto size = static_cast<size_t>(frame->handle->size);
-
   js_arraybuffer_t handle;
 
   uint8_t *data;
   err = js_create_arraybuffer(env, copy_size, data, handle);
   assert(err == 0);
 
-  memcpy(data, src, copy_size);
+  memcpy(data, frame->handle->data[plane], copy_size);
 
   return handle;
 }
