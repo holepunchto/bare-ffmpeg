@@ -56,7 +56,14 @@ test('CodecParameters class should expose a bitsPerRawSample getter', (t) => {
 })
 
 test('CodecParameters class should expose a codecLevel getter', (t) => {
-  t.ok(typeof codecParam.codecLevel === 'number')
+  t.ok(codecParam.codecLevel === ffmpeg.constants.levels.UNKNOWN)
+})
+
+test('CodecParameters class should expose a codecLevel setter', (t) => {
+  // Note: FFmpeg does not expose levels
+  // https://github.com/FFmpeg/FFmpeg/blob/fa458c7243a5462726a6929034f28c14d111c684/libavcodec/defs.h#L206
+  codecParam.codecLevel = 1
+  t.ok(codecParam.codecLevel === 1)
 })
 
 test('CodecParameters class should expose a codecProfile getter', (t) => {

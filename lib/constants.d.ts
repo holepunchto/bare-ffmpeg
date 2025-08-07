@@ -12,6 +12,9 @@ declare const constants: {
   profiles: {
     H264_MAIN: number
   }
+  levels: {
+    UNKNOWN: number
+  }
   pixelFormats: {
     RGBA: number
     RGB24: number

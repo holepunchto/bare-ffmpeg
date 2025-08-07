@@ -12,7 +12,7 @@ declare class FFmpegCodecParameters {
   codecTag: number
   codecId: number
   codecProfile: number
-  readonly codecLevel: number
+  codecLevel: number
   readonly codecFormat: number
   readonly channelLayout: FFmpegChannelLayout
   extraData: Buffer
