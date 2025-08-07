@@ -25,18 +25,24 @@ test('CodecParameters class should expose a codecTag getter', (t) => {
   t.ok(typeof codecParam.codecTag === 'number')
 })
 
+test('CodecParameters class should expose a codecType getter', (t) => {
+  t.ok(typeof codecParam.codecType === 'number')
+})
+
 test('CodecParameters class should expose a codecTag setter', (t) => {
   codecParam.codecTag = ffmpeg.constants.tags.H264
 
   t.ok(codecParam.codecTag === ffmpeg.constants.tags.H264)
 })
 
-test('CodecParameters class should expose a codecType getter', (t) => {
-  t.ok(typeof codecParam.codecType === 'number')
-})
-
 test('CodecParameters class should expose a codecId getter', (t) => {
   t.ok(typeof codecParam.codecId === 'number')
+})
+
+test('CodecParameters class should expose a codecId setter', (t) => {
+  codecParam.codecId = ffmpeg.constants.codecs.H264
+
+  t.ok(codecParam.codecId === ffmpeg.constants.codecs.H264)
 })
 
 test('CodecParameters class should expose a bitRate getter', (t) => {

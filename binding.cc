@@ -1299,6 +1299,16 @@ bare_ffmpeg_codec_parameters_get_codec_id(
   return parameters->handle->codec_id;
 }
 
+static void
+bare_ffmpeg_codec_parameters_set_codec_id(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  uint32_t codec_id
+) {
+  parameters->handle->codec_id = static_cast<AVCodecID>(codec_id);
+}
+
 static int
 bare_ffmpeg_codec_parameters_get_codec_level(
   js_env_t *env,
@@ -2673,6 +2683,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersCodecTag", bare_ffmpeg_codec_parameters_get_codec_tag)
   V("setCodecParametersCodecTag", bare_ffmpeg_codec_parameters_set_codec_tag)
   V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
+  V("setCodecParametersCodecId", bare_ffmpeg_codec_parameters_set_codec_id)
   V("getCodecParametersCodecLevel", bare_ffmpeg_codec_parameters_get_codec_level)
   V("getCodecParametersCodecProfile", bare_ffmpeg_codec_parameters_get_codec_profile)
   V("getCodecParametersCodecFormat", bare_ffmpeg_codec_parameters_get_codec_format)
