@@ -31,7 +31,6 @@ test('CodecParameters class should expose a codecType getter', (t) => {
 
 test('CodecParameters class should expose a codecTag setter', (t) => {
   codecParam.codecTag = ffmpeg.constants.tags.H264
-
   t.ok(codecParam.codecTag === ffmpeg.constants.tags.H264)
 })
 
@@ -41,7 +40,6 @@ test('CodecParameters class should expose a codecId getter', (t) => {
 
 test('CodecParameters class should expose a codecId setter', (t) => {
   codecParam.codecId = ffmpeg.constants.codecs.H264
-
   t.ok(codecParam.codecId === ffmpeg.constants.codecs.H264)
 })
 
@@ -63,6 +61,11 @@ test('CodecParameters class should expose a codecLevel getter', (t) => {
 
 test('CodecParameters class should expose a codecProfile getter', (t) => {
   t.ok(typeof codecParam.codecProfile === 'number')
+})
+
+test('CodecParameters class should expose a codecProfile setter', (t) => {
+  codecParam.codecProfile = ffmpeg.constants.profiles.H264_MAIN
+  t.ok(codecParam.codecProfile === ffmpeg.constants.profiles.H264_MAIN)
 })
 
 test('CodecParameters class should expose a codecFormat getter', (t) => {

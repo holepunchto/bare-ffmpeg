@@ -9,6 +9,9 @@ declare const constants: {
   tags: {
     H264: number
   }
+  profiles: {
+    H264_MAIN: number
+  }
   pixelFormats: {
     RGBA: number
     RGB24: number
