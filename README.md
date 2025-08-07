@@ -480,6 +480,10 @@ Destroys the `Frame` and frees all associated resources. Automatically called wh
 
 Gets the frame data buffer for the given plane.
 
+Parameters:
+
+- `plane` (`number`): The plane index
+
 **Returns**: `Buffer`
 
 ### `Packet`
