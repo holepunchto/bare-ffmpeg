@@ -7,6 +7,13 @@ test('CodecParameters class should expose a codecTag getter', (t) => {
   t.ok(typeof codecParam.codecTag === 'number')
 })
 
+test('CodecParameters class should expose a codecTag setter', (t) => {
+  const codecParam = getCodecParameters()
+  codecParam.codecTag = ffmpeg.constants.codecs.AV1
+
+  t.ok(codecParam.codecTag === ffmpeg.constants.codecs.AV1)
+})
+
 test('CodecParameters class should expose a codecType getter', (t) => {
   const codecParam = getCodecParameters()
 

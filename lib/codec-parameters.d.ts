@@ -9,7 +9,7 @@ declare class FFmpegCodecParameters {
   readonly sampleRate: number
   readonly nbChannels: number
   readonly codecType: number
-  readonly codecTag: number
+  codecTag: number
   readonly codecId: number
   readonly codecProfile: number
   readonly codecLevel: number
