@@ -6,6 +6,9 @@ declare const constants: {
     OPUS: number
     AV1: number
   }
+  tags: {
+    H264: number
+  }
   pixelFormats: {
     RGBA: number
     RGB24: number
