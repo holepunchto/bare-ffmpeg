@@ -79,6 +79,11 @@ test('CodecParameters class should expose a codecFormat getter', (t) => {
   t.ok(typeof codecParam.codecFormat === 'number')
 })
 
+test('CodecParameters class should expose a codecFormat setter', (t) => {
+  codecParam.codecFormat = ffmpeg.constants.pixelFormats.RGBA
+  t.ok(codecParam.codecFormat === ffmpeg.constants.pixelFormats.RGBA)
+})
+
 test('CodecParameters class should expose a extraData getter', (t) => {
   t.ok(codecParam.extraData instanceof Buffer)
 })
