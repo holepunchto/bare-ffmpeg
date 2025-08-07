@@ -1271,6 +1271,16 @@ bare_ffmpeg_codec_parameters_get_codec_type(
   return parameters->handle->codec_type;
 }
 
+static void
+bare_ffmpeg_codec_parameters_set_codec_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int type
+) {
+  parameters->handle->codec_type = static_cast<AVMediaType>(type);
+}
+
 static uint32_t
 bare_ffmpeg_codec_parameters_get_codec_tag(
   js_env_t *env,
@@ -2710,6 +2720,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
+  V("setCodecParametersCodecType", bare_ffmpeg_codec_parameters_set_codec_type)
   V("getCodecParametersCodecTag", bare_ffmpeg_codec_parameters_get_codec_tag)
   V("setCodecParametersCodecTag", bare_ffmpeg_codec_parameters_set_codec_tag)
   V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
