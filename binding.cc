@@ -1614,6 +1614,25 @@ bare_ffmpeg_codec_parameters_set_initial_padding(
   parameters->handle->initial_padding = initial_padding;
 }
 
+static int
+bare_ffmpeg_codec_parameters_get_trailing_padding(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->trailing_padding;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_trailing_padding(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int trailing_padding
+) {
+  parameters->handle->trailing_padding = trailing_padding;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
@@ -2873,6 +2892,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersBlockAlign", bare_ffmpeg_codec_parameters_set_block_align)
   V("getCodecParametersInitialPadding", bare_ffmpeg_codec_parameters_get_initial_padding)
   V("setCodecParametersInitialPadding", bare_ffmpeg_codec_parameters_set_initial_padding)
+  V("getCodecParametersTrailingPadding", bare_ffmpeg_codec_parameters_get_trailing_padding)
+  V("setCodecParametersTrailingPadding", bare_ffmpeg_codec_parameters_set_trailing_padding)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)

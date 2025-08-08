@@ -415,6 +415,12 @@ Audio only. The amount of padding (in samples) inserted by the encoder at the be
 
 **Returns**: `number`
 
+##### `CodecParameters.trailingPadding`
+
+Audio only. The amount of padding (in samples) appended by the encoder to the end of the audio. I.e. this number of decoded samples must be discarded by the caller from the end of the stream to get the original audio without any trailing padding.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`

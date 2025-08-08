@@ -196,6 +196,15 @@ test('CodecParameters class should expose a initialPadding setter', (t) => {
   t.ok(codecParam.initialPadding === 1024)
 })
 
+test('CodecParameters class should expose a trailingPadding getter', (t) => {
+  t.ok(typeof codecParam.trailingPadding === 'number')
+})
+
+test('CodecParameters class should expose a trailingPadding setter', (t) => {
+  codecParam.trailingPadding = 1024
+  t.ok(codecParam.trailingPadding === 1024)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
