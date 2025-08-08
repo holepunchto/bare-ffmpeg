@@ -1437,13 +1437,23 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
   return result;
 }
 
-static int32_t
+static int
 bare_ffmpeg_codec_parameters_get_width(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->width;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int width
+) {
+  parameters->handle->width = width;
 }
 
 static int32_t
@@ -1453,6 +1463,16 @@ bare_ffmpeg_codec_parameters_get_height(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->height;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int height
+) {
+  parameters->handle->height = height;
 }
 
 static js_arraybuffer_t
@@ -2792,7 +2812,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersFormat", bare_ffmpeg_codec_parameters_set_format)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
+  V("setCodecParametersWidth", bare_ffmpeg_codec_parameters_set_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
+  V("setCodecParametersHeight", bare_ffmpeg_codec_parameters_set_height)
   V("getCodecParametersExtraData", bare_ffmpeg_codec_parameters_get_extra_data)
   V("setCodecParametersExtraData", bare_ffmpeg_codec_parameters_set_extra_data)
 

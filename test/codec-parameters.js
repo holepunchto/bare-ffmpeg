@@ -148,6 +148,24 @@ test('CodecParameters class should expose a nbChannels setter', (t) => {
   t.ok(codecParam.nbChannels === 6)
 })
 
+test('CodecParameters class should expose a width getter', (t) => {
+  t.ok(typeof codecParam.width === 'number')
+})
+
+test('CodecParameters class should expose a width setter', (t) => {
+  codecParam.width = 1920
+  t.ok(codecParam.width === 1920)
+})
+
+test('CodecParameters class should expose a height getter', (t) => {
+  t.ok(typeof codecParam.height === 'number')
+})
+
+test('CodecParameters class should expose a height setter', (t) => {
+  codecParam.height = 1080
+  t.ok(codecParam.height === 1080)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
