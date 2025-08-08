@@ -1576,7 +1576,7 @@ bare_ffmpeg_codec_parameters_set_extra_data(
   parameters->handle->extradata_size = static_cast<int>(len);
 }
 
-static int32_t
+static int
 bare_ffmpeg_codec_parameters_get_block_align(
   js_env_t *env,
   js_receiver_t,
@@ -1593,6 +1593,25 @@ bare_ffmpeg_codec_parameters_set_block_align(
   int block_align
 ) {
   parameters->handle->block_align = block_align;
+}
+
+static int
+bare_ffmpeg_codec_parameters_get_initial_padding(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->initial_padding;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_initial_padding(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int initial_padding
+) {
+  parameters->handle->initial_padding = initial_padding;
 }
 
 static js_arraybuffer_t
@@ -2852,6 +2871,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersExtraData", bare_ffmpeg_codec_parameters_set_extra_data)
   V("getCodecParametersBlockAlign", bare_ffmpeg_codec_parameters_get_block_align)
   V("setCodecParametersBlockAlign", bare_ffmpeg_codec_parameters_set_block_align)
+  V("getCodecParametersInitialPadding", bare_ffmpeg_codec_parameters_get_initial_padding)
+  V("setCodecParametersInitialPadding", bare_ffmpeg_codec_parameters_set_initial_padding)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)

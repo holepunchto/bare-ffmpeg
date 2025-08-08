@@ -409,6 +409,12 @@ Corresponds to `nBlockAlign` in `WAVEFORMATEX`.
 
 **Returns**: `number`
 
+##### `CodecParameters.initalPadding`
+
+Audio only. The amount of padding (in samples) inserted by the encoder at the beginning of the audio. I.e. this number of leading decoded samples must be discarded by the caller to get the original audio without leading padding.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`

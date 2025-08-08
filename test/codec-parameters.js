@@ -187,6 +187,15 @@ test('CodecParameters class should expose a blockAlign setter', (t) => {
   t.ok(codecParam.blockAlign === 4)
 })
 
+test('CodecParameters class should expose a initialPadding getter', (t) => {
+  t.ok(typeof codecParam.initialPadding === 'number')
+})
+
+test('CodecParameters class should expose a initialPadding setter', (t) => {
+  codecParam.initialPadding = 1024
+  t.ok(codecParam.initialPadding === 1024)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
