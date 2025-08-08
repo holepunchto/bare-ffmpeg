@@ -201,8 +201,8 @@ function decodeVideo(video) {
 
   for (const stream of format.streams) {
     if (
-      stream.codecParameters.codecType !== constants.mediaTypes.VIDEO &&
-      stream.codecParameters.codecType !== constants.mediaTypes.AUDIO
+      stream.codecParameters.type !== constants.mediaTypes.VIDEO &&
+      stream.codecParameters.type !== constants.mediaTypes.AUDIO
     ) {
       continue
     }
@@ -219,7 +219,7 @@ function decodeVideo(video) {
 
     while (decoder.receiveFrame(frame)) {}
 
-    if (stream.codecParameters.codecType === constants.mediaTypes.VIDEO) {
+    if (stream.codecParameters.type === constants.mediaTypes.VIDEO) {
       result.video.push(packet.data)
     } else {
       result.audio.push(packet.data)
