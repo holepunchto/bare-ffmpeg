@@ -1284,13 +1284,23 @@ bare_ffmpeg_codec_parameters_set_sample_rate(
   parameters->handle->sample_rate = rate;
 }
 
-static int64_t
+static int
 bare_ffmpeg_codec_parameters_get_nb_channels(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
 ) {
   return parameters->handle->ch_layout.nb_channels;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_nb_channels(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int nb_channels
+) {
+  parameters->handle->ch_layout.nb_channels = nb_channels;
 }
 
 static int64_t
@@ -2767,6 +2777,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersFramerate", bare_ffmpeg_codec_parameters_get_framerate)
   V("setCodecParametersFramerate", bare_ffmpeg_codec_parameters_set_framerate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
+  V("setCodecParametersNbChannels", bare_ffmpeg_codec_parameters_set_nb_channels)
   V("getCodecParametersType", bare_ffmpeg_codec_parameters_get_type)
   V("setCodecParametersType", bare_ffmpeg_codec_parameters_set_type)
   V("getCodecParametersTag", bare_ffmpeg_codec_parameters_get_tag)

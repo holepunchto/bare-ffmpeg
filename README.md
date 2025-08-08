@@ -388,6 +388,12 @@ Audio: the sample format, the value corresponds to AVSampleFormat.
 
 **Returns**: `number`
 
+##### `CodecParameters.nbChannels`
+
+Number of channels in the layout.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`

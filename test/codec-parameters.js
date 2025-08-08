@@ -139,6 +139,15 @@ test('CodecParameters class should expose a frameRate setter', (t) => {
   t.ok(codecParam.frameRate.denominator === 1)
 })
 
+test('CodecParameters class should expose a nbChannels getter', (t) => {
+  t.ok(typeof codecParam.nbChannels === 'number')
+})
+
+test('CodecParameters class should expose a nbChannels setter', (t) => {
+  codecParam.nbChannels = 6
+  t.ok(codecParam.nbChannels === 6)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
