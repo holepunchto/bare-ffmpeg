@@ -1217,6 +1217,16 @@ bare_ffmpeg_codec_parameters_get_bit_rate(
   return parameters->handle->bit_rate;
 }
 
+static void
+bare_ffmpeg_codec_parameters_set_bit_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int64_t bit_rate
+) {
+  parameters->handle->bit_rate = bit_rate;
+}
+
 static int64_t
 bare_ffmpeg_codec_parameters_get_bits_per_coded_sample(
   js_env_t *env,
@@ -2705,6 +2715,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("codecParametersFromContext", bare_ffmpeg_codec_parameters_from_context)
   V("codecParametersToContext", bare_ffmpeg_codec_parameters_to_context)
   V("getCodecParametersBitRate", bare_ffmpeg_codec_parameters_get_bit_rate)
+  V("setCodecParametersBitRate", bare_ffmpeg_codec_parameters_set_bit_rate)
   V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
   V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
