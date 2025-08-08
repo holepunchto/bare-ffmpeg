@@ -81,12 +81,12 @@ test('CodecParameters class should expose a codecProfile setter', (t) => {
 })
 
 test('CodecParameters class should expose a codecFormat getter', (t) => {
-  t.ok(typeof codecParam.codecFormat === 'number')
+  t.ok(typeof codecParam.format === 'number')
 })
 
 test('CodecParameters class should expose a codecFormat setter', (t) => {
-  codecParam.codecFormat = ffmpeg.constants.pixelFormats.RGBA
-  t.ok(codecParam.codecFormat === ffmpeg.constants.pixelFormats.RGBA)
+  codecParam.format = ffmpeg.constants.pixelFormats.RGBA
+  t.ok(codecParam.format === ffmpeg.constants.pixelFormats.RGBA)
 })
 
 test('CodecParameters class should expose a extraData getter', (t) => {
