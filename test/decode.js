@@ -174,7 +174,10 @@ function decodeAudio(audio) {
       output.nbSamples
     )
     samples.fill(output)
-    t.ok(samples.data.some(i => i), 'Samples not Empty')
+    t.ok(
+      samples.data.some((i) => i),
+      'Samples not Empty'
+    )
 
     while (resampler.flush(output) > 0) {
       buffers.push(Buffer.from(samples.data))
