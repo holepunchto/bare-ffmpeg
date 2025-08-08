@@ -357,6 +357,12 @@ Gets the sample rate for audio codecs.
 
 **Returns**: `number`
 
+##### `CodecParameters.frameRate`
+
+Gets the frame rate for video codecs.
+
+**Returns**: `Rational`
+
 ##### `CodecParameters.extraData`
 
 Out-of-band global headers that may be used by some codecs.
@@ -379,6 +385,12 @@ Codec-specific bitstream restrictions that the stream conforms to.
 
 Video: the pixel format, the value corresponds to AVPixelFormat.
 Audio: the sample format, the value corresponds to AVSampleFormat.
+
+**Returns**: `number`
+
+##### `CodecParameters.nbChannels`
+
+Number of channels in the layout.
 
 **Returns**: `number`
 
