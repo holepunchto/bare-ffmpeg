@@ -118,6 +118,15 @@ test('CodecParameters class should expose a bitsPerRawSample setter', (t) => {
   t.ok(codecParam.bitsPerRawSample === 24)
 })
 
+test('CodecParameters class should expose a sampleRate getter', (t) => {
+  t.ok(typeof codecParam.sampleRate === 'number')
+})
+
+test('CodecParameters class should expose a sampleRate setter', (t) => {
+  codecParam.sampleRate = 48000
+  t.ok(codecParam.sampleRate === 48000)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
