@@ -166,6 +166,18 @@ test('CodecParameters class should expose a height setter', (t) => {
   t.ok(codecParam.height === 1080)
 })
 
+test('CodecParameters class should expose a channelLayout getter', (t) => {
+  t.ok(codecParam.channelLayout instanceof ffmpeg.ChannelLayout)
+  t.is(codecParam.channelLayout.mask, 0)
+  t.is(codecParam.channelLayout.nbChannels, 6)
+})
+
+test('CodecParameters class should expose a channelLayout setter', (t) => {
+  codecParam.channelLayout = ffmpeg.constants.channelLayouts.STEREO
+  t.is(codecParam.channelLayout.mask, 3)
+  t.is(codecParam.channelLayout.nbChannels, 2)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })

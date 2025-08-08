@@ -394,6 +394,12 @@ Number of channels in the layout.
 
 **Returns**: `number`
 
+##### `CodecParameters.channelLayout`
+
+Gets or sets the channel layout, see `ffmpeg.constants.channelLayouts`
+
+**Returns**: `ChannelLayout`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`
