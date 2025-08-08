@@ -43,7 +43,7 @@ test('decode .aiff', (t) => {
     with: { type: 'binary' }
   })
 
-  const decoded = decodeAudio(audio)
+  const decoded = decodeAudio(audio, t)
 
   t.is(decoded.hz, 8000)
   t.is(decoded.channels, 2)
@@ -56,7 +56,7 @@ test('decode .mp3', (t) => {
     with: { type: 'binary' }
   })
 
-  const decoded = decodeAudio(audio)
+  const decoded = decodeAudio(audio, t)
 
   t.is(decoded.hz, 44100)
   t.is(decoded.channels, 2)
@@ -121,7 +121,7 @@ function decodeImage(image) {
   return result
 }
 
-function decodeAudio(audio) {
+function decodeAudio(audio, t) {
   const io = new ffmpeg.IOContext(audio)
   using format = new ffmpeg.InputFormatContext(io)
 
