@@ -400,6 +400,15 @@ Gets or sets the channel layout, see `ffmpeg.constants.channelLayouts`
 
 **Returns**: `ChannelLayout`
 
+##### `CodecParameters.blockAlign`
+
+Audio only. The number of bytes per coded audio frame, required by some
+formats.
+
+Corresponds to `nBlockAlign` in `WAVEFORMATEX`.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`

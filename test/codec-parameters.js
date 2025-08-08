@@ -178,6 +178,15 @@ test('CodecParameters class should expose a channelLayout setter', (t) => {
   t.is(codecParam.channelLayout.nbChannels, 2)
 })
 
+test('CodecParameters class should expose a blockAlign getter', (t) => {
+  t.ok(typeof codecParam.blockAlign === 'number')
+})
+
+test('CodecParameters class should expose a blockAlign setter', (t) => {
+  codecParam.blockAlign = 4
+  t.ok(codecParam.blockAlign === 4)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
