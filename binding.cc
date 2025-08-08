@@ -1437,6 +1437,19 @@ bare_ffmpeg_codec_parameters_get_channel_layout(
   return result;
 }
 
+static void
+bare_ffmpeg_codec_parameters_set_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout
+) {
+  int err;
+
+  err = av_channel_layout_copy(&parameters->handle->ch_layout, &layout->handle);
+  assert(err == 0);
+}
+
 static int
 bare_ffmpeg_codec_parameters_get_width(
   js_env_t *env,
@@ -2811,6 +2824,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersFormat", bare_ffmpeg_codec_parameters_get_format)
   V("setCodecParametersFormat", bare_ffmpeg_codec_parameters_set_format)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
+  V("setCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_set_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("setCodecParametersWidth", bare_ffmpeg_codec_parameters_set_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)

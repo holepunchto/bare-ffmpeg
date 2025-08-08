@@ -30,3 +30,10 @@ test('codec class should expose a static AV1 builder', (t) => {
   t.ok(codec.encoder)
   t.ok(codec.decoder)
 })
+
+test('codec inspect does not throw if id is unset', (t) => {
+  const codec = new ffmpeg.Codec()
+  t.execution(() => {
+    codec[Symbol.for('bare.inspect')]()
+  })
+})
