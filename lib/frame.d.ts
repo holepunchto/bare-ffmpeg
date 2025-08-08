@@ -16,6 +16,8 @@ declare class FFmpegFrame {
   packetDTS: number
   timeBase: FFmpegRational
 
+  channelLayout(plane: number): Buffer
+
   constructor()
 
   alloc(): void
