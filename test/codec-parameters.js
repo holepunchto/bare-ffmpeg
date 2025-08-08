@@ -48,10 +48,6 @@ test('CodecParameters class should expose a id setter', (t) => {
   t.ok(codecParam.id === ffmpeg.constants.codecs.H264)
 })
 
-test('CodecParameters class should expose a bitsPerCodedSample getter', (t) => {
-  t.ok(typeof codecParam.bitsPerCodedSample === 'number')
-})
-
 test('CodecParameters class should expose a bitsPerRawSample getter', (t) => {
   t.ok(typeof codecParam.bitsPerRawSample === 'number')
 })
@@ -106,6 +102,15 @@ test('CodecParameters class should expose bitRate getter', (t) => {
 test('CodecParameters class should expose a bitRate setter', (t) => {
   codecParam.format = 64000
   t.ok(codecParam.format === 64000)
+})
+
+test('CodecParameters class should expose a bitsPerCodedSample getter', (t) => {
+  t.ok(typeof codecParam.bitsPerCodedSample === 'number')
+})
+
+test('CodecParameters class should expose a bitsPerCodedSample setter', (t) => {
+  codecParam.bitsPerCodedSample = 8
+  t.ok(codecParam.bitsPerCodedSample === 8)
 })
 
 test.hook('teardown', () => {
