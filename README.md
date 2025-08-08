@@ -419,6 +419,10 @@ Audio only. The amount of padding (in samples) inserted by the encoder at the be
 
 Audio only. The amount of padding (in samples) appended by the encoder to the end of the audio. I.e. this number of decoded samples must be discarded by the caller from the end of the stream to get the original audio without any trailing padding.
 
+##### `CodecParameters.seekPreroll`
+
+Audio only. Number of samples to skip after a discontinuity.
+
 **Returns**: `number`
 
 #### Methods

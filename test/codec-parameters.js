@@ -205,6 +205,15 @@ test('CodecParameters class should expose a trailingPadding setter', (t) => {
   t.ok(codecParam.trailingPadding === 1024)
 })
 
+test('CodecParameters class should expose a seekPreroll getter', (t) => {
+  t.ok(typeof codecParam.seekPreroll === 'number')
+})
+
+test('CodecParameters class should expose a seekPreroll setter', (t) => {
+  codecParam.seekPreroll = 256
+  t.ok(codecParam.seekPreroll === 256)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
