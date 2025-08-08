@@ -127,6 +127,18 @@ test('CodecParameters class should expose a sampleRate setter', (t) => {
   t.ok(codecParam.sampleRate === 48000)
 })
 
+test('CodecParameters class should expose a frameRate getter', (t) => {
+  t.ok(codecParam.frameRate instanceof ffmpeg.Rational)
+  t.ok(typeof codecParam.frameRate.numerator === 'number')
+  t.ok(typeof codecParam.frameRate.denominator === 'number')
+})
+
+test('CodecParameters class should expose a frameRate setter', (t) => {
+  codecParam.frameRate = new ffmpeg.Rational(24, 1)
+  t.ok(codecParam.frameRate.numerator === 24)
+  t.ok(codecParam.frameRate.denominator === 1)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })

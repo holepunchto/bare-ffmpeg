@@ -357,6 +357,12 @@ Gets the sample rate for audio codecs.
 
 **Returns**: `number`
 
+##### `CodecParameters.frameRate`
+
+Gets the frame rate for video codecs.
+
+**Returns**: `Rational`
+
 ##### `CodecParameters.extraData`
 
 Out-of-band global headers that may be used by some codecs.

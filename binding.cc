@@ -1465,6 +1465,18 @@ bare_ffmpeg_codec_parameters_get_framerate(
   return result;
 }
 
+static void
+bare_ffmpeg_codec_parameters_set_framerate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int numerator,
+  int denominator
+) {
+  parameters->handle->framerate.num = numerator;
+  parameters->handle->framerate.den = denominator;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_parameters_get_extra_data(
   js_env_t *env,
@@ -2752,6 +2764,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_set_bits_per_raw_sample)
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("setCodecParametersSampleRate", bare_ffmpeg_codec_parameters_set_sample_rate)
+  V("getCodecParametersFramerate", bare_ffmpeg_codec_parameters_get_framerate)
+  V("setCodecParametersFramerate", bare_ffmpeg_codec_parameters_set_framerate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
   V("getCodecParametersType", bare_ffmpeg_codec_parameters_get_type)
   V("setCodecParametersType", bare_ffmpeg_codec_parameters_set_type)
@@ -2768,7 +2782,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)
-  V("getCodecParametersFramerate", bare_ffmpeg_codec_parameters_get_framerate)
   V("getCodecParametersExtraData", bare_ffmpeg_codec_parameters_get_extra_data)
   V("setCodecParametersExtraData", bare_ffmpeg_codec_parameters_set_extra_data)
 
