@@ -1254,7 +1254,7 @@ bare_ffmpeg_codec_parameters_get_nb_channels(
 }
 
 static int64_t
-bare_ffmpeg_codec_parameters_get_codec_type(
+bare_ffmpeg_codec_parameters_get_type(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1263,7 +1263,7 @@ bare_ffmpeg_codec_parameters_get_codec_type(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_type(
+bare_ffmpeg_codec_parameters_set_type(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -1273,7 +1273,7 @@ bare_ffmpeg_codec_parameters_set_codec_type(
 }
 
 static uint32_t
-bare_ffmpeg_codec_parameters_get_codec_tag(
+bare_ffmpeg_codec_parameters_get_tag(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1282,7 +1282,7 @@ bare_ffmpeg_codec_parameters_get_codec_tag(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_tag(
+bare_ffmpeg_codec_parameters_set_tag(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -1292,7 +1292,7 @@ bare_ffmpeg_codec_parameters_set_codec_tag(
 }
 
 static int32_t
-bare_ffmpeg_codec_parameters_get_codec_id(
+bare_ffmpeg_codec_parameters_get_id(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1301,7 +1301,7 @@ bare_ffmpeg_codec_parameters_get_codec_id(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_id(
+bare_ffmpeg_codec_parameters_set_id(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -1311,7 +1311,7 @@ bare_ffmpeg_codec_parameters_set_codec_id(
 }
 
 static int
-bare_ffmpeg_codec_parameters_get_codec_level(
+bare_ffmpeg_codec_parameters_get_level(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1320,7 +1320,7 @@ bare_ffmpeg_codec_parameters_get_codec_level(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_level(
+bare_ffmpeg_codec_parameters_set_level(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -1330,7 +1330,7 @@ bare_ffmpeg_codec_parameters_set_codec_level(
 }
 
 static int
-bare_ffmpeg_codec_parameters_get_codec_profile(
+bare_ffmpeg_codec_parameters_get_profile(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1339,7 +1339,7 @@ bare_ffmpeg_codec_parameters_get_codec_profile(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_profile(
+bare_ffmpeg_codec_parameters_set_profile(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -1349,7 +1349,7 @@ bare_ffmpeg_codec_parameters_set_codec_profile(
 }
 
 static int
-bare_ffmpeg_codec_parameters_get_codec_format(
+bare_ffmpeg_codec_parameters_get_format(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
@@ -1358,7 +1358,7 @@ bare_ffmpeg_codec_parameters_get_codec_format(
 }
 
 static void
-bare_ffmpeg_codec_parameters_set_codec_format(
+bare_ffmpeg_codec_parameters_set_format(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
@@ -2709,18 +2709,18 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersBitsPerRawSample", bare_ffmpeg_codec_parameters_get_bits_per_raw_sample)
   V("getCodecParametersSampleRate", bare_ffmpeg_codec_parameters_get_sample_rate)
   V("getCodecParametersNbChannels", bare_ffmpeg_codec_parameters_get_nb_channels)
-  V("getCodecParametersCodecType", bare_ffmpeg_codec_parameters_get_codec_type)
-  V("setCodecParametersCodecType", bare_ffmpeg_codec_parameters_set_codec_type)
-  V("getCodecParametersCodecTag", bare_ffmpeg_codec_parameters_get_codec_tag)
-  V("setCodecParametersCodecTag", bare_ffmpeg_codec_parameters_set_codec_tag)
-  V("getCodecParametersCodecId", bare_ffmpeg_codec_parameters_get_codec_id)
-  V("setCodecParametersCodecId", bare_ffmpeg_codec_parameters_set_codec_id)
-  V("getCodecParametersCodecLevel", bare_ffmpeg_codec_parameters_get_codec_level)
-  V("setCodecParametersCodecLevel", bare_ffmpeg_codec_parameters_set_codec_level)
-  V("getCodecParametersCodecProfile", bare_ffmpeg_codec_parameters_get_codec_profile)
-  V("setCodecParametersCodecProfile", bare_ffmpeg_codec_parameters_set_codec_profile)
-  V("getCodecParametersCodecFormat", bare_ffmpeg_codec_parameters_get_codec_format)
-  V("setCodecParametersCodecFormat", bare_ffmpeg_codec_parameters_set_codec_format)
+  V("getCodecParametersType", bare_ffmpeg_codec_parameters_get_type)
+  V("setCodecParametersType", bare_ffmpeg_codec_parameters_set_type)
+  V("getCodecParametersTag", bare_ffmpeg_codec_parameters_get_tag)
+  V("setCodecParametersTag", bare_ffmpeg_codec_parameters_set_tag)
+  V("getCodecParametersId", bare_ffmpeg_codec_parameters_get_id)
+  V("setCodecParametersId", bare_ffmpeg_codec_parameters_set_id)
+  V("getCodecParametersLevel", bare_ffmpeg_codec_parameters_get_level)
+  V("setCodecParametersLevel", bare_ffmpeg_codec_parameters_set_level)
+  V("getCodecParametersProfile", bare_ffmpeg_codec_parameters_get_profile)
+  V("setCodecParametersProfile", bare_ffmpeg_codec_parameters_set_profile)
+  V("getCodecParametersFormat", bare_ffmpeg_codec_parameters_get_format)
+  V("setCodecParametersFormat", bare_ffmpeg_codec_parameters_set_format)
   V("getCodecParametersChannelLayout", bare_ffmpeg_codec_parameters_get_channel_layout)
   V("getCodecParametersWidth", bare_ffmpeg_codec_parameters_get_width)
   V("getCodecParametersHeight", bare_ffmpeg_codec_parameters_get_height)

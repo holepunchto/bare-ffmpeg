@@ -229,8 +229,8 @@ function addAudioStream(t, format, inContext, outContext) {
   t.is(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.codecType, mediaTypes.AUDIO, 'media type')
-  t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.OPUS.id, 'codec')
+  t.is(outputStream.codecParameters.type, mediaTypes.AUDIO, 'media type')
+  t.is(outputStream.codecParameters.id, ffmpeg.Codec.OPUS.id, 'codec')
   t.is(outputStream.codecParameters.sampleRate, sampleRate, 'output samplerate')
 
   return { inputStream, decoder, encoder, outputStream }
@@ -294,8 +294,8 @@ function addVideoStream(t, format, inContext, outContext) {
   t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.codecType, mediaTypes.VIDEO, 'media type')
-  t.is(outputStream.codecParameters.codecId, ffmpeg.Codec.AV1.id, 'codec')
+  t.is(outputStream.codecParameters.type, mediaTypes.VIDEO, 'media type')
+  t.is(outputStream.codecParameters.id, ffmpeg.Codec.AV1.id, 'codec')
   t.is(outputStream.codecParameters.width, width, 'width')
   t.is(outputStream.codecParameters.height, height, 'height')
 
