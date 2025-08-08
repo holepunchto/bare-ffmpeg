@@ -178,6 +178,42 @@ test('CodecParameters class should expose a channelLayout setter', (t) => {
   t.is(codecParam.channelLayout.nbChannels, 2)
 })
 
+test('CodecParameters class should expose a blockAlign getter', (t) => {
+  t.ok(typeof codecParam.blockAlign === 'number')
+})
+
+test('CodecParameters class should expose a blockAlign setter', (t) => {
+  codecParam.blockAlign = 4
+  t.ok(codecParam.blockAlign === 4)
+})
+
+test('CodecParameters class should expose a initialPadding getter', (t) => {
+  t.ok(typeof codecParam.initialPadding === 'number')
+})
+
+test('CodecParameters class should expose a initialPadding setter', (t) => {
+  codecParam.initialPadding = 1024
+  t.ok(codecParam.initialPadding === 1024)
+})
+
+test('CodecParameters class should expose a trailingPadding getter', (t) => {
+  t.ok(typeof codecParam.trailingPadding === 'number')
+})
+
+test('CodecParameters class should expose a trailingPadding setter', (t) => {
+  codecParam.trailingPadding = 1024
+  t.ok(codecParam.trailingPadding === 1024)
+})
+
+test('CodecParameters class should expose a seekPreroll getter', (t) => {
+  t.ok(typeof codecParam.seekPreroll === 'number')
+})
+
+test('CodecParameters class should expose a seekPreroll setter', (t) => {
+  codecParam.seekPreroll = 256
+  t.ok(codecParam.seekPreroll === 256)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
