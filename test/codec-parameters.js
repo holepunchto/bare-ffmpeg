@@ -214,6 +214,12 @@ test('CodecParameters class should expose a seekPreroll setter', (t) => {
   t.ok(codecParam.seekPreroll === 256)
 })
 
+test('create independent CodecParameters', (t) => {
+  const codecParam = ffmpeg.CodecParameters.alloc()
+
+  codecParam.destroy()
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
