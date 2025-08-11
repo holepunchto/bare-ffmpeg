@@ -139,6 +139,18 @@ test('CodecParameters class should expose a frameRate setter', (t) => {
   t.ok(codecParam.frameRate.denominator === 1)
 })
 
+test('CodecParameters class should expose a sampleAspectRatio getter', (t) => {
+  t.ok(codecParam.sampleAspectRatio instanceof ffmpeg.Rational)
+  t.ok(typeof codecParam.sampleAspectRatio.numerator === 'number')
+  t.ok(typeof codecParam.sampleAspectRatio.denominator === 'number')
+})
+
+test('CodecParameters class should expose a sampleAspectRatio setter', (t) => {
+  codecParam.sampleAspectRatio = new ffmpeg.Rational(16, 9)
+  t.ok(codecParam.sampleAspectRatio.numerator === 16)
+  t.ok(codecParam.sampleAspectRatio.denominator === 9)
+})
+
 test('CodecParameters class should expose a nbChannels getter', (t) => {
   t.ok(typeof codecParam.nbChannels === 'number')
 })
