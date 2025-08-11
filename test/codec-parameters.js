@@ -226,6 +226,15 @@ test('CodecParameters class should expose a seekPreroll setter', (t) => {
   t.ok(codecParam.seekPreroll === 256)
 })
 
+test('CodecParameters class should expose a videoDelay getter', (t) => {
+  t.ok(typeof codecParam.videoDelay === 'number')
+})
+
+test('CodecParameters class should expose a videoDelay setter', (t) => {
+  codecParam.videoDelay = 2
+  t.ok(codecParam.videoDelay === 2)
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })

@@ -433,6 +433,12 @@ When the aspect ratio is unknown / undefined, the numerator should be set to 0 (
 
 **Returns**: `number`
 
+##### `CodecParameters.videoDelay`
+
+Video only. Number of delayed frames.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`
