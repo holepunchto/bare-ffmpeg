@@ -425,6 +425,20 @@ Audio only. Number of samples to skip after a discontinuity.
 
 **Returns**: `number`
 
+##### `CodecParameters.sampleAspectRatio`
+
+Video only. The aspect ratio (width / height) which a single pixel should have when displayed.
+
+When the aspect ratio is unknown / undefined, the numerator should be set to 0 (the denominator may have any value).
+
+**Returns**: `number`
+
+##### `CodecParameters.videoDelay`
+
+Video only. Number of delayed frames.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecParameters.fromContext(context)`
