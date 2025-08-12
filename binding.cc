@@ -507,11 +507,6 @@ bare_ffmpeg_format_context_write_header(
   } else {
     auto dict = *muxer_options;
     err = avformat_write_header(context->handle, &dict->handle);
-
-    const AVDictionaryEntry *option = NULL;
-    while ((option = av_dict_iterate(dict->handle, option))) {
-      av_log(context->handle, AV_LOG_WARNING, "Ignored option key='%s' value='%s'\n", option->key, option->value);
-    }
   }
 
   if (err < 0) {
