@@ -102,6 +102,9 @@ for (const [key, value] of dict) {
 }
 ```
 
+> [!IMPORTANT]
+> Note: As `Dictionary.set` invalidates all previous entries returned by this function, it must not be called while iterating over the dict.
+
 ### `FormatContext`
 
 The `FormatContext` API provides the base functionality for reading and writing media files.
