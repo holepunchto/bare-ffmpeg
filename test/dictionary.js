@@ -40,3 +40,17 @@ test('non-existent key returns null', (t) => {
 
   t.is(dict.get('missing'), null, 'getting unknown key yields null')
 })
+
+test('it should expose an iterator', (t) => {
+  const dict = new ffmpeg.Dictionary()
+  dict.set('foo', 'bar')
+  dict.set('boo', 'baz')
+
+  let result = []
+  for (entries of dict) result.push(entries)
+
+  t.is(result.at(0).key, 'foo')
+  t.is(result.at(0).value, 'bar')
+  t.is(result.at(1).key, 'boo')
+  t.is(result.at(1).value, 'baz')
+})
