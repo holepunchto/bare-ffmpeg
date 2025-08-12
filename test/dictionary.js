@@ -47,7 +47,7 @@ test('it should expose an iterator', (t) => {
   dict.set('boo', 'baz')
 
   let result = []
-  for (entries of dict) result.push(entries)
+  for (const [key, value] of dict) result.push({ key, value })
 
   t.is(result.at(0).key, 'foo')
   t.is(result.at(0).value, 'bar')

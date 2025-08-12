@@ -97,7 +97,7 @@ const dict = new ffmpeg.Dictionary()
 dict.set('foo', 'bar')
 dict.set('baz', 'qux')
 
-for (const { key, value } of dict) {
+for (const [key, value] of dict) {
   console.log(`${key}: ${value}`)
 }
 ```
