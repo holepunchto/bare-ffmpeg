@@ -235,6 +235,12 @@ test('CodecParameters class should expose a videoDelay setter', (t) => {
   t.ok(codecParam.videoDelay === 2)
 })
 
+test('create independent CodecParameters', (t) => {
+  const codecParam = ffmpeg.CodecParameters.alloc()
+
+  codecParam.destroy()
+})
+
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })

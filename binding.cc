@@ -1208,6 +1208,32 @@ bare_ffmpeg_codec_parameters_to_context(
   }
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_codec_parameters_alloc(
+  js_env_t *env,
+  js_receiver_t
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_codec_parameters_t *parameters;
+  err = js_create_arraybuffer(env, parameters, handle);
+  assert(err == 0);
+
+  parameters->handle = avcodec_parameters_alloc();
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_codec_parameters_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  avcodec_parameters_free(&parameters->handle);
+}
+
 static int64_t
 bare_ffmpeg_codec_parameters_get_bit_rate(
   js_env_t *env,
@@ -2925,6 +2951,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("codecParametersFromContext", bare_ffmpeg_codec_parameters_from_context)
   V("codecParametersToContext", bare_ffmpeg_codec_parameters_to_context)
+  V("allocCodecParameters", bare_ffmpeg_codec_parameters_alloc)
+  V("destroyCodecParameters", bare_ffmpeg_codec_parameters_destroy)
   V("getCodecParametersBitRate", bare_ffmpeg_codec_parameters_get_bit_rate)
   V("setCodecParametersBitRate", bare_ffmpeg_codec_parameters_set_bit_rate)
   V("getCodecParametersBitsPerCodedSample", bare_ffmpeg_codec_parameters_get_bits_per_coded_sample)
