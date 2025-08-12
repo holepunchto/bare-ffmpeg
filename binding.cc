@@ -1679,6 +1679,56 @@ bare_ffmpeg_codec_parameters_set_seek_preroll(
 }
 
 static js_arraybuffer_t
+bare_ffmpeg_codec_parameters_get_sample_aspect_ratio(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  int err;
+  js_arraybuffer_t result;
+
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, result);
+  assert(err == 0);
+
+  data[0] = parameters->handle->sample_aspect_ratio.num;
+  data[1] = parameters->handle->sample_aspect_ratio.den;
+
+  return result;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_sample_aspect_ratio(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int num,
+  int den
+) {
+  parameters->handle->sample_aspect_ratio.num = num;
+  parameters->handle->sample_aspect_ratio.den = den;
+}
+
+static int
+bare_ffmpeg_codec_parameters_get_video_delay(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->video_delay;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_video_delay(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int delay
+) {
+  parameters->handle->video_delay = delay;
+}
+
+static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
 
@@ -2943,6 +2993,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersTrailingPadding", bare_ffmpeg_codec_parameters_set_trailing_padding)
   V("getCodecParametersSeekPreroll", bare_ffmpeg_codec_parameters_get_seek_preroll)
   V("setCodecParametersSeekPreroll", bare_ffmpeg_codec_parameters_set_seek_preroll)
+  V("getCodecParametersSampleAspectRatio", bare_ffmpeg_codec_parameters_get_sample_aspect_ratio)
+  V("setCodecParametersSampleAspectRatio", bare_ffmpeg_codec_parameters_set_sample_aspect_ratio)
+  V("getCodecParametersVideoDelay", bare_ffmpeg_codec_parameters_get_video_delay)
+  V("setCodecParametersVideoDelay", bare_ffmpeg_codec_parameters_set_video_delay)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)

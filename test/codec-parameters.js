@@ -139,6 +139,18 @@ test('CodecParameters class should expose a frameRate setter', (t) => {
   t.ok(codecParam.frameRate.denominator === 1)
 })
 
+test('CodecParameters class should expose a sampleAspectRatio getter', (t) => {
+  t.ok(codecParam.sampleAspectRatio instanceof ffmpeg.Rational)
+  t.ok(typeof codecParam.sampleAspectRatio.numerator === 'number')
+  t.ok(typeof codecParam.sampleAspectRatio.denominator === 'number')
+})
+
+test('CodecParameters class should expose a sampleAspectRatio setter', (t) => {
+  codecParam.sampleAspectRatio = new ffmpeg.Rational(16, 9)
+  t.ok(codecParam.sampleAspectRatio.numerator === 16)
+  t.ok(codecParam.sampleAspectRatio.denominator === 9)
+})
+
 test('CodecParameters class should expose a nbChannels getter', (t) => {
   t.ok(typeof codecParam.nbChannels === 'number')
 })
@@ -212,6 +224,15 @@ test('CodecParameters class should expose a seekPreroll getter', (t) => {
 test('CodecParameters class should expose a seekPreroll setter', (t) => {
   codecParam.seekPreroll = 256
   t.ok(codecParam.seekPreroll === 256)
+})
+
+test('CodecParameters class should expose a videoDelay getter', (t) => {
+  t.ok(typeof codecParam.videoDelay === 'number')
+})
+
+test('CodecParameters class should expose a videoDelay setter', (t) => {
+  codecParam.videoDelay = 2
+  t.ok(codecParam.videoDelay === 2)
 })
 
 test('create independent CodecParameters', (t) => {
