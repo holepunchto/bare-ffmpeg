@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <tuple>
 
 #include <bare.h>
 #include <js.h>
