@@ -33,12 +33,18 @@ extern "C" {
 }
 
 using bare_ffmpeg_io_context_on_write_cb_t = js_function_t<void, js_arraybuffer_t>;
+using bare_ffmpeg_io_context_on_read_cb_t = js_function_t<js_arraybuffer_t, int32_t>;
+using bare_ffmpeg_io_context_on_seek_cb_t = js_function_t<void, int64_t>;
 
 typedef struct {
   AVIOContext *handle;
 
   js_env_t *env;
   js_persistent_t<bare_ffmpeg_io_context_on_write_cb_t> on_write;
+  js_persistent_t<bare_ffmpeg_io_context_on_read_cb_t> on_read;
+  js_persistent_t<bare_ffmpeg_io_context_on_seek_cb_t> on_seek;
+
+  int64_t pos;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -143,6 +149,65 @@ io_context_write_packet(void *opaque, const uint8_t *chunk, int len) {
   return err;
 }
 
+static int
+io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
+  auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+  auto env = context->env;
+
+  bare_ffmpeg_io_context_on_read_cb_t callback;
+  int err = js_get_reference_value(env, context->on_read, callback);
+  assert(err == 0);
+
+  js_arraybuffer_t result;
+  err = js_call_function(env, callback, static_cast<int32_t>(buf_size), result);
+  if (err < 0) return err;
+
+  uint8_t *data = nullptr;
+  size_t len = 0;
+  err = js_get_arraybuffer_info(env, result, data, len);
+  if (err < 0) return err;
+
+  if (len > static_cast<size_t>(buf_size)) {
+    len = static_cast<size_t>(buf_size);
+  }
+
+  memcpy(buf, data, len);
+  context->pos += static_cast<int64_t>(len);
+  return static_cast<int>(len);
+}
+
+static int64_t
+io_context_seek(void *opaque, int64_t offset, int whence) {
+  int err;
+  auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+  auto env = context->env;
+
+  int64_t new_pos;
+  switch (whence) {
+    case SEEK_SET:
+      new_pos = offset;
+      break;
+    case SEEK_CUR:
+      new_pos = context->pos + offset;
+      break;
+    case SEEK_END:
+    default:
+      return -1;
+  }
+
+  if (context->on_seek) {
+    bare_ffmpeg_io_context_on_seek_cb_t callback;
+    err = js_get_reference_value(env, context->on_seek, callback);
+    assert(err == 0);
+
+    err = js_call_function(env, callback, new_pos);
+    assert(err == 0);
+  }
+
+  context->pos = new_pos;
+  return new_pos;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_io_context_init(
   js_env_t *env,
@@ -150,7 +215,9 @@ bare_ffmpeg_io_context_init(
   std::optional<js_arraybuffer_span_t> data,
   uint64_t offset,
   uint64_t len,
-  std::optional<bare_ffmpeg_io_context_on_write_cb_t> on_write
+  std::optional<bare_ffmpeg_io_context_on_write_cb_t> on_write,
+  std::optional<bare_ffmpeg_io_context_on_read_cb_t> on_read,
+  std::optional<bare_ffmpeg_io_context_on_seek_cb_t> on_seek
 ) {
   int err;
 
@@ -161,6 +228,7 @@ bare_ffmpeg_io_context_init(
   assert(err == 0);
 
   context->env = env;
+  context->pos = 0;
 
   int write_flag = 0;
   if (on_write) {
@@ -169,30 +237,37 @@ bare_ffmpeg_io_context_init(
     assert(err == 0);
   }
 
-  size_t size = static_cast<size_t>(len);
-
-  uint8_t *io = NULL;
-
-  if (size) {
-    io = reinterpret_cast<uint8_t *>(av_malloc(size));
+  if (on_read) {
+    err = js_create_reference(env, *on_read, context->on_read);
+    assert(err == 0);
   }
+
+  if (on_seek) {
+    err = js_create_reference(env, *on_seek, context->on_seek);
+    assert(err == 0);
+  }
+
+  size_t size = static_cast<size_t>(len);
+  uint8_t *io = reinterpret_cast<uint8_t *>(av_malloc(size));
 
   if (data) {
     memcpy(io, &data.value()[static_cast<size_t>(offset)], size);
   }
-
-  // TODO: for stream read support provide read/seek callbacks
 
   context->handle = avio_alloc_context(
     io,
     static_cast<int>(len),
     write_flag,
     context,
-    NULL, // io_context_read_packet
+    on_read ? io_context_read_packet : NULL,
     io_context_write_packet,
-    NULL // io_context_seek
+    on_seek ? io_context_seek : NULL
   );
   assert(context->handle->opaque == context);
+
+  if (!on_seek) {
+    context->handle->seekable = 0;
+  }
 
   return handle;
 }
@@ -207,6 +282,8 @@ bare_ffmpeg_io_context_destroy(
 
   avio_context_free(&context->handle);
   context->on_write.reset();
+  context->on_read.reset();
+  context->on_seek.reset();
 }
 
 static js_arraybuffer_t
