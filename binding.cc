@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <cstdint>
+#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -2498,14 +2499,15 @@ bare_ffmpeg_dictionary_set_entry(
   assert(err == 0);
 }
 
-static std::tuple<const char *, const char *>
+static std::optional<std::tuple<const char *, const char *>>
 bare_ffmpeg_dictionary_yield_key_value(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
 ) {
   dict->prev = av_dict_iterate(dict->handle, dict->prev);
-  return dict->prev != nullptr ? std::tuple{dict->prev->key, dict->prev->value} : std::tuple{"", ""};
+  if (dict->prev != nullptr) return std::tuple{dict->prev->key, dict->prev->value};
+  else return std::nullopt;
 }
 
 static std::optional<std::string>
