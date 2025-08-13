@@ -82,6 +82,12 @@ Parameters:
 
 **Returns**: `string` value or `null` if the key doesn't exist
 
+##### `Dictionary.entries()`
+
+Retrieves all keys and values.
+
+**Returns**: `Array<[string, string]>` value
+
 ##### `Dictionary.destroy()`
 
 Destroys the `Dictionary` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
@@ -101,9 +107,6 @@ for (const [key, value] of dict) {
   console.log(`${key}: ${value}`)
 }
 ```
-
-> [!IMPORTANT]
-> Note: As `Dictionary.set` invalidates all previous entries returned by this function, it must not be called while iterating over the dict.
 
 ### `FormatContext`
 

@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <cstdint>
-#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <tuple>
+#include <vector>
 
 #include <bare.h>
 #include <js.h>
@@ -89,7 +89,6 @@ typedef struct {
 
 typedef struct {
   struct AVDictionary *handle;
-  const struct AVDictionaryEntry *prev;
 } bare_ffmpeg_dictionary_t;
 
 typedef struct {
@@ -2495,15 +2494,20 @@ bare_ffmpeg_dictionary_set_entry(
   assert(err == 0);
 }
 
-static std::optional<std::tuple<const char *, const char *>>
-bare_ffmpeg_dictionary_yield_key_value(
+static std::vector<std::tuple<const char *, const char *>>
+bare_ffmpeg_dictionary_get_entries(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
 ) {
-  dict->prev = av_dict_iterate(dict->handle, dict->prev);
-  if (dict->prev != nullptr) return std::tuple{dict->prev->key, dict->prev->value};
-  else return std::nullopt;
+  std::vector<std::tuple<const char *, const char *>> entries{};
+
+  const AVDictionaryEntry *entry = nullptr;
+  while ((entry = av_dict_iterate(dict->handle, entry))) {
+    entries.emplace_back(entry->key, entry->value);
+  }
+
+  return entries;
 }
 
 static std::optional<std::string>
@@ -3067,7 +3071,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
-  V("dictionaryYieldKeyValue", bare_ffmpeg_dictionary_yield_key_value)
+  V("getDictionnaryEntries", bare_ffmpeg_dictionary_get_entries)
 
   V("initResampler", bare_ffmpeg_resampler_init)
   V("destroyResampler", bare_ffmpeg_resampler_destroy)

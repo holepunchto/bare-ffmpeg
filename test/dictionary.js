@@ -41,6 +41,17 @@ test('non-existent key returns null', (t) => {
   t.is(dict.get('missing'), null, 'getting unknown key yields null')
 })
 
+test('it should expose an entries method', (t) => {
+  const dict = new ffmpeg.Dictionary()
+  dict.set('foo', 'bar')
+  dict.set('boo', 'baz')
+
+  let entries = dict.entries()
+
+  t.alike(entries.at(0), ['foo', 'bar'])
+  t.alike(entries.at(1), ['boo', 'baz'])
+})
+
 test('it should expose an iterator', (t) => {
   const dict = new ffmpeg.Dictionary()
   dict.set('foo', 'bar')
