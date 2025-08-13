@@ -3,7 +3,7 @@ const ffmpeg = require('..')
 
 const { mediaTypes } = ffmpeg.constants
 
-test.solo('IOContext streaming webm with onread', (t) => {
+test('IOContext streaming webm with onread', (t) => {
   const data = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
   })
@@ -29,7 +29,7 @@ test.solo('IOContext streaming webm with onread', (t) => {
   t.is(audio.length, 42419, 'audio size matches')
 })
 
-test.solo('IOContext streaming mp4 with onseek', (t) => {
+test('IOContext streaming mp4 with onseek', (t) => {
   const data = require('./fixtures/video/sample.mp4', {
     with: { type: 'binary' }
   })
