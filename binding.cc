@@ -151,21 +151,27 @@ io_context_write_packet(void *opaque, const uint8_t *chunk, int len) {
 
 static int
 io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
+  int err;
+
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
   auto env = context->env;
 
   bare_ffmpeg_io_context_on_read_cb_t callback;
-  int err = js_get_reference_value(env, context->on_read, callback);
+  err = js_get_reference_value(env, context->on_read, callback);
   assert(err == 0);
 
   js_arraybuffer_t result;
   err = js_call_function<js_type_options_t{}, js_arraybuffer_t, int32_t>(env, callback, static_cast<int32_t>(buf_size), result);
-  if (err < 0) return err;
+  assert(err == 0);
 
   uint8_t *data = nullptr;
   size_t len = 0;
   err = js_get_arraybuffer_info(env, result, data, len);
-  if (err < 0) return err;
+  assert(err == 0);
+
+  if (len == 0) {
+    return AVERROR_EOF;
+  }
 
   if (len > static_cast<size_t>(buf_size)) {
     len = static_cast<size_t>(buf_size);
@@ -179,6 +185,7 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
 static int64_t
 io_context_seek(void *opaque, int64_t offset, int whence) {
   int err;
+
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
   auto env = context->env;
 
@@ -195,14 +202,12 @@ io_context_seek(void *opaque, int64_t offset, int whence) {
       return -1;
   }
 
-  if (context->on_seek) {
-    bare_ffmpeg_io_context_on_seek_cb_t callback;
-    err = js_get_reference_value(env, context->on_seek, callback);
-    assert(err == 0);
+  bare_ffmpeg_io_context_on_seek_cb_t callback;
+  err = js_get_reference_value(env, context->on_seek, callback);
+  assert(err == 0);
 
-    err = js_call_function(env, callback, new_pos);
-    assert(err == 0);
-  }
+  err = js_call_function(env, callback, new_pos);
+  assert(err == 0);
 
   context->pos = new_pos;
   return new_pos;
