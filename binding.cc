@@ -159,7 +159,7 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
   assert(err == 0);
 
   js_arraybuffer_t result;
-  err = js_call_function(env, callback, static_cast<int32_t>(buf_size), result);
+  err = js_call_function<js_type_options_t{}, js_arraybuffer_t, int32_t>(env, callback, static_cast<int32_t>(buf_size), result);
   if (err < 0) return err;
 
   uint8_t *data = nullptr;
