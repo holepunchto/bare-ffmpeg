@@ -58,7 +58,7 @@ test('IOContext streaming mp4 with onseek', (t) => {
   t.is(audio.length, 34914, 'audio size matches')
 })
 
-function runStreams (io) {
+function runStreams(io) {
   using format = new ffmpeg.InputFormatContext(io)
   using packet = new ffmpeg.Packet()
 
