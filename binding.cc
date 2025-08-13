@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <tuple>
+#include <vector>
 
 #include <bare.h>
 #include <js.h>
@@ -504,11 +506,6 @@ bare_ffmpeg_format_context_write_header(
   } else {
     auto dict = *muxer_options;
     err = avformat_write_header(context->handle, &dict->handle);
-
-    const AVDictionaryEntry *option = NULL;
-    while ((option = av_dict_iterate(dict->handle, option))) {
-      av_log(context->handle, AV_LOG_WARNING, "Ignored option key='%s' value='%s'\n", option->key, option->value);
-    }
   }
 
   if (err < 0) {
@@ -2497,6 +2494,22 @@ bare_ffmpeg_dictionary_set_entry(
   assert(err == 0);
 }
 
+static std::vector<std::tuple<const char *, const char *>>
+bare_ffmpeg_dictionary_get_entries(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
+) {
+  std::vector<std::tuple<const char *, const char *>> entries{};
+
+  const AVDictionaryEntry *entry = nullptr;
+  while ((entry = av_dict_iterate(dict->handle, entry))) {
+    entries.emplace_back(entry->key, entry->value);
+  }
+
+  return entries;
+}
+
 static std::optional<std::string>
 bare_ffmpeg_dictionary_get_entry(
   js_env_t *env,
@@ -3058,6 +3071,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
+  V("getDictionaryEntries", bare_ffmpeg_dictionary_get_entries)
 
   V("initResampler", bare_ffmpeg_resampler_init)
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
