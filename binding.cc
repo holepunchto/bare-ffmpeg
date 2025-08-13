@@ -3071,7 +3071,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyDictionary", bare_ffmpeg_dictionary_destroy)
   V("getDictionaryEntry", bare_ffmpeg_dictionary_get_entry)
   V("setDictionaryEntry", bare_ffmpeg_dictionary_set_entry)
-  V("getDictionnaryEntries", bare_ffmpeg_dictionary_get_entries)
+  V("getDictionaryEntries", bare_ffmpeg_dictionary_get_entries)
 
   V("initResampler", bare_ffmpeg_resampler_init)
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
