@@ -33,7 +33,7 @@ extern "C" {
 }
 
 using bare_ffmpeg_io_context_on_write_cb_t = js_function_t<void, js_arraybuffer_t>;
-using bare_ffmpeg_io_context_on_read_cb_t = js_function_t<js_arraybuffer_t, int32_t>;
+using bare_ffmpeg_io_context_on_read_cb_t = js_function_t<int32_t, js_typedarray_t<uint8_t>, int32_t>;
 using bare_ffmpeg_io_context_on_seek_cb_t = js_function_t<void, int64_t>;
 
 typedef struct {
@@ -160,26 +160,28 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
   err = js_get_reference_value(env, context->on_read, callback);
   assert(err == 0);
 
-  js_arraybuffer_t result;
-  err = js_call_function<js_type_options_t{}, js_arraybuffer_t, int32_t>(env, callback, static_cast<int32_t>(buf_size), result);
+  js_arraybuffer_t arraybuffer;
+  err = js_create_external_arraybuffer(env, buf, static_cast<size_t>(buf_size), arraybuffer);
   assert(err == 0);
 
-  uint8_t *data = nullptr;
-  size_t len = 0;
-  err = js_get_arraybuffer_info(env, result, data, len);
+  js_typedarray_t<uint8_t> uint8array;
+  err = js_create_typedarray(env, static_cast<size_t>(buf_size), arraybuffer, uint8array);
   assert(err == 0);
 
-  if (len == 0) {
+  int32_t result;
+  err = js_call_function(env, callback, uint8array, buf_size, result);
+  assert(err == 0);
+
+  if (result == 0) {
     return AVERROR_EOF;
   }
 
-  if (len > static_cast<size_t>(buf_size)) {
-    len = static_cast<size_t>(buf_size);
+  if (result > buf_size) {
+    result = buf_size;
   }
 
-  memcpy(buf, data, len);
-  context->pos += static_cast<int64_t>(len);
-  return static_cast<int>(len);
+  context->pos += static_cast<int64_t>(result);
+  return static_cast<int>(result);
 }
 
 static int64_t

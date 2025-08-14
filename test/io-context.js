@@ -10,16 +10,18 @@ test('IOContext streaming webm with onread', (t) => {
 
   let offset = 0
   const io = new ffmpeg.IOContext(4096, {
-    onread: (len) => {
-      if (offset >= data.length) {
-        return Buffer.alloc(0)
+    onread: (buffer) => {
+      const bytesToRead = Math.min(buffer.length, data.length - offset)
+
+      if (bytesToRead === 0) {
+        return 0
       }
 
-      const n = Math.min(len, data.length - offset)
-      const chunk = data.subarray(offset, offset + n)
-      offset += n
+      const chunk = data.subarray(offset, offset + bytesToRead)
 
-      return chunk
+      buffer.set(chunk)
+      offset += bytesToRead
+      return bytesToRead
     }
   })
 
@@ -36,16 +38,18 @@ test('IOContext streaming mp4 with onseek', (t) => {
 
   let offset = 0
   const io = new ffmpeg.IOContext(4096, {
-    onread: (len) => {
-      if (offset >= data.length) {
-        return Buffer.alloc(0)
+    onread: (buffer) => {
+      const bytesToRead = Math.min(buffer.length, data.length - offset)
+
+      if (bytesToRead === 0) {
+        return 0
       }
 
-      const n = Math.min(len, data.length - offset)
-      const chunk = data.subarray(offset, offset + n)
-      offset += n
+      const chunk = data.subarray(offset, offset + bytesToRead)
 
-      return chunk
+      buffer.set(chunk)
+      offset += bytesToRead
+      return bytesToRead
     },
     onseek: (newOffset) => {
       offset = Math.max(0, Math.min(newOffset, data.length))
