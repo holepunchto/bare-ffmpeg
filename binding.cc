@@ -169,7 +169,7 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
   assert(err == 0);
 
   int32_t result;
-  err = js_call_function(env, callback, uint8array, buf_size, result);
+  err = js_call_function<js_function_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, buf_size, result);
   assert(err == 0);
 
   if (result == 0) {
