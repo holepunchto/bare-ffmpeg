@@ -172,6 +172,9 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
   err = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, buf_size, result);
   assert(err == 0);
 
+err = js_detach_arraybuffer(env, arraybuffer);
+assert(err == 0);
+
   if (result == 0) {
     return AVERROR_EOF;
   }
