@@ -172,8 +172,8 @@ io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
   err = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, buf_size, result);
   assert(err == 0);
 
-err = js_detach_arraybuffer(env, arraybuffer);
-assert(err == 0);
+  err = js_detach_arraybuffer(env, arraybuffer);
+  assert(err == 0);
 
   if (result == 0) {
     return AVERROR_EOF;
@@ -196,15 +196,15 @@ io_context_seek(void *opaque, int64_t offset, int whence) {
 
   int64_t new_pos;
   switch (whence) {
-    case SEEK_SET:
-      new_pos = offset;
-      break;
-    case SEEK_CUR:
-      new_pos = context->pos + offset;
-      break;
-    case SEEK_END:
-    default:
-      return -1;
+  case SEEK_SET:
+    new_pos = offset;
+    break;
+  case SEEK_CUR:
+    new_pos = context->pos + offset;
+    break;
+  case SEEK_END:
+  default:
+    return -1;
   }
 
   bare_ffmpeg_io_context_on_seek_cb_t callback;
