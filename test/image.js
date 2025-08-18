@@ -16,7 +16,7 @@ test('Image class should expose a method for reading from frame which handle RGB
   const frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
-  frame.pixelFormat = format
+  frame.format = format
   frame.alloc()
   imageA.fill(frame)
 
@@ -40,7 +40,7 @@ test('Image class should expose a method for reading from frame which handle YUV
   const frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
-  frame.pixelFormat = format
+  frame.format = format
   frame.alloc()
   imageA.fill(frame)
 
