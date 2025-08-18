@@ -887,7 +887,7 @@ bare_ffmpeg_codec_context_set_flags(
   context->handle->flags = value;
 }
 
-static int64_t
+static int
 bare_ffmpeg_frame_get_format(
   js_env_t *env,
   js_receiver_t,
@@ -1882,25 +1882,6 @@ bare_ffmpeg_frame_set_height(
   int32_t height
 ) {
   frame->handle->height = height;
-}
-
-static int64_t
-bare_ffmpeg_frame_get_pixel_format(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
-) {
-  return frame->handle->format;
-}
-
-static void
-bare_ffmpeg_frame_set_pixel_format(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
-  int32_t format
-) {
-  frame->handle->format = static_cast<AVPixelFormat>(format);
 }
 
 static int32_t
@@ -3105,8 +3086,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameWidth", bare_ffmpeg_frame_set_width)
   V("getFrameHeight", bare_ffmpeg_frame_get_height)
   V("setFrameHeight", bare_ffmpeg_frame_set_height)
-  V("getFramePixelFormat", bare_ffmpeg_frame_get_pixel_format)
-  V("setFramePixelFormat", bare_ffmpeg_frame_set_pixel_format)
   V("getFrameFormat", bare_ffmpeg_frame_get_format)
   V("setFrameFormat", bare_ffmpeg_frame_set_format)
   V("getFrameChannelLayout", bare_ffmpeg_frame_get_channel_layout)

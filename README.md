@@ -600,15 +600,9 @@ Gets or sets the frame height.
 
 **Returns**: `number`
 
-##### `Frame.pixelFormat`
-
-Gets or sets the pixel format.
-
-**Returns**: `number` (pixel format constant)
-
 ##### `Frame.format`
 
-Gets or sets the sample format for audio frames.
+Gets or sets the format of the frame, `-1` if unknown or unset.
 
 **Returns**: `number` (sample format constant)
 

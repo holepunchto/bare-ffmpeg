@@ -155,7 +155,7 @@ function fakeFrame() {
   const frame = new ffmpeg.Frame()
   frame.width = 100
   frame.height = 100
-  frame.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  frame.format = ffmpeg.constants.pixelFormats.YUV420P
   frame.alloc()
 
   return frame

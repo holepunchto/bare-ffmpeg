@@ -29,18 +29,18 @@ test('frame expose a getter for height', (t) => {
   t.ok(fr.height === 200)
 })
 
-test('frame expose a setter for pixelFormat', (t) => {
+test('frame expose a setter for format', (t) => {
   const fr = new ffmpeg.Frame()
   t.execution(() => {
-    fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+    fr.format = ffmpeg.constants.pixelFormats.YUV420P
   })
 })
 
-test('frame expose a getter for pixelFormat', (t) => {
+test('frame expose a getter for format', (t) => {
   const fr = new ffmpeg.Frame()
-  fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  fr.format = ffmpeg.constants.pixelFormats.YUV420P
 
-  t.ok(fr.pixelFormat === ffmpeg.constants.pixelFormats.YUV420P)
+  t.ok(fr.format === ffmpeg.constants.pixelFormats.YUV420P)
 })
 
 test('frame expose an alloc method', (t) => {
@@ -48,7 +48,7 @@ test('frame expose an alloc method', (t) => {
 
   fr.height = 200
   fr.width = 200
-  fr.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  fr.format = ffmpeg.constants.pixelFormats.YUV420P
   t.execution(() => {
     fr.alloc()
   })
