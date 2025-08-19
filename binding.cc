@@ -1,14 +1,13 @@
-#include <assert.h>
-#include <cstdint>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 #include <tuple>
 #include <vector>
 
+#include <assert.h>
 #include <bare.h>
 #include <js.h>
 #include <jstl.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -34,19 +33,20 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-using bare_ffmpeg_io_context_on_write_cb_t = js_function_t<void, js_arraybuffer_t>;
-using bare_ffmpeg_io_context_on_read_cb_t = js_function_t<int32_t, js_typedarray_t<uint8_t>, int32_t>;
-using bare_ffmpeg_io_context_on_seek_cb_t = js_function_t<void, int64_t>;
+using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
+using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_typedarray_t<uint8_t>, int32_t>;
+using bare_ffmpeg_io_context_seek_cb_t = js_function_t<void, int64_t>;
 
 typedef struct {
   AVIOContext *handle;
 
   js_env_t *env;
-  js_persistent_t<bare_ffmpeg_io_context_on_write_cb_t> on_write;
-  js_persistent_t<bare_ffmpeg_io_context_on_read_cb_t> on_read;
-  js_persistent_t<bare_ffmpeg_io_context_on_seek_cb_t> on_seek;
 
-  int64_t pos;
+  js_persistent_t<bare_ffmpeg_io_context_write_cb_t> on_write;
+  js_persistent_t<bare_ffmpeg_io_context_read_cb_t> on_read;
+  js_persistent_t<bare_ffmpeg_io_context_seek_cb_t> on_seek;
+
+  int64_t offset;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -108,9 +108,9 @@ typedef struct {
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static inline bool
-bad_timebase(const AVRational r) {
-  return r.den < 1 ||    // invalid denominator
-         av_q2d(r) == 0; // detect initial state: (0 / 1)
+bare_ffmpeg__bad_timebase(const AVRational r) {
+  return r.den < 1 ||    // Invalid denominator
+         av_q2d(r) == 0; // Initial state (0 / 1)
 }
 
 static void
@@ -131,93 +131,95 @@ bare_ffmpeg_log_set_level(js_env_t *, int32_t level) {
 }
 
 static int
-io_context_write_packet(void *opaque, const uint8_t *chunk, int len) {
-  auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
+  int err;
+
+  auto context = static_cast<bare_ffmpeg_io_context_t *>(opaque);
+
   auto env = context->env;
 
-  bare_ffmpeg_io_context_on_write_cb_t callback;
-
-  int err = js_get_reference_value(env, context->on_write, callback);
+  bare_ffmpeg_io_context_write_cb_t callback;
+  err = js_get_reference_value(env, context->on_write, callback);
   assert(err == 0);
 
   js_arraybuffer_t data;
-  err = js_create_arraybuffer(env, chunk, static_cast<size_t>(len), data);
-
+  err = js_create_arraybuffer(env, buf, static_cast<size_t>(len), data);
   assert(err == 0);
 
-  // TODO: running on js-stack during avformat_write_header()
-  // trace other invocations, pray singlethread.
   err = js_call_function(env, callback, data);
-  return err;
+  assert(err == 0);
+
+  return 0;
 }
 
 static int
-io_context_read_packet(void *opaque, uint8_t *buf, int buf_size) {
+bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
   int err;
 
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+
   auto env = context->env;
 
-  bare_ffmpeg_io_context_on_read_cb_t callback;
+  bare_ffmpeg_io_context_read_cb_t callback;
   err = js_get_reference_value(env, context->on_read, callback);
   assert(err == 0);
 
   js_arraybuffer_t arraybuffer;
-  err = js_create_external_arraybuffer(env, buf, static_cast<size_t>(buf_size), arraybuffer);
+  err = js_create_external_arraybuffer(env, buf, static_cast<size_t>(len), arraybuffer);
   assert(err == 0);
 
   js_typedarray_t<uint8_t> uint8array;
-  err = js_create_typedarray(env, static_cast<size_t>(buf_size), arraybuffer, uint8array);
+  err = js_create_typedarray(env, static_cast<size_t>(len), arraybuffer, uint8array);
   assert(err == 0);
 
   int32_t result;
-  err = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, buf_size, result);
+  err = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, len, result);
   assert(err == 0);
 
   err = js_detach_arraybuffer(env, arraybuffer);
   assert(err == 0);
 
-  if (result == 0) {
-    return AVERROR_EOF;
-  }
+  if (result == 0) return AVERROR_EOF;
 
-  if (result > buf_size) {
-    result = buf_size;
-  }
+  if (result > len) result = len;
 
-  context->pos += static_cast<int64_t>(result);
+  context->offset += static_cast<int64_t>(result);
+
   return static_cast<int>(result);
 }
 
 static int64_t
-io_context_seek(void *opaque, int64_t offset, int whence) {
+bare_ffmpeg__on_io_context_seek(void *opaque, int64_t offset, int whence) {
   int err;
 
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
+
   auto env = context->env;
 
-  int64_t new_pos;
+  int64_t result;
+
   switch (whence) {
   case SEEK_SET:
-    new_pos = offset;
+    result = offset;
     break;
   case SEEK_CUR:
-    new_pos = context->pos + offset;
+    result = context->offset + offset;
     break;
   case SEEK_END:
   default:
     return -1;
   }
 
-  bare_ffmpeg_io_context_on_seek_cb_t callback;
+  bare_ffmpeg_io_context_seek_cb_t callback;
   err = js_get_reference_value(env, context->on_seek, callback);
   assert(err == 0);
 
-  err = js_call_function(env, callback, new_pos);
+  err = js_call_function(env, callback, result);
   assert(err == 0);
 
-  context->pos = new_pos;
-  return new_pos;
+  context->offset = result;
+
+  return result;
 }
 
 static js_arraybuffer_t
@@ -227,9 +229,9 @@ bare_ffmpeg_io_context_init(
   std::optional<js_arraybuffer_span_t> data,
   uint64_t offset,
   uint64_t len,
-  std::optional<bare_ffmpeg_io_context_on_write_cb_t> on_write,
-  std::optional<bare_ffmpeg_io_context_on_read_cb_t> on_read,
-  std::optional<bare_ffmpeg_io_context_on_seek_cb_t> on_seek
+  std::optional<bare_ffmpeg_io_context_write_cb_t> on_write,
+  std::optional<bare_ffmpeg_io_context_read_cb_t> on_read,
+  std::optional<bare_ffmpeg_io_context_seek_cb_t> on_seek
 ) {
   int err;
 
@@ -240,11 +242,13 @@ bare_ffmpeg_io_context_init(
   assert(err == 0);
 
   context->env = env;
-  context->pos = 0;
+  context->offset = 0;
 
-  int write_flag = 0;
+  int writable = 0;
+
   if (on_write) {
-    write_flag = 1;
+    writable = 1;
+
     err = js_create_reference(env, *on_write, context->on_write);
     assert(err == 0);
   }
@@ -259,8 +263,9 @@ bare_ffmpeg_io_context_init(
     assert(err == 0);
   }
 
-  size_t size = static_cast<size_t>(len);
-  uint8_t *io = reinterpret_cast<uint8_t *>(av_malloc(size));
+  auto size = static_cast<size_t>(len);
+
+  auto io = reinterpret_cast<uint8_t *>(av_malloc(size));
 
   if (data) {
     memcpy(io, &data.value()[static_cast<size_t>(offset)], size);
@@ -269,13 +274,12 @@ bare_ffmpeg_io_context_init(
   context->handle = avio_alloc_context(
     io,
     static_cast<int>(len),
-    write_flag,
+    writable,
     context,
-    on_read ? io_context_read_packet : NULL,
-    io_context_write_packet,
-    on_seek ? io_context_seek : NULL
+    on_read ? bare_ffmpeg__on_io_context_read : nullptr,
+    on_write ? bare_ffmpeg__on_io_context_write : nullptr,
+    on_seek ? bare_ffmpeg__on_io_context_seek : nullptr
   );
-  assert(context->handle->opaque == context);
 
   if (!on_seek) {
     context->handle->seekable = 0;
@@ -293,6 +297,7 @@ bare_ffmpeg_io_context_destroy(
   av_free(context->handle->buffer);
 
   avio_context_free(&context->handle);
+
   context->on_write.reset();
   context->on_read.reset();
   context->on_seek.reset();
@@ -502,7 +507,7 @@ bare_ffmpeg_format_context_get_streams(
 ) {
   int err;
 
-  uint32_t len = context->handle->nb_streams;
+  auto len = context->handle->nb_streams;
 
   js_array_t result;
   err = js_create_array(env, len, result);
@@ -584,15 +589,14 @@ bare_ffmpeg_format_context_write_header(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
-  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1>> muxer_options
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1>> options
 ) {
   int err;
 
-  if (!muxer_options) {
-    err = avformat_write_header(context->handle, NULL);
+  if (options) {
+    err = avformat_write_header(context->handle, &options.value()->handle);
   } else {
-    auto dict = *muxer_options;
-    err = avformat_write_header(context->handle, &dict->handle);
+    err = avformat_write_header(context->handle, NULL);
   }
 
   if (err < 0) {
@@ -604,6 +608,7 @@ bare_ffmpeg_format_context_write_header(
 
   return err;
 }
+
 static void
 bare_ffmpeg_format_context_write_frame(
   js_env_t *env,
@@ -611,8 +616,9 @@ bare_ffmpeg_format_context_write_frame(
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
-  int err = av_interleaved_write_frame(context->handle, packet->handle);
+  int err;
 
+  err = av_interleaved_write_frame(context->handle, packet->handle);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -627,7 +633,9 @@ bare_ffmpeg_format_context_write_trailer(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
 ) {
-  int err = av_write_trailer(context->handle);
+  int err;
+
+  err = av_write_trailer(context->handle);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -649,6 +657,7 @@ bare_ffmpeg_format_context_dump(
 
   for (int i = 0; i < context->handle->nb_streams; i++) {
     auto stream = context->handle->streams[i];
+
     av_log(NULL, AV_LOG_INFO, "  - stream=%i timebase=(%i / %i)\n", i, stream->time_base.num, stream->time_base.den);
   }
 }
@@ -857,7 +866,6 @@ bare_ffmpeg_codec_context_open(
   int err;
 
   err = avcodec_open2(context->handle, context->handle->codec, NULL);
-
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1220,7 +1228,7 @@ bare_ffmpeg_codec_context_send_frame(
   int err;
 
   if (frame) {
-    err = avcodec_send_frame(context->handle, (*frame)->handle);
+    err = avcodec_send_frame(context->handle, frame.value()->handle);
   } else {
     err = avcodec_send_frame(context->handle, NULL); // End of stream
   }
@@ -1265,7 +1273,6 @@ bare_ffmpeg_codec_parameters_from_context(
   int err;
 
   err = avcodec_parameters_from_context(parameters->handle, context->handle);
-
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1300,6 +1307,7 @@ bare_ffmpeg_codec_parameters_alloc(
   int err;
 
   js_arraybuffer_t handle;
+
   bare_ffmpeg_codec_parameters_t *parameters;
   err = js_create_arraybuffer(env, parameters, handle);
   assert(err == 0);
@@ -1665,7 +1673,6 @@ bare_ffmpeg_codec_parameters_set_extra_data(
   int err;
 
   std::span<uint8_t> view;
-
   err = js_get_arraybuffer_info(env, buffer, view);
   assert(err == 0);
 
@@ -1679,6 +1686,7 @@ bare_ffmpeg_codec_parameters_set_extra_data(
   size_t min_size = len + AV_INPUT_BUFFER_PADDING_SIZE;
 
   parameters->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(min_size));
+
   memset(&parameters->handle->extradata[len], 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
   memcpy(parameters->handle->extradata, &view[offset], len);
@@ -1977,6 +1985,7 @@ bare_ffmpeg_frame_get_time_base(
 
   return result;
 }
+
 static void
 bare_ffmpeg_frame_set_time_base(
   js_env_t *env,
@@ -2083,10 +2092,12 @@ bare_ffmpeg_image_read(
   uint64_t offset,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
+  int err;
+
   uint8_t *dst_data[4];
   int dst_linesize[4];
 
-  int err = av_image_fill_arrays(
+  auto len = av_image_fill_arrays(
     dst_data,
     dst_linesize,
     &data[offset],
@@ -2095,7 +2106,13 @@ bare_ffmpeg_image_read(
     height,
     align
   );
-  assert(err >= 0);
+
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 
   av_image_copy(
     dst_data,
@@ -2292,6 +2309,7 @@ bare_ffmpeg_packet_set_data(
   uint32_t len
 ) {
   int err;
+
   assert(offset + len <= data.size());
 
   av_packet_unref(packet->handle);
@@ -2397,11 +2415,11 @@ bare_ffmpeg_packet_rescale_ts(
   int32_t den
 ) {
   AVRational src = packet->handle->time_base;
-  AVRational dst = {.num = num, .den = den};
+  AVRational dst = {num, den};
 
   if (
-    bad_timebase(src) ||
-    bad_timebase(dst) ||
+    bare_ffmpeg__bad_timebase(src) ||
+    bare_ffmpeg__bad_timebase(dst) ||
     packet->handle->dts == AV_NOPTS_VALUE ||
     packet->handle->pts == AV_NOPTS_VALUE
   ) {
@@ -2507,7 +2525,9 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
-  int err = av_frame_copy_props(target->handle, source->handle);
+  int err;
+
+  err = av_frame_copy_props(target->handle, source->handle);
   assert(err == 0);
 
   return sws_scale(
@@ -2571,6 +2591,7 @@ bare_ffmpeg_dictionary_get_entries(
   std::vector<std::tuple<const char *, const char *>> entries{};
 
   const AVDictionaryEntry *entry = nullptr;
+
   while ((entry = av_dict_iterate(dict->handle, entry))) {
     entries.emplace_back(entry->key, entry->value);
   }
@@ -2828,11 +2849,12 @@ bare_ffmpeg_audio_fifo_write(
 ) {
   int err;
 
-  int len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->data, frame->handle->nb_samples);
+  auto len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->data, frame->handle->nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -2849,11 +2871,12 @@ bare_ffmpeg_audio_fifo_read(
 ) {
   int err;
 
-  int len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->data, nb_samples);
+  auto len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->data, nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -2870,11 +2893,12 @@ bare_ffmpeg_audio_fifo_peek(
 ) {
   int err;
 
-  int len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->data, nb_samples);
+  auto len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->data, nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -2890,11 +2914,12 @@ bare_ffmpeg_audio_fifo_drain(
 ) {
   int err;
 
-  int len = av_audio_fifo_drain(fifo->handle, nb_samples);
+  auto len = av_audio_fifo_drain(fifo->handle, nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
+
     throw js_pending_exception;
   }
 
@@ -2934,11 +2959,9 @@ bare_ffmpeg_rational_d2q(
   js_receiver_t,
   double num
 ) {
-  constexpr int safe_max = 1 << 26;
-
-  auto rational = av_d2q(num, safe_max);
-
   int err;
+
+  auto rational = av_d2q(num, 1 << 26);
 
   js_arraybuffer_t result;
 
