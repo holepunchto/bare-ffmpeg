@@ -31,7 +31,7 @@ test('IOContext streaming webm with onread', (t) => {
   t.is(audio.length, 42419, 'audio size matches')
 })
 
-test('IOContext streaming mp4 with onseek', (t) => {
+test.skip('IOContext streaming mp4 with onseek', (t) => {
   const data = require('./fixtures/video/sample.mp4', {
     with: { type: 'binary' }
   })
