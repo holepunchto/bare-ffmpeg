@@ -96,7 +96,7 @@ test('codec context should expose a receivePacket method', (t) => {
   setDefaultOptions(codecCtx)
   codecCtx.open(getEncoderOptions())
   const frame = fakeFrame()
-  codecCtx.sendFrame(frame)
+  while (codecCtx.sendFrame(frame)) {} // Make the internal buffer full
 
   const packet = new ffmpeg.Packet()
   t.ok(codecCtx.receivePacket(packet))
