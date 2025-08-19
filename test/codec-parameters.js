@@ -26,8 +26,8 @@ test('CodecParameters class should expose a tag getter', (t) => {
 })
 
 test('CodecParameters class should expose a tag setter', (t) => {
-  codecParam.tag = ffmpeg.constants.tags.H264
-  t.ok(codecParam.tag === ffmpeg.constants.tags.H264)
+  codecParam.tag = ffmpeg.constants.tags.AV1
+  t.ok(codecParam.tag === ffmpeg.constants.tags.AV1)
 })
 
 test('CodecParameters class should expose a type getter', (t) => {
@@ -44,8 +44,8 @@ test('CodecParameters class should expose a id getter', (t) => {
 })
 
 test('CodecParameters class should expose a id setter', (t) => {
-  codecParam.id = ffmpeg.constants.codecs.H264
-  t.ok(codecParam.id === ffmpeg.constants.codecs.H264)
+  codecParam.id = ffmpeg.constants.codecs.AV1
+  t.ok(codecParam.id === ffmpeg.constants.codecs.AV1)
 })
 
 test('CodecParameters class should expose a level getter', (t) => {
