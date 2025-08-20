@@ -108,6 +108,21 @@ for (const [key, value] of dict) {
 }
 ```
 
+#### Static methods
+
+##### `Dictionary.from(object)`
+
+A helper to create a `Dictionary` instance from an object.
+
+```js
+const dict = ffmpeg.Dictionary.from({
+  foo: 'bar',
+  baz: 'qux'
+})
+```
+
+**Returns**: A new `Dictionary` instance
+
 ### `FormatContext`
 
 The `FormatContext` API provides the base functionality for reading and writing media files.

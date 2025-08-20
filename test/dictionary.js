@@ -65,3 +65,13 @@ test('it should expose an iterator', (t) => {
   t.is(result.at(1).key, 'boo')
   t.is(result.at(1).value, 'baz')
 })
+
+test('it should be created from an object', (t) => {
+  const dict = ffmpeg.Dictionary.from({
+    foo: 'bar',
+    boo: 'baz'
+  })
+
+  t.is(dict.get('foo'), 'bar')
+  t.is(dict.get('boo'), 'baz')
+})
