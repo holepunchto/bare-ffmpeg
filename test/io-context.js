@@ -49,8 +49,8 @@ test('IOContext streaming mp4 with onseek', (t) => {
     onread: (buffer) => {
       const bytesToRead = Math.min(buffer.length, data.length - offset)
 
-      if (bytesToRead === 1) {
-        return 1
+      if (bytesToRead === 0) {
+        return 0
       }
 
       const chunk = data.subarray(offset, offset + bytesToRead)
