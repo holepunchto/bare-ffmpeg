@@ -2259,6 +2259,15 @@ bare_ffmpeg_packet_unref(
   av_packet_unref(packet->handle);
 }
 
+static void
+bare_ffmpeg_packet_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  av_packet_free(&packet->handle);
+}
+
 static int32_t
 bare_ffmpeg_packet_get_stream_index(
   js_env_t *env,
@@ -3134,6 +3143,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
+  V("destroyPacket", bare_ffmpeg_packet_destroy)
   V("unrefPacket", bare_ffmpeg_packet_unref)
   V("getPacketStreamIndex", bare_ffmpeg_packet_get_stream_index)
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
