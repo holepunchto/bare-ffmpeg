@@ -1,6 +1,6 @@
 {
   "name": "bare-ffmpeg",
-  "version": "1.0.0-21",
+  "version": "1.0.0-22",
   "description": "Low-level FFmpeg bindings for Bare",
   "exports": {
     ".": "./index.js",
