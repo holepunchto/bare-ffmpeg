@@ -27,8 +27,16 @@ test('IOContext streaming webm with onread', (t) => {
 
   const { audio, video } = runStreams(io)
 
-  t.is(video.length, 145416, 'video size matches')
-  t.is(audio.length, 42419, 'audio size matches')
+  t.is(
+    video.length,
+    145416,
+    `video size mismatch: got ${video.length}, expected 145416`
+  )
+  t.is(
+    audio.length,
+    42419,
+    `audio size mismatch: got ${audio.length}, expected 42419`
+  )
 })
 
 test('IOContext streaming mp4 with onseek', (t) => {
@@ -41,8 +49,8 @@ test('IOContext streaming mp4 with onseek', (t) => {
     onread: (buffer) => {
       const bytesToRead = Math.min(buffer.length, data.length - offset)
 
-      if (bytesToRead === 0) {
-        return 0
+      if (bytesToRead === 1) {
+        return 1
       }
 
       const chunk = data.subarray(offset, offset + bytesToRead)
@@ -58,8 +66,16 @@ test('IOContext streaming mp4 with onseek', (t) => {
 
   const { audio, video } = runStreams(io)
 
-  t.is(video.length, 140102, 'video size matches')
-  t.is(audio.length, 34914, 'audio size matches')
+  t.is(
+    video.length,
+    140102,
+    `video size mismatch: got ${video.length}, expected 140102`
+  )
+  t.is(
+    audio.length,
+    34914,
+    `audio size mismatch: got ${audio.length}, expected 34914`
+  )
 })
 
 function runStreams(io) {
