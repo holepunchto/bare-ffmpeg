@@ -285,6 +285,7 @@ if(CMAKE_HOST_WIN32)
   find_path(
     msys2
     NAMES msys2.exe
+    PATHS "C:/tools/msys64"
     REQUIRED
   )
 
