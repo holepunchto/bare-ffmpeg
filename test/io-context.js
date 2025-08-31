@@ -59,8 +59,20 @@ test('IOContext streaming mp4 with onseek', (t) => {
       offset += bytesToRead
       return bytesToRead
     },
-    onseek: (newOffset) => {
-      offset = Math.max(0, Math.min(newOffset, data.length))
+
+    onseek: (o, whence) => {
+      switch (whence) {
+        case 'avseek_size':
+          return data.length
+
+        case 'seek_set':
+          offset = o
+          return offset
+
+        default:
+          t.fail('seek operation not implemented: ' + whence)
+          return -1
+      }
     }
   })
 

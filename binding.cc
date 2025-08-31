@@ -33,9 +33,9 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
+using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_typedarray_t<uint8_t>>;
 using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_typedarray_t<uint8_t>, int32_t>;
-using bare_ffmpeg_io_context_seek_cb_t = js_function_t<void, int64_t>;
+using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, std::string>;
 
 typedef struct {
   AVIOContext *handle;
@@ -45,8 +45,6 @@ typedef struct {
   js_persistent_t<bare_ffmpeg_io_context_write_cb_t> on_write;
   js_persistent_t<bare_ffmpeg_io_context_read_cb_t> on_read;
   js_persistent_t<bare_ffmpeg_io_context_seek_cb_t> on_seek;
-
-  int64_t offset;
 } bare_ffmpeg_io_context_t;
 
 typedef struct {
@@ -146,7 +144,12 @@ bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
   err = js_create_arraybuffer(env, buf, static_cast<size_t>(len), data);
   assert(err == 0);
 
-  err = js_call_function(env, callback, data);
+  js_typedarray_t<uint8_t> view;
+  err = js_create_typedarray(env, static_cast<size_t>(len), data, view);
+  assert(err == 0);
+
+
+  err = js_call_function(env, callback, view);
   assert(err == 0);
 
   return 0;
@@ -168,24 +171,21 @@ bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
   err = js_create_external_arraybuffer(env, buf, static_cast<size_t>(len), arraybuffer);
   assert(err == 0);
 
-  js_typedarray_t<uint8_t> uint8array;
-  err = js_create_typedarray(env, static_cast<size_t>(len), arraybuffer, uint8array);
+  js_typedarray_t<uint8_t> view;
+  err = js_create_typedarray(env, static_cast<size_t>(len), arraybuffer, view);
   assert(err == 0);
 
   int32_t result;
-  err = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, uint8array, len, result);
-  assert(err == 0);
+  int call_status = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, view, len, result);
 
   err = js_detach_arraybuffer(env, arraybuffer);
   assert(err == 0);
 
+  if (call_status < 0) return AVERROR(EIO);
+
   if (result == 0) return AVERROR_EOF;
 
-  if (result > len) result = len;
-
-  context->offset += static_cast<int64_t>(result);
-
-  return static_cast<int>(result);
+  return result;
 }
 
 static int64_t
@@ -197,27 +197,37 @@ bare_ffmpeg__on_io_context_seek(void *opaque, int64_t offset, int whence) {
   auto env = context->env;
 
   int64_t result;
-
+  std::string whence_str;
   switch (whence) {
+  case AVSEEK_SIZE:
+    whence_str = "avseek_size";
+    break;
+  case AVSEEK_FORCE:
+    whence_str = "avseek_force";
+    break;
   case SEEK_SET:
-    result = offset;
+    whence_str = "seek_set";
     break;
   case SEEK_CUR:
-    result = context->offset + offset;
+    whence_str = "seek_cur";
     break;
   case SEEK_END:
+    whence_str = "seek_end";
+    break;
   default:
-    return -1;
+    whence_str = "unknown:" + std::to_string(whence);
   }
 
   bare_ffmpeg_io_context_seek_cb_t callback;
   err = js_get_reference_value(env, context->on_seek, callback);
   assert(err == 0);
 
-  err = js_call_function(env, callback, result);
-  assert(err == 0);
+  err = js_call_function(env, callback, offset, whence_str, result);
+  if (err < 0) return AVERROR(EIO);
 
-  context->offset = result;
+  if (result == -1) {
+    return AVERROR(ENOSYS); // evals to 0??
+  }
 
   return result;
 }
@@ -242,7 +252,6 @@ bare_ffmpeg_io_context_init(
   assert(err == 0);
 
   context->env = env;
-  context->offset = 0;
 
   int writable = 0;
 
