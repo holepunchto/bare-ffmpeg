@@ -33,8 +33,8 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_typedarray_t<uint8_t>>;
-using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_typedarray_t<uint8_t>, int32_t>;
+using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
+using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_arraybuffer_t, int32_t>;
 using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, std::string>;
 
 typedef struct {
@@ -144,12 +144,7 @@ bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
   err = js_create_arraybuffer(env, buf, static_cast<size_t>(len), data);
   assert(err == 0);
 
-  js_typedarray_t<uint8_t> view;
-  err = js_create_typedarray(env, static_cast<size_t>(len), data, view);
-  assert(err == 0);
-
-
-  err = js_call_function(env, callback, view);
+  err = js_call_function(env, callback, data);
   assert(err == 0);
 
   return 0;
@@ -171,12 +166,8 @@ bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
   err = js_create_external_arraybuffer(env, buf, static_cast<size_t>(len), arraybuffer);
   assert(err == 0);
 
-  js_typedarray_t<uint8_t> view;
-  err = js_create_typedarray(env, static_cast<size_t>(len), arraybuffer, view);
-  assert(err == 0);
-
   int32_t result;
-  int call_status = js_call_function<js_type_options_t{}, int32_t, js_typedarray_t<uint8_t>, int32_t>(env, callback, view, len, result);
+  int call_status = js_call_function<js_type_options_t{}, int32_t, js_arraybuffer_t, int32_t>(env, callback, arraybuffer, len, result);
 
   err = js_detach_arraybuffer(env, arraybuffer);
   assert(err == 0);

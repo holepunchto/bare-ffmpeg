@@ -11,6 +11,10 @@ test('IOContext streaming webm with onread', (t) => {
   let offset = 0
   const io = new ffmpeg.IOContext(4096, {
     onread: (buffer) => {
+      if (!offset) {
+        t.ok(Buffer.isBuffer(buffer), 'is buffer')
+      }
+
       const bytesToRead = Math.min(buffer.length, data.length - offset)
 
       if (bytesToRead === 0) {
@@ -47,6 +51,10 @@ test('IOContext streaming mp4 with onseek', (t) => {
   let offset = 0
   const io = new ffmpeg.IOContext(4096, {
     onread: (buffer) => {
+      if (!offset) {
+        t.ok(Buffer.isBuffer(buffer), 'is buffer')
+      }
+
       const bytesToRead = Math.min(buffer.length, data.length - offset)
 
       if (bytesToRead === 0) {
