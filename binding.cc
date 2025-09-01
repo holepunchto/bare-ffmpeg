@@ -222,11 +222,11 @@ bare_ffmpeg__on_io_context_seek(void *opaque, int64_t offset, int whence) {
   err = js_get_reference_value(env, context->on_seek, callback);
   assert(err == 0);
 
-  err = js_call_function(env, callback, offset, whence_str, result);
-  if (err < 0) return AVERROR(EIO);
+  err = js_call_function<js_type_options_t{}, int64_t, int64_t, std::string>(env, callback, offset, whence_str, result);
+  if (err < 0) return AVERROR(EIO); // read-error
 
   if (result == -1) {
-    return AVERROR(ENOSYS); // evals to 0??
+    return AVERROR(ENOSYS); // seek-op not supported by IO
   }
 
   return result;
