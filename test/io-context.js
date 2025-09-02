@@ -62,10 +62,10 @@ test('IOContext streaming mp4 with onseek', (t) => {
 
     onseek: (o, whence) => {
       switch (whence) {
-        case ffmpeg.constants.seek.AVSEEK_SIZE:
+        case ffmpeg.constants.seek.SIZE:
           return data.length
 
-        case ffmpeg.constants.seek.SEEK_SET:
+        case ffmpeg.constants.seek.SET:
           offset = o
           return offset
 
