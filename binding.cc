@@ -35,7 +35,7 @@ extern "C" {
 
 using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
 using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_arraybuffer_t, int32_t>;
-using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, std::string>;
+using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, int>;
 
 typedef struct {
   AVIOContext *handle;
@@ -181,39 +181,21 @@ bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
 
 static int64_t
 bare_ffmpeg__on_io_context_seek(void *opaque, int64_t offset, int whence) {
-  int err;
-
   auto context = reinterpret_cast<bare_ffmpeg_io_context_t *>(opaque);
-
   auto env = context->env;
 
   int64_t result;
-  std::string whence_str;
-  switch (whence) {
-  case AVSEEK_SIZE:
-    whence_str = "avseek_size";
-    break;
-  case AVSEEK_FORCE:
-    whence_str = "avseek_force";
-    break;
-  case SEEK_SET:
-    whence_str = "seek_set";
-    break;
-  case SEEK_CUR:
-    whence_str = "seek_cur";
-    break;
-  case SEEK_END:
-    whence_str = "seek_end";
-    break;
-  default:
-    whence_str = "unknown:" + std::to_string(whence);
-  }
-
   bare_ffmpeg_io_context_seek_cb_t callback;
-  err = js_get_reference_value(env, context->on_seek, callback);
+  int err = js_get_reference_value(env, context->on_seek, callback);
   assert(err == 0);
 
-  err = js_call_function<js_type_options_t{}, int64_t, int64_t, std::string>(env, callback, offset, whence_str, result);
+  err = js_call_function<
+    js_type_options_t{},
+    int64_t,
+    int64_t,
+    int>(
+    env, callback, offset, whence, result
+  );
   if (err < 0) return AVERROR(EIO); // read-error
 
   if (result == -1) {
@@ -3421,6 +3403,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   // Levels
   V(AV_LEVEL_UNKNOWN)
+
+  // SEEK
+  V(AVSEEK_SIZE)
+  V(AVSEEK_FORCE)
+  V(SEEK_CUR)
+  V(SEEK_SET)
+  V(SEEK_END)
 #undef V
 
   return exports;
