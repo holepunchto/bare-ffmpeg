@@ -97,7 +97,7 @@ const io = new ffmpeg.IOContext(4096, {
   },
   onseek: (offset, whence) => {
     switch (whence) {
-      case ffmpeg.constants.seek.AVSEEK_SIZE:
+      case ffmpeg.constants.seek.SIZE:
         return data.length
       case ffmpeg.constants.seek.SEEK_SET:
         offset = offset
