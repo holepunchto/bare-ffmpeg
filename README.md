@@ -99,7 +99,7 @@ const io = new ffmpeg.IOContext(4096, {
     switch (whence) {
       case ffmpeg.constants.seek.SIZE:
         return data.length
-      case ffmpeg.constants.seek.SEEK_SET:
+      case ffmpeg.constants.seek.SET:
         offset = offset
         return offset
       default:
