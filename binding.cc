@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <tuple>
 #include <vector>
 
@@ -3400,7 +3399,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_LEVEL_UNKNOWN)
 
   // SEEK
-  V(AVSEEK_SIZE)
   V(AVSEEK_FORCE)
   V(SEEK_CUR)
   V(SEEK_SET)
