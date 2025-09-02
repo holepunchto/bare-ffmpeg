@@ -189,7 +189,13 @@ bare_ffmpeg__on_io_context_seek(void *opaque, int64_t offset, int whence) {
   int err = js_get_reference_value(env, context->on_seek, callback);
   assert(err == 0);
 
-  err = js_call_function(env, callback, offset, whence, result);
+  err = js_call_function<
+    js_type_options_t{},
+    int64_t,
+    int64_t,
+    int>(
+    env, callback, offset, whence, result
+  );
   if (err < 0) return AVERROR(EIO); // read-error
 
   if (result == -1) {
@@ -3399,6 +3405,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_LEVEL_UNKNOWN)
 
   // SEEK
+  V(AVSEEK_SIZE)
   V(AVSEEK_FORCE)
   V(SEEK_CUR)
   V(SEEK_SET)
