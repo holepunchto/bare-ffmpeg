@@ -3,6 +3,22 @@ const ffmpeg = require('..')
 
 const { mediaTypes } = ffmpeg.constants
 
+test('IOContext should propagate onread throwed error properly', (t) => {
+  const readError = 'read error'
+  const io = new ffmpeg.IOContext(4096, {
+    onread: () => {
+      throw new Error(readError)
+    }
+  })
+
+  t.plan(1)
+  try {
+    using _ctx = new ffmpeg.InputFormatContext(io)
+  } catch (err) {
+    t.is(err.message, readError)
+  }
+})
+
 test('IOContext streaming webm with onread', (t) => {
   const data = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
