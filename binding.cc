@@ -373,6 +373,12 @@ bare_ffmpeg_format_context_open_input_with_io(
   if (err < 0) {
     avformat_free_context(context->handle);
 
+    bool is_exception_pending;
+    err = js_is_exception_pending(env, &is_exception_pending);
+    assert(err == 0);
+
+    if (is_exception_pending) throw js_pending_exception;
+
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
 

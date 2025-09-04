@@ -3,6 +3,52 @@ const ffmpeg = require('..')
 
 const { mediaTypes } = ffmpeg.constants
 
+test('IOContext should propagate onread throwed error properly', (t) => {
+  const readError = 'read error'
+  const io = new ffmpeg.IOContext(4096, {
+    onread: () => {
+      throw new Error(readError)
+    }
+  })
+
+  t.plan(1)
+  try {
+    using _ctx = new ffmpeg.InputFormatContext(io)
+  } catch (err) {
+    t.is(err.message, readError)
+  }
+})
+
+test('IOContext should propagate onseek throwed error properly', (t) => {
+  const data = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const seekError = 'seek error'
+
+  let offset = 0
+  const io = new ffmpeg.IOContext(4096, {
+    onread: (buffer) => {
+      const remaining = data.length - offset
+      if (remaining <= 0) return 0
+      const n = Math.min(buffer.length, remaining)
+      buffer.set(data.subarray(offset, offset + n))
+      offset += n
+      return n
+    },
+    onseek: () => {
+      if (offset > 4096) throw new Error(seekError)
+      return data.length
+    }
+  })
+
+  t.plan(1)
+  try {
+    using _ctx = new ffmpeg.InputFormatContext(io)
+  } catch (err) {
+    t.is(err.message, seekError)
+  }
+})
+
 test('IOContext streaming webm with onread', (t) => {
   const data = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
