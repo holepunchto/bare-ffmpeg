@@ -146,9 +146,7 @@ bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
 
   err = js_call_function(env, callback, data);
 
-  if (err == js_pending_exception) return 0;
-
-  if (err == js_uncaught_exception) return AVERROR_EXTERNAL;
+  if (err < 0) return AVERROR(EIO);
 
   // TODO: we should return the number of written bytes
   return 0;
