@@ -148,7 +148,6 @@ bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
 
   if (err < 0) return AVERROR(EIO);
 
-  // TODO: we should return the number of written bytes
   return 0;
 }
 
