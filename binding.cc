@@ -145,8 +145,10 @@ bare_ffmpeg__on_io_context_write(void *opaque, const uint8_t *buf, int len) {
   assert(err == 0);
 
   err = js_call_function(env, callback, data);
-  assert(err == 0);
 
+  if (err < 0) return AVERROR(EIO);
+
+  // TODO: we should return the number of written bytes
   return 0;
 }
 

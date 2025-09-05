@@ -49,6 +49,31 @@ test('IOContext should propagate onseek throwed error properly', (t) => {
   }
 })
 
+test('IOContext should propagate onwrite throwed error properly', (t) => {
+  const writeError = 'write error'
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: () => {
+      throw new Error(writeError)
+    }
+  })
+  const outFormat = new ffmpeg.OutputFormat('webm')
+  using outContext = new ffmpeg.OutputFormatContext(outFormat, io)
+
+  const outputStream = outContext.createStream()
+  outputStream.codec = ffmpeg.Codec.AV1
+  outputStream.codecParameters.type = mediaTypes.VIDEO
+  outputStream.codecParameters.id = ffmpeg.Codec.AV1.id
+  outputStream.codecParameters.width = 1
+  outputStream.codecParameters.height = 1
+
+  t.plan(1)
+  try {
+    outContext.writeHeader()
+  } catch (err) {
+    t.is(err.message, writeError)
+  }
+})
+
 test('IOContext streaming webm with onread', (t) => {
   const data = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
@@ -127,6 +152,8 @@ test('IOContext streaming mp4 with onseek', (t) => {
   t.is(video.length, 140102, `video size: got ${video.length}, expected 140102`)
   t.is(audio.length, 34914, `audio size: got ${audio.length}, expected 34914`)
 })
+
+// Helpers
 
 function runStreams(io) {
   using format = new ffmpeg.InputFormatContext(io)
