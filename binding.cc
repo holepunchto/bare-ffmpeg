@@ -2327,6 +2327,20 @@ bare_ffmpeg_packet_is_keyframe(
   return packet->handle->flags & AV_PKT_FLAG_KEY;
 }
 
+static void
+bare_ffmpeg_packet_set_is_keyframe(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  bool has_key_frame
+) {
+  if (has_key_frame) {
+    packet->handle->flags |= AV_PKT_FLAG_KEY;
+  } else {
+    packet->handle->flags &= ~AV_PKT_FLAG_KEY;
+  }
+}
+
 static int64_t
 bare_ffmpeg_packet_get_dts(
   js_env_t *env,
@@ -3139,6 +3153,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("setPacketData", bare_ffmpeg_packet_set_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
+  V("setPacketIsKeyFrame", bare_ffmpeg_packet_set_is_keyframe)
   V("getPacketDTS", bare_ffmpeg_packet_get_dts)
   V("setPacketDTS", bare_ffmpeg_packet_set_dts)
   V("getPacketPTS", bare_ffmpeg_packet_get_pts)
