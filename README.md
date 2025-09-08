@@ -752,6 +752,12 @@ Gets the stream index this packet belongs to.
 
 **Returns**: `number`
 
+##### `Packet.isKeyFrame`
+
+Get or set the key frame flag.
+
+**Returns**: `boolean`
+
 #### Methods
 
 ##### `Packet.unref()`

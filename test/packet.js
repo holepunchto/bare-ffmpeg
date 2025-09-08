@@ -103,6 +103,22 @@ test('packet should expose flags accessor', (t) => {
   t.is(packet.flags, 1)
 })
 
+test('packet should expose isKeyFrame getter', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  t.is(typeof packet.isKeyframe, 'boolean')
+})
+
+test('packet should expose isKeyFrame setter', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  packet.isKeyframe = false
+  t.is(packet.isKeyframe, false)
+
+  packet.isKeyframe = true
+  t.is(packet.isKeyframe, true)
+})
+
 test('rescale packet timestamps & timebase', (t) => {
   const packet = new ffmpeg.Packet()
 
