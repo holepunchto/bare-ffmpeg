@@ -2483,6 +2483,80 @@ bare_ffmpeg_packet_set_flags(
   packet->handle->flags = value;
 }
 
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_packet_get_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  int err;
+
+  if (!packet->handle->side_data_elems) return std::nullopt;
+
+  size_t len = 0;
+
+  for (int i = 0; i < packet->handle->side_data_elems; i++) {
+    auto side_data = packet->handle->side_data[i];
+    len += sizeof(int32_t);
+    len += sizeof(size_t);
+    len += side_data.size;
+  }
+
+  uint8_t *data = reinterpret_cast<uint8_t *>(malloc(len));
+
+  size_t offset = 0;
+  for (int i = 0; i < packet->handle->side_data_elems; i++) {
+    auto side_data = packet->handle->side_data[i];
+
+    *reinterpret_cast<int32_t *>(&data[offset]) = side_data.type;
+    offset += sizeof(int32_t);
+
+    *reinterpret_cast<size_t *>(&data[offset]) = side_data.size;
+    offset += sizeof(size_t);
+
+    memcpy(data + offset, side_data.data, side_data.size);
+    offset += side_data.size;
+  }
+
+  js_arraybuffer_t handle;
+  err = js_create_arraybuffer(env, data, len, handle);
+  assert(err == 0);
+  free(data);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_packet_set_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  js_arraybuffer_span_t data,
+  uint32_t offset,
+  uint32_t len
+) {
+  assert(offset + len <= data.size());
+
+  av_packet_free_side_data(packet->handle);
+
+  while (offset < len) {
+    auto type = static_cast<AVPacketSideDataType>(
+      *reinterpret_cast<int32_t *>(&data[offset])
+    );
+    offset += sizeof(int32_t);
+
+    size_t size = *reinterpret_cast<size_t *>(&data[offset]);
+    offset += sizeof(size_t);
+
+    auto side_data = reinterpret_cast<uint8_t *>(av_malloc(size));
+    memcpy(side_data, &data[offset], size);
+    offset += size;
+
+    int err = av_packet_add_side_data(packet->handle, type, side_data, size);
+    assert(err == 0);
+  }
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_scaler_init(
   js_env_t *env,
@@ -3165,6 +3239,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketDuration", bare_ffmpeg_packet_set_duration)
   V("getPacketFlags", bare_ffmpeg_packet_get_flags)
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
+  V("getPacketSideData", bare_ffmpeg_packet_get_side_data)
+  V("setPacketSideData", bare_ffmpeg_packet_set_side_data)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)

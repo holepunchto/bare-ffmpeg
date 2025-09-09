@@ -7,6 +7,7 @@ test('packet should expose a buffer getter', (t) => {
 
   t.ok(packet.data instanceof Buffer)
   t.ok(packet.data.byteLength > 0)
+  packet.destroy()
 })
 
 test('packet should expose a streamIndex accessor', (t) => {
@@ -18,12 +19,14 @@ test('packet should expose a streamIndex accessor', (t) => {
   packet.streamIndex = 9
 
   t.is(packet.streamIndex, 9)
+  packet.destroy()
 })
 
 test('packet should be instantiate from an Buffer', (t) => {
   const buf = Buffer.from([0x41, 0x42, 0x43, 0x44])
   const packet = new ffmpeg.Packet(buf)
   t.ok(packet)
+  packet.destroy()
 })
 
 test('packet should copy and expose its data', (t) => {
@@ -36,6 +39,7 @@ test('packet should copy and expose its data', (t) => {
   t.ok(buffer[1] == 0x42)
   t.ok(buffer[2] == 0x43)
   t.ok(buffer[3] == 0x44)
+  packet.destroy()
 })
 
 test('packet set data', (t) => {
@@ -50,6 +54,7 @@ test('packet set data', (t) => {
   t.ok(buffer[1] == 0x46)
   t.ok(buffer[2] == 0x47)
   t.ok(buffer[3] == 0x48)
+  packet.destroy()
 })
 
 test('packet should expose dts acessor', (t) => {
@@ -60,6 +65,7 @@ test('packet should expose dts acessor', (t) => {
   packet.dts = 0
 
   t.is(packet.dts, 0)
+  packet.destroy()
 })
 
 test('packet should expose pts acessor', (t) => {
@@ -70,6 +76,7 @@ test('packet should expose pts acessor', (t) => {
   packet.pts = 0
 
   t.is(packet.pts, 0)
+  packet.destroy()
 })
 
 test('packet should expose timeBase accessor', (t) => {
@@ -81,6 +88,7 @@ test('packet should expose timeBase accessor', (t) => {
   packet.timeBase = base
 
   t.alike(packet.timeBase, base)
+  packet.destroy()
 })
 
 test('packet should expose duration accessor', (t) => {
@@ -91,6 +99,28 @@ test('packet should expose duration accessor', (t) => {
   packet.duration = 16
 
   t.is(packet.duration, 16)
+  packet.destroy()
+})
+
+test('packet should expose extraData accessor', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  t.is(packet.extraData, undefined)
+
+  const x = Buffer.from([
+    // int32_t
+    0x01, 0x00, 0x00, 0x00,
+
+    // size_t
+    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+    // data
+    0xfe, 0xed
+  ])
+  packet.sideData = x
+
+  t.alike(packet.sideData, x)
+  packet.destroy()
 })
 
 test('packet should expose flags accessor', (t) => {
@@ -101,6 +131,7 @@ test('packet should expose flags accessor', (t) => {
   packet.flags = 1
 
   t.is(packet.flags, 1)
+  packet.destroy()
 })
 
 test('packet should expose isKeyFrame getter', (t) => {
@@ -136,6 +167,7 @@ test('rescale packet timestamps & timebase', (t) => {
   t.is(packet.dts, packet.pts)
   t.is(packet.dts, 700)
   t.alike(packet.timeBase, dst)
+  packet.destroy()
 })
 
 function fillPacket(packet) {
@@ -145,4 +177,5 @@ function fillPacket(packet) {
   const io = new ffmpeg.IOContext(image)
   const format = new ffmpeg.InputFormatContext(io)
   format.readFrame(packet)
+  format.destroy()
 }
