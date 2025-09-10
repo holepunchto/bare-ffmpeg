@@ -1,5 +1,6 @@
 const test = require('brittle')
 const ffmpeg = require('..')
+const { SideData } = require('../lib/packet')
 
 test('packet should expose a buffer getter', (t) => {
   const packet = new ffmpeg.Packet()
@@ -136,6 +137,35 @@ test('rescale packet timestamps & timebase', (t) => {
   t.is(packet.dts, packet.pts)
   t.is(packet.dts, 700)
   t.alike(packet.timeBase, dst)
+})
+
+test.skip('packet should expose a sideData getter', (t) => {
+  const packet = new ffmpeg.Packet()
+  fillPacket(packet)
+
+  const sideData = packet.sideData
+  t.ok(Array.isArray(sideData))
+
+  const obj = sideData.at(0)
+  t.ok(obj.type)
+  t.ok(obj.name)
+  t.ok(obj.data)
+})
+
+test.skip('packet should expose a sideData setter', (t) => {
+  const packet = new ffmpeg.Packet()
+  fillPacket(packet)
+
+  const obj1 = new ffmpeg.Packet.SideData(null, {
+    data: Buffer.from('lol'),
+    type: 0
+  })
+  const obj2 = new ffmpeg.Packet.SideData(null, {
+    data: Buffer.from('lol'),
+    type: 0
+  })
+
+  packet.sideData([obj1, obj2])
 })
 
 function fillPacket(packet) {
