@@ -168,6 +168,19 @@ test('packet should expose a sideData setter', (t) => {
   t.is(sideData.length, 2)
 })
 
+test('sideData object should expose a type method', (t) => {
+  const packet = new ffmpeg.Packet()
+  fillPacket(packet)
+  const obj1 = new ffmpeg.Packet.SideData(null, {
+    data: Buffer.from('lol'),
+    type: ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  })
+  packet.sideData = [obj1]
+
+  const sideDataObject = packet.sideData.at(0)
+  t.is(sideDataObject.type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
+})
+
 function fillPacket(packet) {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
