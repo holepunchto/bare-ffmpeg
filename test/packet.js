@@ -152,16 +152,18 @@ test('packet should expose a sideData setter', (t) => {
   fillPacket(packet)
   const obj1 = new ffmpeg.Packet.SideData(null, {
     data: Buffer.from('lol'),
-    type: 0
+    type: 0 // Fix with real values
   })
   const obj2 = new ffmpeg.Packet.SideData(null, {
     data: Buffer.from('lol'),
-    type: 0
+    type: 1
   })
 
   packet.sideData = [obj1, obj2]
 
-  t.ok(Array.isArray(packet.sideData))
+  const sideData = packet.sideData
+  t.ok(Array.isArray(sideData))
+  t.is(sideData.length, 2)
 })
 
 function fillPacket(packet) {
