@@ -147,10 +147,9 @@ test('packet should expose a sideData getter', (t) => {
   t.ok(Array.isArray(sideData))
 })
 
-test.skip('packet should expose a sideData setter', (t) => {
+test('packet should expose a sideData setter', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
-
   const obj1 = new ffmpeg.Packet.SideData(null, {
     data: Buffer.from('lol'),
     type: 0
@@ -160,7 +159,9 @@ test.skip('packet should expose a sideData setter', (t) => {
     type: 0
   })
 
-  packet.sideData([obj1, obj2])
+  packet.sideData = [obj1, obj2]
+
+  t.ok(Array.isArray(packet.sideData))
 })
 
 function fillPacket(packet) {

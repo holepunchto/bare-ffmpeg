@@ -2346,6 +2346,40 @@ bare_ffmpeg_packet_get_side_data(
   return res;
 }
 
+static void
+bare_ffmpeg_packet_set_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  std::vector<js_object_t> side_data_array
+) {
+  for (js_object_t side_data : side_data_array) {
+    int err;
+
+    int32_t type;
+    err = js_get_property(env, side_data, "type", type);
+    assert(err == 0);
+
+    js_arraybuffer_span_t buf;
+    err = js_get_property(env, side_data, "buffer", buf);
+    assert(err == 0);
+
+    int32_t offset;
+    err = js_get_property(env, side_data, "offset", offset);
+    assert(err == 0);
+
+    int32_t len;
+    err = js_get_property(env, side_data, "length", len);
+    assert(err == 0);
+
+    uint8_t *data = av_packet_new_side_data(packet->handle, static_cast<AVPacketSideDataType>(type), static_cast<size_t>(len));
+    memcpy(data, &buf[static_cast<size_t>(offset)], static_cast<size_t>(len));
+
+    err = av_packet_add_side_data(packet->handle, static_cast<AVPacketSideDataType>(type), data, static_cast<size_t>(len));
+    assert(err == 0);
+  }
+}
+
 static bool
 bare_ffmpeg_packet_is_keyframe(
   js_env_t *,
@@ -3181,6 +3215,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("setPacketData", bare_ffmpeg_packet_set_data)
   V("getPacketSideData", bare_ffmpeg_packet_get_side_data)
+  V("setPacketSideData", bare_ffmpeg_packet_set_side_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
   V("setPacketIsKeyFrame", bare_ffmpeg_packet_set_is_keyframe)
   V("getPacketDTS", bare_ffmpeg_packet_get_dts)
