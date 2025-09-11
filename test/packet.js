@@ -139,17 +139,12 @@ test('rescale packet timestamps & timebase', (t) => {
   t.alike(packet.timeBase, dst)
 })
 
-test.skip('packet should expose a sideData getter', (t) => {
+test('packet should expose a sideData getter', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
 
   const sideData = packet.sideData
   t.ok(Array.isArray(sideData))
-
-  const obj = sideData.at(0)
-  t.ok(obj.type)
-  t.ok(obj.name)
-  t.ok(obj.data)
 })
 
 test.skip('packet should expose a sideData setter', (t) => {

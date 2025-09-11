@@ -103,6 +103,10 @@ typedef struct {
   AVAudioFifo *handle;
 } bare_ffmpeg_audio_fifo_t;
 
+typedef struct {
+  AVPacketSideData *handle;
+} bare_ffmpeg_side_data_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static inline bool
@@ -2318,6 +2322,30 @@ bare_ffmpeg_packet_set_data(
   memcpy(packet->handle->data, &data[offset], len);
 }
 
+static std::vector<js_arraybuffer_t>
+bare_ffmpeg_packet_get_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  std::vector<js_arraybuffer_t> res{};
+
+  int count = packet->handle->side_data_elems;
+  if (count == 0) return res;
+
+  for (int i = 0; i < count; i++) {
+    js_arraybuffer_t handle;
+    bare_ffmpeg_side_data_t *sd;
+    int err = js_create_arraybuffer(env, sd, handle);
+    assert(err == 0);
+
+    sd->handle = &packet->handle->side_data[i];
+    res.push_back(handle);
+  }
+
+  return res;
+}
+
 static bool
 bare_ffmpeg_packet_is_keyframe(
   js_env_t *,
@@ -3152,6 +3180,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("setPacketData", bare_ffmpeg_packet_set_data)
+  V("getPacketSideData", bare_ffmpeg_packet_get_side_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
   V("setPacketIsKeyFrame", bare_ffmpeg_packet_set_is_keyframe)
   V("getPacketDTS", bare_ffmpeg_packet_get_dts)
