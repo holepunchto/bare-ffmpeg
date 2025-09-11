@@ -2375,9 +2375,6 @@ bare_ffmpeg_packet_set_side_data(
 
     uint8_t *data = av_packet_new_side_data(packet->handle, static_cast<AVPacketSideDataType>(type), static_cast<size_t>(len));
     memcpy(data, &buf[static_cast<size_t>(offset)], static_cast<size_t>(len));
-
-    err = av_packet_add_side_data(packet->handle, static_cast<AVPacketSideDataType>(type), data, static_cast<size_t>(len));
-    assert(err == 0);
   }
 }
 
@@ -2562,6 +2559,22 @@ bare_ffmpeg_side_data_get_name(
   js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
 ) {
   return av_packet_side_data_name(side_data->handle->type);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_side_data_get_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
+) {
+  js_arraybuffer_t handle;
+  uint8_t *buf;
+  int err = js_create_arraybuffer(env, side_data->handle->size, buf, handle);
+  assert(err == 0);
+
+  memcpy(buf, side_data->handle->data, side_data->handle->size);
+
+  return handle;
 }
 
 static js_arraybuffer_t
@@ -3251,6 +3264,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("getSideDataType", bare_ffmpeg_side_data_get_type)
   V("getSideDataName", bare_ffmpeg_side_data_get_name)
+  V("getSideDataBuffer", bare_ffmpeg_side_data_get_data)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
