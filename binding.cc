@@ -824,7 +824,6 @@ bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, uint32_t 
   return std::string(name);
 }
 
-
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_init(
   js_env_t *env,
