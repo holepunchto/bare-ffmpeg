@@ -104,7 +104,7 @@ typedef struct {
 } bare_ffmpeg_audio_fifo_t;
 
 typedef struct {
-  AVPacketSideData handle;
+  AVPacketSideData *handle;
 } bare_ffmpeg_side_data_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
@@ -2341,7 +2341,7 @@ bare_ffmpeg_packet_get_side_data(
     int err = js_create_arraybuffer(env, sd, handle);
     assert(err == 0);
 
-    sd->handle = packet->handle->side_data[i];
+    sd->handle = &packet->handle->side_data[i];
     res.push_back(handle);
   }
 
