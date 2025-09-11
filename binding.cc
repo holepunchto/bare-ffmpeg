@@ -2555,6 +2555,15 @@ bare_ffmpeg_side_data_get_type(
   return side_data->handle->type;
 }
 
+static std::string
+bare_ffmpeg_side_data_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
+) {
+  return av_packet_side_data_name(side_data->handle->type);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_scaler_init(
   js_env_t *env,
@@ -3241,6 +3250,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
 
   V("getSideDataType", bare_ffmpeg_side_data_get_type)
+  V("getSideDataName", bare_ffmpeg_side_data_get_name)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
