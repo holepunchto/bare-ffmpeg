@@ -817,6 +817,14 @@ bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   return std::string(name);
 }
 
+static std::string
+bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
+  auto name = av_get_sample_fmt_name(static_cast<enum AVSampleFormat>(id));
+
+  return std::string(name);
+}
+
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_init(
   js_env_t *env,
@@ -3034,6 +3042,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
+  V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
