@@ -159,6 +159,8 @@ test('packet should expose a sideData setter', (t) => {
     type: ffmpeg.constants.packetSideDataType.H263_MB_INFO
   })
 
+  // TODO: there is crash if I pass two SideData with the same type
+  // See how we could handle it.
   packet.sideData = [obj1, obj2]
 
   const sideData = packet.sideData
