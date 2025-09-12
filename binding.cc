@@ -929,12 +929,9 @@ bare_ffmpeg_codec_context_set_extra_data(
     av_free(context->handle->extradata);
   }
 
-  size_t min_size = len + AV_INPUT_BUFFER_PADDING_SIZE;
-
-  context->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(min_size));
+  context->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(len + AV_INPUT_BUFFER_PADDING_SIZE));
 
   memset(&context->handle->extradata[len], 0, AV_INPUT_BUFFER_PADDING_SIZE);
-
   memcpy(context->handle->extradata, &view[offset], len);
 
   context->handle->extradata_size = static_cast<int>(len);
