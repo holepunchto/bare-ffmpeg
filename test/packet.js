@@ -150,18 +150,19 @@ test('packet should expose a sideData getter', (t) => {
 test('packet should expose a sideData setter', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
-  const obj1 = new ffmpeg.Packet.SideData(null, {
-    data: Buffer.from('lol'),
-    type: ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  })
-  const obj2 = new ffmpeg.Packet.SideData(null, {
-    data: Buffer.from('lol'),
-    type: ffmpeg.constants.packetSideDataType.H263_MB_INFO
-  })
 
   // TODO: there is crash if I pass two SideData with the same type
   // See how we could handle it.
-  packet.sideData = [obj1, obj2]
+  packet.sideData = [
+    ffmpeg.Packet.SideData.fromData(
+      Buffer.from('lol'),
+      ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+    ),
+    ffmpeg.Packet.SideData.fromData(
+      Buffer.from('lol'),
+      ffmpeg.constants.packetSideDataType.H263_MB_INFO
+    )
+  ]
 
   const sideData = packet.sideData
   t.ok(Array.isArray(sideData))
@@ -171,40 +172,43 @@ test('packet should expose a sideData setter', (t) => {
 test('sideData object should expose a type method', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
-  const obj1 = new ffmpeg.Packet.SideData(null, {
-    data: Buffer.from('lol'),
-    type: ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  })
+  const obj1 = ffmpeg.Packet.SideData.fromData(
+    Buffer.from('lol'),
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
   packet.sideData = [obj1]
 
   const sideDataObject = packet.sideData.at(0)
+
   t.is(sideDataObject.type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
 })
 
 test('sideData object should expose a name method', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
-  const obj1 = new ffmpeg.Packet.SideData(null, {
-    data: Buffer.from('lol'),
-    type: ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  })
+  const obj1 = ffmpeg.Packet.SideData.fromData(
+    Buffer.from('lol'),
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
   packet.sideData = [obj1]
 
   const sideDataObject = packet.sideData.at(0)
+
   t.is(sideDataObject.name, 'New Extradata')
 })
 
 test('sideData object should expose a data method', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
-  const obj1 = new ffmpeg.Packet.SideData(null, {
-    data: Buffer.from('lol'),
-    type: ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  })
+  const buf = Buffer.from('lol')
+  const obj1 = ffmpeg.Packet.SideData.fromData(
+    buf,
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
   packet.sideData = [obj1]
 
   const sideDataObject = packet.sideData.at(0)
-  t.alike(sideDataObject.data, Buffer.from('lol'))
+  t.alike(sideDataObject.data, buf)
 })
 
 function fillPacket(packet) {
