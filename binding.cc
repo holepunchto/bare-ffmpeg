@@ -890,13 +890,10 @@ bare_ffmpeg_codec_context_get_extra_data(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
 ) {
-  int err;
-
-  js_arraybuffer_t buffer;
-
   assert(context->handle->extradata_size >= 0);
 
-  err = js_create_arraybuffer(
+  js_arraybuffer_t buffer;
+  int err = js_create_arraybuffer(
     env,
     context->handle->extradata,
     static_cast<size_t>(context->handle->extradata_size),
