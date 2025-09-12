@@ -889,6 +889,49 @@ bare_ffmpeg_codec_context_set_flags(
   context->handle->flags = value;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_codec_context_get_extra_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  js_arraybuffer_t buffer;
+  int err = js_create_arraybuffer(
+    env,
+    context->handle->extradata,
+    static_cast<size_t>(context->handle->extradata_size),
+    buffer
+  );
+  assert(err == 0);
+
+  return buffer;
+}
+
+void
+bare_ffmpeg_codec_context_set_extra_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_t buffer,
+  uint32_t offset,
+  uint32_t len
+) {
+  std::span<uint8_t> view;
+  int err = js_get_arraybuffer_info(env, buffer, view);
+  assert(err == 0);
+
+  if (context->handle->extradata_size) {
+    av_free(context->handle->extradata);
+  }
+
+  context->handle->extradata = reinterpret_cast<uint8_t *>(av_malloc(len + AV_INPUT_BUFFER_PADDING_SIZE));
+
+  memset(&context->handle->extradata[len], 0, AV_INPUT_BUFFER_PADDING_SIZE);
+  memcpy(context->handle->extradata, &view[offset], len);
+
+  context->handle->extradata_size = static_cast<int>(len);
+}
+
 static int
 bare_ffmpeg_frame_get_format(
   js_env_t *env,
@@ -3084,6 +3127,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextGOPSize", bare_ffmpeg_codec_context_set_gop_size)
   V("getCodecContextFramerate", bare_ffmpeg_codec_context_get_framerate)
   V("setCodecContextFramerate", bare_ffmpeg_codec_context_set_framerate)
+  V("getCodecContextExtraData", bare_ffmpeg_codec_context_get_extra_data)
+  V("setCodecContextExtraData", bare_ffmpeg_codec_context_set_extra_data)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)

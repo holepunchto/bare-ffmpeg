@@ -137,6 +137,23 @@ test('codec context should expose framerate', (t) => {
   t.alike(codecCtx.frameRate, fps)
 })
 
+test('CodecContext class should expose a extraData getter', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  t.ok(codecCtx.extraData instanceof Buffer)
+  codecCtx.destroy()
+})
+
+test('CodecContext class should expose a extraData setter', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  const buf = Buffer.from('test')
+  codecCtx.extraData = buf
+
+  t.ok(codecCtx.extraData[0] === 't'.charCodeAt(0))
+  t.ok(codecCtx.extraData[1] === 'e'.charCodeAt(0))
+  t.ok(codecCtx.extraData[2] === 's'.charCodeAt(0))
+  t.ok(codecCtx.extraData[3] === 't'.charCodeAt(0))
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
