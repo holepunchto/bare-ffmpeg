@@ -536,6 +536,218 @@ bare_ffmpeg_format_context_get_best_stream_index(
   return i;
 }
 
+static int64_t
+bare_ffmpeg_format_context_get_bit_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->bit_rate;
+}
+
+static void
+bare_ffmpeg_format_context_set_bit_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int64_t bit_rate
+) {
+  context->handle->bit_rate = bit_rate;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->duration;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_start_time(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->start_time;
+}
+
+static int
+bare_ffmpeg_format_context_get_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->flags;
+}
+
+static void
+bare_ffmpeg_format_context_set_flags(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int flags
+) {
+  context->handle->flags = flags;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_probesize(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->probesize;
+}
+
+static void
+bare_ffmpeg_format_context_set_probesize(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int64_t probesize
+) {
+  context->handle->probesize = probesize;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_max_analyze_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->max_analyze_duration;
+}
+
+static void
+bare_ffmpeg_format_context_set_max_analyze_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int64_t duration
+) {
+  context->handle->max_analyze_duration = duration;
+}
+
+static int
+bare_ffmpeg_format_context_get_fps_probe_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->fps_probe_size;
+}
+
+static void
+bare_ffmpeg_format_context_set_fps_probe_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int size
+) {
+  context->handle->fps_probe_size = size;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_max_interleave_delta(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->max_interleave_delta;
+}
+
+static void
+bare_ffmpeg_format_context_set_max_interleave_delta(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int64_t delta
+) {
+  context->handle->max_interleave_delta = delta;
+}
+
+static int
+bare_ffmpeg_format_context_get_avoid_negative_ts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->avoid_negative_ts;
+}
+
+static void
+bare_ffmpeg_format_context_set_avoid_negative_ts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int value
+) {
+  context->handle->avoid_negative_ts = value;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_output_ts_offset(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  return context->handle->output_ts_offset;
+}
+
+static void
+bare_ffmpeg_format_context_set_output_ts_offset(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  int64_t offset
+) {
+  context->handle->output_ts_offset = offset;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_format_context_get_metadata(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int err;
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_dictionary_t *dict;
+  err = js_create_arraybuffer(env, dict, handle);
+  assert(err == 0);
+
+  if (context->handle->metadata) {
+    err = av_dict_copy(&dict->handle, context->handle->metadata, 0);
+    assert(err >= 0);
+  } else {
+    dict->handle = NULL;
+  }
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_format_context_set_metadata(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict
+) {
+  int err;
+
+  if (context->handle->metadata) {
+    av_dict_free(&context->handle->metadata);
+  }
+
+  if (dict->handle) {
+    err = av_dict_copy(&context->handle->metadata, dict->handle, 0);
+    assert(err >= 0);
+  }
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_format_context_create_stream(
   js_env_t *env,
@@ -3383,14 +3595,34 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("closeInputFormatContext", bare_ffmpeg_format_context_close_input)
   V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
-  V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
-  V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
   V("writeFormatContextHeader", bare_ffmpeg_format_context_write_header)
   V("writeFormatContextFrame", bare_ffmpeg_format_context_write_frame)
   V("writeFormatContextTrailer", bare_ffmpeg_format_context_write_trailer)
   V("dumpFormatContext", bare_ffmpeg_format_context_dump)
+  V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
+  V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
+  V("getFormatContextBitRate", bare_ffmpeg_format_context_get_bit_rate)
+  V("setFormatContextBitRate", bare_ffmpeg_format_context_set_bit_rate)
+  V("getFormatContextDuration", bare_ffmpeg_format_context_get_duration)
+  V("getFormatContextStartTime", bare_ffmpeg_format_context_get_start_time)
+  V("getFormatContextFlags", bare_ffmpeg_format_context_get_flags)
+  V("setFormatContextFlags", bare_ffmpeg_format_context_set_flags)
+  V("getFormatContextProbesize", bare_ffmpeg_format_context_get_probesize)
+  V("setFormatContextProbesize", bare_ffmpeg_format_context_set_probesize)
+  V("getFormatContextMaxAnalyzeDuration", bare_ffmpeg_format_context_get_max_analyze_duration)
+  V("setFormatContextMaxAnalyzeDuration", bare_ffmpeg_format_context_set_max_analyze_duration)
+  V("getFormatContextFpsProbeSize", bare_ffmpeg_format_context_get_fps_probe_size)
+  V("setFormatContextFpsProbeSize", bare_ffmpeg_format_context_set_fps_probe_size)
+  V("getFormatContextMaxInterleaveDelta", bare_ffmpeg_format_context_get_max_interleave_delta)
+  V("setFormatContextMaxInterleaveDelta", bare_ffmpeg_format_context_set_max_interleave_delta)
+  V("getFormatContextAvoidNegativeTs", bare_ffmpeg_format_context_get_avoid_negative_ts)
+  V("setFormatContextAvoidNegativeTs", bare_ffmpeg_format_context_set_avoid_negative_ts)
+  V("getFormatContextOutputTsOffset", bare_ffmpeg_format_context_get_output_ts_offset)
+  V("setFormatContextOutputTsOffset", bare_ffmpeg_format_context_set_output_ts_offset)
+  V("getFormatContextMetadata", bare_ffmpeg_format_context_get_metadata)
+  V("setFormatContextMetadata", bare_ffmpeg_format_context_set_metadata)
 
   V("getStreamIndex", bare_ffmpeg_stream_get_index)
   V("getStreamId", bare_ffmpeg_stream_get_id)
@@ -3714,6 +3946,28 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AVFMT_NEEDNUMBER)
   V(AVFMT_NOTIMESTAMPS)
 
+  // Format context flags
+  V(AVFMT_FLAG_GENPTS)
+  V(AVFMT_FLAG_IGNIDX)
+  V(AVFMT_FLAG_NONBLOCK)
+  V(AVFMT_FLAG_IGNDTS)
+  V(AVFMT_FLAG_NOFILLIN)
+  V(AVFMT_FLAG_NOPARSE)
+  V(AVFMT_FLAG_NOBUFFER)
+  V(AVFMT_FLAG_CUSTOM_IO)
+  V(AVFMT_FLAG_DISCARD_CORRUPT)
+  V(AVFMT_FLAG_FLUSH_PACKETS)
+  V(AVFMT_FLAG_BITEXACT)
+  V(AVFMT_FLAG_SORT_DTS)
+  V(AVFMT_FLAG_FAST_SEEK)
+  V(AVFMT_FLAG_AUTO_BSF)
+
+  // Avoid negative timestamp modes
+  V(AVFMT_AVOID_NEG_TS_AUTO)
+  V(AVFMT_AVOID_NEG_TS_DISABLED)
+  V(AVFMT_AVOID_NEG_TS_MAKE_NON_NEGATIVE)
+  V(AVFMT_AVOID_NEG_TS_MAKE_ZERO)
+
   // Profile
   V(AV_PROFILE_UNKNOWN)
   V(AV_PROFILE_RESERVED)
@@ -3877,7 +4131,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PKT_DATA_3D_REFERENCE_DISPLAYS)
   V(AV_PKT_DATA_RTCP_SR)
   V(AV_PKT_DATA_NB)
-
 #undef V
 
   return exports;

@@ -350,3 +350,138 @@ function validateOutput(t, data) {
 
   format.destroy()
 }
+
+test('OutputFormatContext should expose maxInterleaveDelta accessor', (t) => {
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: () => {}
+  })
+  const outContext = new ffmpeg.OutputFormatContext('mp4', io)
+
+  const defaultDelta = outContext.maxInterleaveDelta
+  t.is(typeof defaultDelta, 'number')
+
+  outContext.maxInterleaveDelta = 10000000
+  t.is(outContext.maxInterleaveDelta, 10000000)
+
+  outContext.destroy()
+})
+
+test('OutputFormatContext should expose avoidNegativeTs accessor', (t) => {
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: () => {}
+  })
+  const outContext = new ffmpeg.OutputFormatContext('mp4', io)
+
+  const defaultMode = outContext.avoidNegativeTs
+  t.is(typeof defaultMode, 'number')
+
+  outContext.avoidNegativeTs = ffmpeg.constants.avoidNegativeTs.MAKE_ZERO
+  t.is(outContext.avoidNegativeTs, ffmpeg.constants.avoidNegativeTs.MAKE_ZERO)
+
+  outContext.avoidNegativeTs =
+    ffmpeg.constants.avoidNegativeTs.MAKE_NON_NEGATIVE
+  t.is(
+    outContext.avoidNegativeTs,
+    ffmpeg.constants.avoidNegativeTs.MAKE_NON_NEGATIVE
+  )
+
+  outContext.destroy()
+})
+
+test('OutputFormatContext should expose outputTsOffset accessor', (t) => {
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: () => {}
+  })
+  const outContext = new ffmpeg.OutputFormatContext('webm', io)
+
+  t.is(outContext.outputTsOffset, 0)
+
+  outContext.outputTsOffset = 1000000
+  t.is(outContext.outputTsOffset, 1000000)
+
+  outContext.destroy()
+})
+
+test('OutputFormatContext with metadata and flags', (t) => {
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: () => {}
+  })
+  const outContext = new ffmpeg.OutputFormatContext('mp4', io)
+
+  const metadata = ffmpeg.Dictionary.from({
+    title: 'Test Output',
+    artist: 'FFmpeg Test',
+    comment: 'Testing metadata handling'
+  })
+  outContext.metadata = metadata
+
+  outContext.flags =
+    ffmpeg.constants.formatContextFlags.FLUSH_PACKETS |
+    ffmpeg.constants.formatContextFlags.BITEXACT
+
+  outContext.maxInterleaveDelta = 5000000
+  outContext.avoidNegativeTs = ffmpeg.constants.avoidNegativeTs.MAKE_ZERO
+  outContext.bitRate = 2000000
+
+  const retrievedMetadata = outContext.metadata
+  t.is(retrievedMetadata.get('title'), 'Test Output')
+  t.is(retrievedMetadata.get('artist'), 'FFmpeg Test')
+
+  t.ok(outContext.flags & ffmpeg.constants.formatContextFlags.FLUSH_PACKETS)
+  t.ok(outContext.flags & ffmpeg.constants.formatContextFlags.BITEXACT)
+
+  t.is(outContext.maxInterleaveDelta, 5000000)
+  t.is(outContext.avoidNegativeTs, ffmpeg.constants.avoidNegativeTs.MAKE_ZERO)
+  t.is(outContext.bitRate, 2000000)
+
+  metadata.destroy()
+  retrievedMetadata.destroy()
+  outContext.destroy()
+})
+
+test('OutputFormatContext properties persist through muxing', async (t) => {
+  const buffers = []
+  const io = new ffmpeg.IOContext(4096, {
+    onwrite: (buffer) => buffers.push(buffer)
+  })
+
+  const outContext = new ffmpeg.OutputFormatContext('webm', io)
+
+  const metadata = ffmpeg.Dictionary.from({
+    title: 'Persistence Test',
+    encoder: 'bare-ffmpeg'
+  })
+  outContext.metadata = metadata
+  outContext.avoidNegativeTs = ffmpeg.constants.avoidNegativeTs.MAKE_ZERO
+  outContext.addFlags(ffmpeg.constants.formatContextFlags.FLUSH_PACKETS)
+
+  const stream = outContext.createStream()
+  const encoder = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  encoder.width = 640
+  encoder.height = 480
+  encoder.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  encoder.timeBase = new ffmpeg.Rational(1, 30)
+
+  encoder.open()
+
+  stream.codecParameters.fromContext(encoder)
+  stream.timeBase = encoder.timeBase
+
+  outContext.writeHeader()
+
+  t.is(outContext.avoidNegativeTs, ffmpeg.constants.avoidNegativeTs.MAKE_ZERO)
+  t.ok(outContext.hasFlags(ffmpeg.constants.formatContextFlags.FLUSH_PACKETS))
+
+  const retrievedMetadata = outContext.metadata
+  t.is(retrievedMetadata.get('title'), 'Persistence Test')
+
+  outContext.writeTrailer()
+
+  metadata.destroy()
+  retrievedMetadata.destroy()
+  encoder.destroy()
+  outContext.destroy()
+
+  t.ok(buffers.length > 0, 'Output was written')
+})
