@@ -1809,6 +1809,25 @@ bare_ffmpeg_codec_parameters_set_video_delay(
   parameters->handle->video_delay = delay;
 }
 
+static int
+bare_ffmpeg_codec_parameters_get_frame_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->frame_size;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_frame_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int frame_size
+) {
+  parameters->handle->frame_size = frame_size;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
@@ -3113,6 +3132,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersSampleAspectRatio", bare_ffmpeg_codec_parameters_set_sample_aspect_ratio)
   V("getCodecParametersVideoDelay", bare_ffmpeg_codec_parameters_get_video_delay)
   V("setCodecParametersVideoDelay", bare_ffmpeg_codec_parameters_set_video_delay)
+  V("getCodecParametersFrameSize", bare_ffmpeg_codec_parameters_get_frame_size)
+  V("setCodecParametersFrameSize", bare_ffmpeg_codec_parameters_set_frame_size)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)

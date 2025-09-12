@@ -235,6 +235,15 @@ test('CodecParameters class should expose a videoDelay setter', (t) => {
   t.ok(codecParam.videoDelay === 2)
 })
 
+test('CodecParameters class should expose a frameSize getter', (t) => {
+  t.ok(typeof codecParam.frameSize === 'number')
+})
+
+test('CodecParameters class should expose a frameSize setter', (t) => {
+  codecParam.frameSize = 1024
+  t.ok(codecParam.frameSize === 1024)
+})
+
 test('create independent CodecParameters', (t) => {
   const codecParam = ffmpeg.CodecParameters.alloc()
 
