@@ -890,8 +890,6 @@ bare_ffmpeg_codec_context_get_extra_data(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
 ) {
-  assert(context->handle->extradata_size >= 0);
-
   js_arraybuffer_t buffer;
   int err = js_create_arraybuffer(
     env,
@@ -913,16 +911,11 @@ bare_ffmpeg_codec_context_set_extra_data(
   uint32_t offset,
   uint32_t len
 ) {
-  int err;
-
   std::span<uint8_t> view;
-  err = js_get_arraybuffer_info(env, buffer, view);
+  int err = js_get_arraybuffer_info(env, buffer, view);
   assert(err == 0);
 
   if (context->handle->extradata_size) {
-    assert(context->handle->extradata_size > 0);
-    assert(context->handle->extradata);
-
     av_free(context->handle->extradata);
   }
 
