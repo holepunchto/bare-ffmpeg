@@ -103,6 +103,10 @@ typedef struct {
   AVAudioFifo *handle;
 } bare_ffmpeg_audio_fifo_t;
 
+typedef struct {
+  AVPacketSideData *handle;
+} bare_ffmpeg_side_data_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static inline bool
@@ -2385,6 +2389,62 @@ bare_ffmpeg_packet_set_data(
   memcpy(packet->handle->data, &data[offset], len);
 }
 
+static std::vector<js_arraybuffer_t>
+bare_ffmpeg_packet_get_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+) {
+  std::vector<js_arraybuffer_t> res{};
+
+  int count = packet->handle->side_data_elems;
+  if (count == 0) return res;
+
+  for (int i = 0; i < count; i++) {
+    js_arraybuffer_t handle;
+    bare_ffmpeg_side_data_t *sd;
+    int err = js_create_arraybuffer(env, sd, handle);
+    assert(err == 0);
+
+    sd->handle = &packet->handle->side_data[i];
+
+    res.push_back(handle);
+  }
+
+  return res;
+}
+
+static void
+bare_ffmpeg_packet_set_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  std::vector<js_object_t> side_data_array
+) {
+  for (js_object_t side_data : side_data_array) {
+    int err;
+
+    int32_t type;
+    err = js_get_property(env, side_data, "type", type);
+    assert(err == 0);
+
+    js_arraybuffer_span_t buf;
+    err = js_get_property(env, side_data, "buffer", buf);
+    assert(err == 0);
+
+    int32_t offset;
+    err = js_get_property(env, side_data, "offset", offset);
+    assert(err == 0);
+
+    int32_t len;
+    err = js_get_property(env, side_data, "length", len);
+    assert(err == 0);
+
+    uint8_t *data = av_packet_new_side_data(packet->handle, static_cast<AVPacketSideDataType>(type), static_cast<size_t>(len));
+    memcpy(data, &buf[static_cast<size_t>(offset)], static_cast<size_t>(len));
+  }
+}
+
 static bool
 bare_ffmpeg_packet_is_keyframe(
   js_env_t *,
@@ -2548,6 +2608,40 @@ bare_ffmpeg_packet_set_flags(
   int32_t value
 ) {
   packet->handle->flags = value;
+}
+
+static int
+bare_ffmpeg_side_data_get_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
+) {
+  return side_data->handle->type;
+}
+
+static std::string
+bare_ffmpeg_side_data_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
+) {
+  return av_packet_side_data_name(side_data->handle->type);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_side_data_get_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_side_data_t, 1> side_data
+) {
+  js_arraybuffer_t handle;
+  uint8_t *buf;
+  int err = js_create_arraybuffer(env, side_data->handle->size, buf, handle);
+  assert(err == 0);
+
+  memcpy(buf, side_data->handle->data, side_data->handle->size);
+
+  return handle;
 }
 
 static js_arraybuffer_t
@@ -3224,6 +3318,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketStreamIndex", bare_ffmpeg_packet_set_stream_index)
   V("getPacketData", bare_ffmpeg_packet_get_data)
   V("setPacketData", bare_ffmpeg_packet_set_data)
+  V("getPacketSideData", bare_ffmpeg_packet_get_side_data)
+  V("setPacketSideData", bare_ffmpeg_packet_set_side_data)
   V("isPacketKeyframe", bare_ffmpeg_packet_is_keyframe)
   V("setPacketIsKeyFrame", bare_ffmpeg_packet_set_is_keyframe)
   V("getPacketDTS", bare_ffmpeg_packet_get_dts)
@@ -3237,6 +3333,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketDuration", bare_ffmpeg_packet_set_duration)
   V("getPacketFlags", bare_ffmpeg_packet_get_flags)
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
+
+  V("getSideDataType", bare_ffmpeg_side_data_get_type)
+  V("getSideDataName", bare_ffmpeg_side_data_get_name)
+  V("getSideDataBuffer", bare_ffmpeg_side_data_get_data)
 
   V("initScaler", bare_ffmpeg_scaler_init)
   V("destroyScaler", bare_ffmpeg_scaler_destroy)
@@ -3504,6 +3604,49 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(SEEK_CUR)
   V(SEEK_SET)
   V(SEEK_END)
+
+  V(AV_PKT_DATA_PALETTE)
+  V(AV_PKT_DATA_NEW_EXTRADATA)
+  V(AV_PKT_DATA_PARAM_CHANGE)
+  V(AV_PKT_DATA_H263_MB_INFO)
+  V(AV_PKT_DATA_REPLAYGAIN)
+  V(AV_PKT_DATA_DISPLAYMATRIX)
+  V(AV_PKT_DATA_STEREO3D)
+  V(AV_PKT_DATA_AUDIO_SERVICE_TYPE)
+  V(AV_PKT_DATA_QUALITY_STATS)
+  V(AV_PKT_DATA_FALLBACK_TRACK)
+  V(AV_PKT_DATA_CPB_PROPERTIES)
+  V(AV_PKT_DATA_SKIP_SAMPLES)
+  V(AV_PKT_DATA_JP_DUALMONO)
+  V(AV_PKT_DATA_STRINGS_METADATA)
+  V(AV_PKT_DATA_SUBTITLE_POSITION)
+  V(AV_PKT_DATA_MATROSKA_BLOCKADDITIONAL)
+  V(AV_PKT_DATA_WEBVTT_IDENTIFIER)
+  V(AV_PKT_DATA_WEBVTT_SETTINGS)
+  V(AV_PKT_DATA_METADATA_UPDATE)
+  V(AV_PKT_DATA_MPEGTS_STREAM_ID)
+  V(AV_PKT_DATA_MASTERING_DISPLAY_METADATA)
+  V(AV_PKT_DATA_SPHERICAL)
+  V(AV_PKT_DATA_CONTENT_LIGHT_LEVEL)
+  V(AV_PKT_DATA_A53_CC)
+  V(AV_PKT_DATA_ENCRYPTION_INIT_INFO)
+  V(AV_PKT_DATA_ENCRYPTION_INFO)
+  V(AV_PKT_DATA_AFD)
+  V(AV_PKT_DATA_PRFT)
+  V(AV_PKT_DATA_ICC_PROFILE)
+  V(AV_PKT_DATA_DOVI_CONF)
+  V(AV_PKT_DATA_S12M_TIMECODE)
+  V(AV_PKT_DATA_DYNAMIC_HDR10_PLUS)
+  V(AV_PKT_DATA_IAMF_MIX_GAIN_PARAM)
+  V(AV_PKT_DATA_IAMF_DEMIXING_INFO_PARAM)
+  V(AV_PKT_DATA_IAMF_RECON_GAIN_INFO_PARAM)
+  V(AV_PKT_DATA_AMBIENT_VIEWING_ENVIRONMENT)
+  V(AV_PKT_DATA_FRAME_CROPPING)
+  V(AV_PKT_DATA_LCEVC)
+  V(AV_PKT_DATA_3D_REFERENCE_DISPLAYS)
+  V(AV_PKT_DATA_RTCP_SR)
+  V(AV_PKT_DATA_NB)
+
 #undef V
 
   return exports;
