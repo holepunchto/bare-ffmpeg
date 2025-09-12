@@ -988,6 +988,215 @@ bare_ffmpeg_frame_set_channel_layout(
   assert(err == 0);
 }
 
+static int64_t
+bare_ffmpeg_codec_context_get_bit_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->bit_rate;
+}
+
+static void
+bare_ffmpeg_codec_context_set_bit_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int64_t bit_rate
+) {
+  context->handle->bit_rate = bit_rate;
+}
+
+static int
+bare_ffmpeg_codec_context_get_frame_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->frame_size;
+}
+
+static void
+bare_ffmpeg_codec_context_set_frame_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int frame_size
+) {
+  context->handle->frame_size = frame_size;
+}
+
+static int
+bare_ffmpeg_codec_context_get_profile(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->profile;
+}
+
+static void
+bare_ffmpeg_codec_context_set_profile(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int profile
+) {
+  context->handle->profile = profile;
+}
+
+static int
+bare_ffmpeg_codec_context_get_level(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->level;
+}
+
+static void
+bare_ffmpeg_codec_context_set_level(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int level
+) {
+  context->handle->level = level;
+}
+
+static int
+bare_ffmpeg_codec_context_get_compression_level(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->compression_level;
+}
+
+static void
+bare_ffmpeg_codec_context_set_compression_level(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int compression_level
+) {
+  context->handle->compression_level = compression_level;
+}
+
+static int
+bare_ffmpeg_codec_context_get_cutoff(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->cutoff;
+}
+
+static void
+bare_ffmpeg_codec_context_set_cutoff(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int cutoff
+) {
+  context->handle->cutoff = cutoff;
+}
+
+static int
+bare_ffmpeg_codec_context_get_thread_count(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->thread_count;
+}
+
+static void
+bare_ffmpeg_codec_context_set_thread_count(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int thread_count
+) {
+  context->handle->thread_count = thread_count;
+}
+
+static int64_t
+bare_ffmpeg_codec_context_get_rc_max_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->rc_max_rate;
+}
+
+static void
+bare_ffmpeg_codec_context_set_rc_max_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int64_t rc_max_rate
+) {
+  context->handle->rc_max_rate = rc_max_rate;
+}
+
+static int64_t
+bare_ffmpeg_codec_context_get_rc_min_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->rc_min_rate;
+}
+
+static void
+bare_ffmpeg_codec_context_set_rc_min_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int64_t rc_min_rate
+) {
+  context->handle->rc_min_rate = rc_min_rate;
+}
+
+static int
+bare_ffmpeg_codec_context_get_qmin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->qmin;
+}
+
+static void
+bare_ffmpeg_codec_context_set_qmin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int qmin
+) {
+  context->handle->qmin = qmin;
+}
+
+static int
+bare_ffmpeg_codec_context_get_qmax(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->qmax;
+}
+
+static void
+bare_ffmpeg_codec_context_set_qmax(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int qmax
+) {
+  context->handle->qmax = qmax;
+}
+
 static bool
 bare_ffmpeg_codec_context_open_with_options(
   js_env_t *env,
@@ -3223,6 +3432,28 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextFramerate", bare_ffmpeg_codec_context_set_framerate)
   V("getCodecContextExtraData", bare_ffmpeg_codec_context_get_extra_data)
   V("setCodecContextExtraData", bare_ffmpeg_codec_context_set_extra_data)
+  V("getCodecContextBitRate", bare_ffmpeg_codec_context_get_bit_rate)
+  V("setCodecContextBitRate", bare_ffmpeg_codec_context_set_bit_rate)
+  V("getCodecContextFrameSize", bare_ffmpeg_codec_context_get_frame_size)
+  V("setCodecContextFrameSize", bare_ffmpeg_codec_context_set_frame_size)
+  V("getCodecContextProfile", bare_ffmpeg_codec_context_get_profile)
+  V("setCodecContextProfile", bare_ffmpeg_codec_context_set_profile)
+  V("getCodecContextLevel", bare_ffmpeg_codec_context_get_level)
+  V("setCodecContextLevel", bare_ffmpeg_codec_context_set_level)
+  V("getCodecContextCompressionLevel", bare_ffmpeg_codec_context_get_compression_level)
+  V("setCodecContextCompressionLevel", bare_ffmpeg_codec_context_set_compression_level)
+  V("getCodecContextCutoff", bare_ffmpeg_codec_context_get_cutoff)
+  V("setCodecContextCutoff", bare_ffmpeg_codec_context_set_cutoff)
+  V("getCodecContextThreadCount", bare_ffmpeg_codec_context_get_thread_count)
+  V("setCodecContextThreadCount", bare_ffmpeg_codec_context_set_thread_count)
+  V("getCodecContextRcMaxRate", bare_ffmpeg_codec_context_get_rc_max_rate)
+  V("setCodecContextRcMaxRate", bare_ffmpeg_codec_context_set_rc_max_rate)
+  V("getCodecContextRcMinRate", bare_ffmpeg_codec_context_get_rc_min_rate)
+  V("setCodecContextRcMinRate", bare_ffmpeg_codec_context_set_rc_min_rate)
+  V("getCodecContextQmin", bare_ffmpeg_codec_context_get_qmin)
+  V("setCodecContextQmin", bare_ffmpeg_codec_context_set_qmin)
+  V("getCodecContextQmax", bare_ffmpeg_codec_context_get_qmax)
+  V("setCodecContextQmax", bare_ffmpeg_codec_context_set_qmax)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
