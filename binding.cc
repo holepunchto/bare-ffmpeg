@@ -2610,6 +2610,85 @@ bare_ffmpeg_packet_set_flags(
   packet->handle->flags = value;
 }
 
+static void
+bare_ffmpeg_packet_copy_props(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> src
+) {
+  int err;
+
+  err = av_packet_copy_props(dst->handle, src->handle);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_packet_get_side_data_by_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t type
+) {
+  int err;
+
+  size_t size;
+  uint8_t* data = av_packet_get_side_data(
+    packet->handle,
+    static_cast<AVPacketSideDataType>(type),
+    &size
+  );
+
+  if (data == NULL) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t handle;
+  uint8_t *buf;
+  err = js_create_arraybuffer(env, size, buf, handle);
+  assert(err == 0);
+
+  memcpy(buf, data, size);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_packet_add_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
+  int32_t type,
+  js_arraybuffer_span_t data,
+  uint32_t offset,
+  uint32_t len
+) {
+  int err;
+
+  uint8_t *buf = reinterpret_cast<uint8_t*>(av_malloc(len));
+  memcpy(buf, &data[offset], len);
+
+  err = av_packet_add_side_data(
+    packet->handle,
+    static_cast<AVPacketSideDataType>(type),
+    buf,
+    len
+  );
+
+  if (err < 0) {
+    av_free(buf);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static int
 bare_ffmpeg_side_data_get_type(
   js_env_t *env,
@@ -3333,6 +3412,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketDuration", bare_ffmpeg_packet_set_duration)
   V("getPacketFlags", bare_ffmpeg_packet_get_flags)
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
+  V("copyPacketProps", bare_ffmpeg_packet_copy_props)
+  V("getPacketSideDataByType", bare_ffmpeg_packet_get_side_data_by_type)
+  V("addPacketSideData", bare_ffmpeg_packet_add_side_data)
 
   V("getSideDataType", bare_ffmpeg_side_data_get_type)
   V("getSideDataName", bare_ffmpeg_side_data_get_name)
