@@ -1149,6 +1149,34 @@ bare_ffmpeg_codec_context_set_extra_data(
 }
 
 static int
+bare_ffmpeg_codec_context_get_codec_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->codec_type;
+}
+
+static int
+bare_ffmpeg_codec_context_get_max_b_frames(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->max_b_frames;
+}
+
+static void
+bare_ffmpeg_codec_context_set_max_b_frames(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int max_b_frames
+) {
+  context->handle->max_b_frames = max_b_frames;
+}
+
+static int
 bare_ffmpeg_frame_get_format(
   js_env_t *env,
   js_receiver_t,
@@ -3686,6 +3714,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextQmin", bare_ffmpeg_codec_context_set_qmin)
   V("getCodecContextQmax", bare_ffmpeg_codec_context_get_qmax)
   V("setCodecContextQmax", bare_ffmpeg_codec_context_set_qmax)
+  V("getCodecContextCodecType", bare_ffmpeg_codec_context_get_codec_type)
+  V("getCodecContextMaxBFrames", bare_ffmpeg_codec_context_get_max_b_frames)
+  V("setCodecContextMaxBFrames", bare_ffmpeg_codec_context_set_max_b_frames)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)

@@ -240,7 +240,7 @@ test('codec context should expose quality accessors', (t) => {
   codecCtx.destroy()
 })
 
-test('audio encoder configuration should work with new properties', (t) => {
+test('audio encoder configuration', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
 
   codecCtx.sampleRate = 48000
@@ -263,7 +263,7 @@ test('audio encoder configuration should work with new properties', (t) => {
   codecCtx.destroy()
 })
 
-test('video encoder configuration should work with new properties', (t) => {
+test('video encoder configuration', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
   setDefaultOptions(codecCtx)
@@ -313,27 +313,34 @@ test('codec parameters to context should not override direct settings', (t) => {
   codecCtx.destroy()
 })
 
-test('audio encoder configuration should work with new properties', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
-
-  codecCtx.sampleRate = 48000
-  codecCtx.sampleFormat = ffmpeg.constants.sampleFormats.S16
-  codecCtx.channelLayout = ffmpeg.ChannelLayout.from(
-    ffmpeg.constants.channelLayouts.STEREO
+test('codec context should have a codecType property', (t) => {
+  const videoCodec = ffmpeg.Codec.AV1.encoder
+  const videoCtx = new ffmpeg.CodecContext(videoCodec)
+  t.is(
+    videoCtx.codecType,
+    ffmpeg.constants.mediaTypes.VIDEO,
+    'should be video type'
   )
-  codecCtx.bitRate = 128000
-  codecCtx.frameSize = 960 // 20ms at 48kHz for Opus
-  codecCtx.timeBase = new ffmpeg.Rational(1, 48000)
+  videoCtx.destroy()
 
-  t.execution(() => {
-    codecCtx.open()
-  })
+  const audioCodec = ffmpeg.Codec.AAC.encoder
+  const audioCtx = new ffmpeg.CodecContext(audioCodec)
+  t.is(
+    audioCtx.codecType,
+    ffmpeg.constants.mediaTypes.AUDIO,
+    'should be audio type'
+  )
+  audioCtx.destroy()
+})
 
-  t.is(codecCtx.bitRate, 128000)
-  t.is(codecCtx.frameSize, 960)
-  t.is(codecCtx.sampleRate, 48000)
+test('codec context should have a maxBFrames property', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
 
-  codecCtx.destroy()
+  ctx.maxBFrames = 3
+  t.is(ctx.maxBFrames, 3, 'should set and get maxBFrames')
+
+  ctx.destroy()
 })
 
 function setDefaultOptions(ctx) {
