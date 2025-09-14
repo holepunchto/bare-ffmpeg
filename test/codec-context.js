@@ -154,6 +154,201 @@ test('CodecContext class should expose a extraData setter', (t) => {
   t.ok(codecCtx.extraData[3] === 't'.charCodeAt(0))
 })
 
+test('codec context - avoptions string', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.width = 640
+  ctx.height = 480
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+
+  // av1 encoder has a profile option that accepts strings like 'main', 'high', 'professional'
+  ctx.setOption('profile', 'main')
+  ctx.open()
+
+  // ffmpeg converts 'main' to 0 internally
+  const profile = ctx.getOptionInt('profile')
+  t.is(profile, 0, 'should get option value converted to int')
+
+  ctx.destroy()
+})
+
+test('codec context - avoptions integer', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.width = 640
+  ctx.height = 480
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+
+  ctx.setOptionInt('crf', 23)
+  ctx.open()
+
+  const crf = ctx.getOptionInt('crf')
+  t.is(crf, 23, 'should get integer option value')
+
+  ctx.destroy()
+})
+
+test('codec context - avoptions rational', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.width = 640
+  ctx.height = 480
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+
+  ctx.setOptionRational('aspect', 16, 9)
+  ctx.open()
+
+  const aspect = ctx.getOptionRational('aspect')
+  t.is(aspect.numerator, 16, 'should get rational numerator')
+  t.is(aspect.denominator, 9, 'should get rational denominator')
+
+  ctx.destroy()
+})
+
+test('codec context - avoptions with flags', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.width = 640
+  ctx.height = 480
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+
+  ctx.setOption('profile', 'main', ffmpeg.constants.optionFlags.SEARCH_CHILDREN)
+  ctx.open()
+
+  // ffmpeg converts "main" to '0' internally for AV1
+  const profile = ctx.getOption(
+    'profile',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
+  )
+  t.is(profile, '0', 'should get option with flags (converted to int string)')
+
+  ctx.destroy()
+})
+
+test('codec context - opus bitrate option', (t) => {
+  const codec = ffmpeg.Codec.OPUS.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.sampleFormat = ffmpeg.constants.sampleFormats.S16
+  ctx.sampleRate = 48000
+  ctx.channelLayout = ffmpeg.ChannelLayout.from(
+    ffmpeg.constants.channelLayouts.STEREO
+  )
+
+  ctx.setOptionInt('b', 128000)
+  ctx.open()
+
+  const bitrate = ctx.getOptionInt('b')
+  t.is(bitrate, 128000, 'should get bitrate option value')
+
+  ctx.destroy()
+})
+
+test('codec context - opus vbr string option', (t) => {
+  const codec = ffmpeg.Codec.OPUS.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.sampleFormat = ffmpeg.constants.sampleFormats.S16
+  ctx.sampleRate = 48000
+  ctx.channelLayout = ffmpeg.ChannelLayout.from(
+    ffmpeg.constants.channelLayouts.STEREO
+  )
+
+  ctx.setOption('vbr', 'on')
+  ctx.open()
+
+  // ffmpeg converts 'on' to '1'
+  const vbr = ctx.getOption('vbr')
+  t.is(vbr, '1', 'should get vbr option value converted to int string')
+
+  ctx.destroy()
+})
+
+test('codec context - opus compression_level option', (t) => {
+  const codec = ffmpeg.Codec.OPUS.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.sampleFormat = ffmpeg.constants.sampleFormats.S16
+  ctx.sampleRate = 48000
+  ctx.channelLayout = ffmpeg.ChannelLayout.from(
+    ffmpeg.constants.channelLayouts.STEREO
+  )
+
+  ctx.setOptionInt('compression_level', 5)
+  ctx.open()
+
+  const level = ctx.getOptionInt('compression_level')
+  t.is(level, 5, 'should get compression_level option value')
+
+  ctx.destroy()
+})
+
+test('codec context - opus frame_duration option', (t) => {
+  const codec = ffmpeg.Codec.OPUS.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.sampleFormat = ffmpeg.constants.sampleFormats.S16
+  ctx.sampleRate = 48000
+  ctx.channelLayout = ffmpeg.ChannelLayout.from(
+    ffmpeg.constants.channelLayouts.STEREO
+  )
+
+  ctx.setOptionDouble('frame_duration', 20.0)
+  ctx.open()
+
+  const duration = ctx.getOptionDouble('frame_duration')
+  t.is(duration, 20.0, 'should get frame_duration option value')
+
+  ctx.destroy()
+})
+
+test('codec context - opus application option', (t) => {
+  const codec = ffmpeg.Codec.OPUS.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.sampleFormat = ffmpeg.constants.sampleFormats.S16
+  ctx.sampleRate = 48000
+  ctx.channelLayout = ffmpeg.ChannelLayout.from(
+    ffmpeg.constants.channelLayouts.STEREO
+  )
+
+  ctx.setOption('application', 'audio')
+  ctx.open()
+
+  const app = ctx.getOption('application')
+  t.is(
+    app,
+    '2049',
+    'should get application option value converted to int string'
+  )
+
+  ctx.destroy()
+})
+
+test('codec context - invalid option should throw', (t) => {
+  const codec = ffmpeg.Codec.AV1.encoder
+  const ctx = new ffmpeg.CodecContext(codec)
+
+  ctx.width = 640
+  ctx.height = 480
+  ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
+  ctx.timeBase = new ffmpeg.Rational(1, 30)
+
+  t.exception(() => {
+    ctx.setOption('invalid_option_name_that_does_not_exist', 'value')
+  }, /Option not found/)
+
+  ctx.destroy()
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P

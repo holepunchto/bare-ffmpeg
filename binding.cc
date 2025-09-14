@@ -26,6 +26,7 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/mem.h>
+#include <libavutil/opt.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libavutil/samplefmt.h>
@@ -1219,6 +1220,621 @@ bare_ffmpeg_codec_context_set_framerate(
   context->handle->framerate.den = den;
 }
 
+
+static void
+bare_ffmpeg_codec_context_set_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  std::string value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set(context->handle, key.c_str(), value.c_str(), flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static std::string
+bare_ffmpeg_codec_context_get_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  char *buf = NULL;
+  err = av_opt_get(context->handle, key.c_str(), flags, reinterpret_cast<uint8_t **>(&buf));
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::string result(buf);
+  av_freep(&buf);
+
+  return result;
+}
+
+static void
+bare_ffmpeg_codec_context_set_option_int(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int64_t value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_int(context->handle, key.c_str(), value, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static int64_t
+bare_ffmpeg_codec_context_get_option_int(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  int64_t value;
+  err = av_opt_get_int(context->handle, key.c_str(), flags, &value);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return value;
+}
+
+static void
+bare_ffmpeg_codec_context_set_option_double(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  double value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_double(context->handle, key.c_str(), value, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static double
+bare_ffmpeg_codec_context_get_option_double(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  double value;
+  err = av_opt_get_double(context->handle, key.c_str(), flags, &value);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return value;
+}
+
+static void
+bare_ffmpeg_codec_context_set_option_q(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int num,
+  int den,
+  int flags
+) {
+  int err;
+
+  AVRational q = {num, den};
+  err = av_opt_set_q(context->handle, key.c_str(), q, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_codec_context_get_option_q(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  AVRational q;
+  err = av_opt_get_q(context->handle, key.c_str(), flags, &q);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t buf;
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, buf);
+  assert(err == 0);
+
+  data[0] = q.num;
+  data[1] = q.den;
+
+  return buf;
+}
+
+static void
+bare_ffmpeg_codec_context_set_option_bin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  js_arraybuffer_t buffer,
+  uint32_t offset,
+  uint32_t len,
+  int flags = AV_OPT_SEARCH_CHILDREN
+) {
+  int err;
+
+  std::span<uint8_t> view;
+  err = js_get_arraybuffer_info(env, buffer, view);
+  assert(err == 0);
+
+  if (offset + len > view.size()) {
+    err = js_throw_error(env, NULL, "Buffer offset/length out of bounds");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  err = av_opt_set_bin(context->handle, key.c_str(), view.data() + offset, static_cast<int>(len), flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_codec_context_get_option_bin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags = AV_OPT_SEARCH_CHILDREN
+) {
+  int err;
+
+  const AVOption *opt = av_opt_find(context->handle, key.c_str(), NULL, 0, flags);
+  if (!opt) {
+    err = js_throw_error(env, NULL, "option not found");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+  if (opt->type != AV_OPT_TYPE_BINARY) {
+    err = js_throw_error(env, NULL, "option is not binary");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  // get offset from base + opt ptr to get size of opt value
+  uint8_t *base = reinterpret_cast<uint8_t *>(context->handle) + opt->offset;
+  uint8_t *data = *reinterpret_cast<uint8_t **>(base);
+  int size = *reinterpret_cast<int *>(base + sizeof(uint8_t *));
+
+  if (size == 0) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t result;
+  err = js_create_arraybuffer(env, data, static_cast<size_t>(size), result);
+  assert(err == 0);
+
+  return result;
+}
+
+static void
+bare_ffmpeg_codec_context_set_option_chlayout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_chlayout(context->handle, key.c_str(), &layout->handle, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_codec_context_get_option_chlayout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  AVChannelLayout layout;
+  av_channel_layout_default(&layout, 0);
+
+  err = av_opt_get_chlayout(context->handle, key.c_str(), flags, &layout);
+  if (err < 0) {
+    av_channel_layout_uninit(&layout);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t result;
+  bare_ffmpeg_channel_layout_t *channel_layout;
+  err = js_create_arraybuffer(env, channel_layout, result);
+  assert(err == 0);
+
+  av_channel_layout_copy(&channel_layout->handle, &layout);
+  av_channel_layout_uninit(&layout);
+
+  return result;
+}
+
+static void
+bare_ffmpeg_format_context_set_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  std::string value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set(context->handle, key.c_str(), value.c_str(), flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_set_option_int(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int64_t value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_int(context->handle, key.c_str(), value, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_set_option_double(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  double value,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_double(context->handle, key.c_str(), value, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_set_option_q(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int num,
+  int den,
+  int flags
+) {
+  int err;
+
+  AVRational q = {num, den};
+  err = av_opt_set_q(context->handle, key.c_str(), q, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_set_option_bin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  js_arraybuffer_t buffer,
+  uint32_t offset,
+  uint32_t len,
+  int flags
+) {
+  int err;
+
+  std::span<uint8_t> view;
+  err = js_get_arraybuffer_info(env, buffer, view);
+  assert(err == 0);
+
+  if (offset + len > view.size()) {
+    err = js_throw_error(env, NULL, "Buffer offset/length out of bounds");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  err = av_opt_set_bin(context->handle, key.c_str(), view.data() + offset, static_cast<int>(len), flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_format_context_set_option_chlayout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout,
+  int flags
+) {
+  int err;
+
+  err = av_opt_set_chlayout(context->handle, key.c_str(), &layout->handle, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static std::string
+bare_ffmpeg_format_context_get_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  char *buf = NULL;
+  err = av_opt_get(context->handle, key.c_str(), flags, reinterpret_cast<uint8_t **>(&buf));
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::string result(buf);
+  av_freep(&buf);
+
+  return result;
+}
+
+static int64_t
+bare_ffmpeg_format_context_get_option_int(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  int64_t value;
+  err = av_opt_get_int(context->handle, key.c_str(), flags, &value);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return value;
+}
+
+static double
+bare_ffmpeg_format_context_get_option_double(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  double value;
+  err = av_opt_get_double(context->handle, key.c_str(), flags, &value);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return value;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_format_context_get_option_q(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  AVRational q;
+  err = av_opt_get_q(context->handle, key.c_str(), flags, &q);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t buf;
+  int32_t *data;
+  err = js_create_arraybuffer(env, 2, data, buf);
+  assert(err == 0);
+
+  data[0] = q.num;
+  data[1] = q.den;
+
+  return buf;
+}
+
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_format_context_get_option_bin(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  const AVOption *opt = av_opt_find(context->handle, key.c_str(), NULL, 0, flags);
+  if (!opt) {
+    err = js_throw_error(env, NULL, "option not found");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+  if (opt->type != AV_OPT_TYPE_BINARY) {
+    err = js_throw_error(env, NULL, "option is not binary");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  // get offset from base + opt ptr to get size of opt value
+  uint8_t *base = reinterpret_cast<uint8_t *>(context->handle) + opt->offset;
+  uint8_t *data = *reinterpret_cast<uint8_t **>(base);
+  int size = *reinterpret_cast<int *>(base + sizeof(uint8_t *));
+
+  if (size == 0) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t result;
+  err = js_create_arraybuffer(env, data, static_cast<size_t>(size), result);
+  assert(err == 0);
+
+  return result;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_format_context_get_option_chlayout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context,
+  std::string key,
+  int flags
+) {
+  int err;
+
+  AVChannelLayout layout;
+  av_channel_layout_default(&layout, 0);
+
+  err = av_opt_get_chlayout(context->handle, key.c_str(), flags, &layout);
+  if (err < 0) {
+    av_channel_layout_uninit(&layout);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t result;
+  bare_ffmpeg_channel_layout_t *channel_layout;
+  err = js_create_arraybuffer(env, channel_layout, result);
+  assert(err == 0);
+
+  av_channel_layout_copy(&channel_layout->handle, &layout);
+  av_channel_layout_uninit(&layout);
+
+  return result;
+}
+
 static bool
 bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
@@ -1891,7 +2507,7 @@ bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   assert(err == 0);
 
   frame->handle = av_frame_alloc();
-  frame->handle->opaque = (void *) frame;
+  frame->handle->opaque = static_cast<void *>(frame);
 
   return handle;
 }
@@ -3022,7 +3638,7 @@ bare_ffmpeg_audio_fifo_write(
 ) {
   int err;
 
-  auto len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->data, frame->handle->nb_samples);
+  auto len = av_audio_fifo_write(fifo->handle, reinterpret_cast<void **>(frame->handle->data), frame->handle->nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
@@ -3044,7 +3660,7 @@ bare_ffmpeg_audio_fifo_read(
 ) {
   int err;
 
-  auto len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->data, nb_samples);
+  auto len = av_audio_fifo_read(fifo->handle, reinterpret_cast<void **>(frame->handle->data), nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
@@ -3066,7 +3682,7 @@ bare_ffmpeg_audio_fifo_peek(
 ) {
   int err;
 
-  auto len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->data, nb_samples);
+  auto len = av_audio_fifo_peek(fifo->handle, reinterpret_cast<void **>(frame->handle->data), nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
@@ -3223,6 +3839,34 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextFramerate", bare_ffmpeg_codec_context_set_framerate)
   V("getCodecContextExtraData", bare_ffmpeg_codec_context_get_extra_data)
   V("setCodecContextExtraData", bare_ffmpeg_codec_context_set_extra_data)
+
+  // AVCodecContext AVOption getters/setters
+  V("setCodecContextOption", bare_ffmpeg_codec_context_set_option)
+  V("setCodecContextOptionInt", bare_ffmpeg_codec_context_set_option_int)
+  V("setCodecContextOptionDouble", bare_ffmpeg_codec_context_set_option_double)
+  V("setCodecContextOptionQ", bare_ffmpeg_codec_context_set_option_q)
+  V("setCodecContextOptionBin", bare_ffmpeg_codec_context_set_option_bin)
+  V("setCodecContextOptionChlayout", bare_ffmpeg_codec_context_set_option_chlayout)
+  V("getCodecContextOption", bare_ffmpeg_codec_context_get_option)
+  V("getCodecContextOptionInt", bare_ffmpeg_codec_context_get_option_int)
+  V("getCodecContextOptionDouble", bare_ffmpeg_codec_context_get_option_double)
+  V("getCodecContextOptionQ", bare_ffmpeg_codec_context_get_option_q)
+  V("getCodecContextOptionBin", bare_ffmpeg_codec_context_get_option_bin)
+  V("getCodecContextOptionChlayout", bare_ffmpeg_codec_context_get_option_chlayout)
+
+  // AVFormatContext AVOption getters/setters
+  V("setFormatContextOption", bare_ffmpeg_format_context_set_option)
+  V("setFormatContextOptionInt", bare_ffmpeg_format_context_set_option_int)
+  V("setFormatContextOptionDouble", bare_ffmpeg_format_context_set_option_double)
+  V("setFormatContextOptionQ", bare_ffmpeg_format_context_set_option_q)
+  V("setFormatContextOptionBin", bare_ffmpeg_format_context_set_option_bin)
+  V("setFormatContextOptionChlayout", bare_ffmpeg_format_context_set_option_chlayout)
+  V("getFormatContextOption", bare_ffmpeg_format_context_get_option)
+  V("getFormatContextOptionInt", bare_ffmpeg_format_context_get_option_int)
+  V("getFormatContextOptionDouble", bare_ffmpeg_format_context_get_option_double)
+  V("getFormatContextOptionQ", bare_ffmpeg_format_context_get_option_q)
+  V("getFormatContextOptionBin", bare_ffmpeg_format_context_get_option_bin)
+  V("getFormatContextOptionChlayout", bare_ffmpeg_format_context_get_option_chlayout)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
@@ -3647,6 +4291,35 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PKT_DATA_RTCP_SR)
   V(AV_PKT_DATA_NB)
 
+  // AVOption constants
+  V(AV_OPT_SEARCH_CHILDREN)
+  V(AV_OPT_SEARCH_FAKE_OBJ)
+  V(AV_OPT_ALLOW_NULL)
+  V(AV_OPT_ARRAY_REPLACE)
+  V(AV_OPT_MULTI_COMPONENT_RANGE)
+
+  // AVOptionType enum
+  V(AV_OPT_TYPE_FLAGS)
+  V(AV_OPT_TYPE_INT)
+  V(AV_OPT_TYPE_INT64)
+  V(AV_OPT_TYPE_DOUBLE)
+  V(AV_OPT_TYPE_FLOAT)
+  V(AV_OPT_TYPE_STRING)
+  V(AV_OPT_TYPE_RATIONAL)
+  V(AV_OPT_TYPE_BINARY)
+  V(AV_OPT_TYPE_DICT)
+  V(AV_OPT_TYPE_UINT64)
+  V(AV_OPT_TYPE_CONST)
+  V(AV_OPT_TYPE_IMAGE_SIZE)
+  V(AV_OPT_TYPE_PIXEL_FMT)
+  V(AV_OPT_TYPE_SAMPLE_FMT)
+  V(AV_OPT_TYPE_VIDEO_RATE)
+  V(AV_OPT_TYPE_DURATION)
+  V(AV_OPT_TYPE_COLOR)
+  V(AV_OPT_TYPE_BOOL)
+  V(AV_OPT_TYPE_CHLAYOUT)
+  V(AV_OPT_TYPE_UINT)
+  V(AV_OPT_TYPE_FLAG_ARRAY)
 #undef V
 
   return exports;
