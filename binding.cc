@@ -16,6 +16,7 @@ extern "C" {
 #include <libavcodec/codec_par.h>
 #include <libavcodec/packet.h>
 #include <libavdevice/avdevice.h>
+#include <libavfilter/avfilter.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/audio_fifo.h>
@@ -106,6 +107,10 @@ typedef struct {
 typedef struct {
   AVPacketSideData *handle;
 } bare_ffmpeg_side_data_t;
+
+typedef struct {
+  const AVFilter *handle;
+} bare_ffmpeg_filter_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -3148,6 +3153,30 @@ bare_ffmpeg_rational_d2q(
   return result;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_filter_get_by_name(
+  js_env_t *env,
+  js_receiver_t,
+  std::string name
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_filter_t *filter;
+  err = js_create_arraybuffer(env, filter, handle);
+  assert(err == 0);
+
+  filter->handle = avfilter_get_by_name(name.c_str());
+  if (filter->handle == nullptr) {
+    err = js_throw_errorf(env, nullptr, "No Filter found for '%s' name", name.c_str());
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return handle;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -3370,6 +3399,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
 
   V("rationalD2Q", bare_ffmpeg_rational_d2q)
+
+  V("getFilterByName", bare_ffmpeg_filter_get_by_name)
 #undef V
 
 #define V(name) \

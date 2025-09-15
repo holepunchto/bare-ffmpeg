@@ -1200,6 +1200,26 @@ Destroys the `Scaler` and frees all associated resources. Automatically called w
 
 **Returns**: `void`
 
+### `Filter`
+
+The `Filter` API provides access to FFmpeg filters by name.
+
+```js
+const filter = new ffmpeg.Filter(name)
+```
+
+Parameters:
+
+- `name` (`string`): The filter name (e.g., `'scale'`, `'buffer'`, `'overlay'`)
+
+**Returns**: A new `Filter` instance
+
+#### Example
+
+```js
+const filter = new ffmpeg.Filter('buffer')
+```
+
 ### `AudioFIFO`
 
 The `AudioFIFO` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.
