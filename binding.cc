@@ -3169,6 +3169,8 @@ bare_ffmpeg_filter_get_by_name(
   filter->handle = avfilter_get_by_name(name.c_str());
   if (filter->handle == nullptr) {
     err = js_throw_errorf(env, nullptr, "No Filter found for '%s' name", name.c_str());
+    assert(err == 0);
+
     throw js_pending_exception;
   }
 
