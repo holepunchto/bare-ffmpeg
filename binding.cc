@@ -3159,12 +3159,18 @@ bare_ffmpeg_filter_get_by_name(
   js_receiver_t,
   std::string name
 ) {
+  int err;
+
   js_arraybuffer_t handle;
   bare_ffmpeg_filter_t *filter;
-  int err = js_create_arraybuffer(env, filter, handle);
+  err = js_create_arraybuffer(env, filter, handle);
   assert(err == 0);
 
   filter->handle = avfilter_get_by_name(name.c_str());
+  if (filter->handle == nullptr) {
+    err = js_throw_errorf(env, nullptr, "No Filter found for '%s' name", name.c_str());
+    throw js_pending_exception;
+  }
 
   return handle;
 }
