@@ -112,6 +112,10 @@ typedef struct {
   const AVFilter *handle;
 } bare_ffmpeg_filter_t;
 
+typedef struct {
+  AVFilterContext *handle;
+} bare_ffmpeg_filter_context_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static inline bool
@@ -3177,6 +3181,21 @@ bare_ffmpeg_filter_get_by_name(
   return handle;
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_filter_context_init(
+  js_env_t *env,
+  js_receiver_t
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_filter_context_t *filter_ctx;
+  err = js_create_arraybuffer(env, filter_ctx, handle);
+  assert(err == 0);
+
+  return handle;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -3401,6 +3420,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("rationalD2Q", bare_ffmpeg_rational_d2q)
 
   V("getFilterByName", bare_ffmpeg_filter_get_by_name)
+
+  V("initFilterContext", bare_ffmpeg_filter_context_init)
 #undef V
 
 #define V(name) \
