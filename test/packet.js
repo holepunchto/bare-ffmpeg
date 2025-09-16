@@ -239,13 +239,13 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   const destPacket = new ffmpeg.Packet()
   destPacket.copyPropsFrom(sourcePacket)
 
-  t.is(destPacket.streamIndex, 5)
-  t.is(destPacket.dts, 1000)
-  t.is(destPacket.pts, 1000)
-  t.is(destPacket.duration, 40)
-  t.is(destPacket.flags, 1)
-  t.alike(destPacket.timeBase, new ffmpeg.Rational(1, 48000))
-  t.is(destPacket.isKeyframe, true)
+  t.is(destPacket.streamIndex, sourcePacket.streamIndex)
+  t.is(destPacket.dts, sourcePacket.dts)
+  t.is(destPacket.pts, sourcePacket.pts)
+  t.is(destPacket.duration, sourcePacket.duration)
+  t.is(destPacket.flags, sourcePacket.flags)
+  t.alike(destPacket.timeBase, sourcePacket.timeBase)
+  t.is(destPacket.isKeyframe, sourcePacket.isKeyFrame)
 
   const sideData = destPacket.sideData
   t.is(sideData.length, 1)
