@@ -2262,7 +2262,7 @@ bare_ffmpeg_samples_fill(
     throw js_pending_exception;
   }
 
-  if (required < len) {
+  if (len < required) {
     js_throw_errorf(env, NULL, "required at least %zu bytes, got %zu", required, len);
 
     throw js_pending_exception;
