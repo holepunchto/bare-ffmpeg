@@ -14,16 +14,20 @@ test('it should expose a destroy method', (t) => {
   })
 })
 
-test('it should expose a name accessor', (t) => {
+test('it should expose a name getter', (t) => {
   using filterInOut = new ffmpeg.FilterInOut()
 
   t.is(filterInOut.name, undefined)
+})
 
-  filterInOut.name = 'input'
-  t.is(filterInOut.name, 'input')
+test('it should expose a name setter', (t) => {
+  using filterInOut = new ffmpeg.FilterInOut()
 
-  filterInOut.name = 'output'
-  t.is(filterInOut.name, 'output')
+  filterInOut.name = 'in'
+  t.is(filterInOut.name, 'in')
+
+  filterInOut.name = 'out'
+  t.is(filterInOut.name, 'out')
 })
 
 test('it should expose a padIdx getter', (t) => {
@@ -46,7 +50,7 @@ test('it should expose a filterContext getter', (t) => {
 })
 
 // Note: should be un-skipped after after exposing avfilter_graph_create_filter API
-// Before that FilterContext reamains empty
+// Before that FilterContext remains empty
 test.skip('it should expose a filterContext setter', (t) => {
   using filterInOut = new ffmpeg.FilterInOut()
   const filterContext = new ffmpeg.FilterContext()

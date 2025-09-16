@@ -3282,7 +3282,6 @@ bare_ffmpeg_filter_inout_get_filter_context(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
 ) {
-
   if (filter_inout->handle->filter_ctx == nullptr) return std::nullopt;
 
   js_arraybuffer_t handle;
