@@ -305,13 +305,10 @@ test('packet addSideData should add side data by type', (t) => {
 
 test('packet inspect should show side data info', (t) => {
   const packet = new ffmpeg.Packet()
-
   packet.data = Buffer.from('sample data')
-
   packet.streamIndex = 1
   packet.dts = 500
   packet.pts = 500
-
   packet.sideData = [
     ffmpeg.Packet.SideData.fromData(
       Buffer.from('extradata'),
