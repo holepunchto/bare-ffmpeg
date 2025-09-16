@@ -1,4 +1,5 @@
 require('./test/audio-fifo')
+require('./test/codec-config')
 require('./test/codec-context')
 require('./test/codec-parameters')
 require('./test/codec')

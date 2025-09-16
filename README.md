@@ -459,6 +459,52 @@ Parameters:
 
 **Returns**: `boolean` indicating if a packet was received
 
+##### `CodecContext.getSupportedConfig(config)`
+
+Gets the supported values for a codec configuration option.
+
+Parameters:
+
+- `config` (`number`): The configuration type from `ffmpeg.constants.codecConfig`
+
+**Returns**:
+
+- For `PIX_FORMAT`, `SAMPLE_FORMAT`, `COLOR_RANGE`, `COLOR_SPACE`: `Int32Array` of supported values (all valid values are included if the codec has no restrictions)
+- For `SAMPLE_RATE`: `Int32Array` of supported sample rates or `null` if the codec accepts any valid sample rate
+- For `FRAME_RATE`: Array of `Rational` instances or `null` if the codec accepts any valid frame rate
+- For `CHANNEL_LAYOUT`: Array of `ChannelLayout` instances or `null` if the codec accepts any valid channel layout
+
+**Throws**: Error if the config type is not applicable to this codec (e.g., asking for pixel formats from an audio codec)
+
+Examples:
+
+```js
+const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+const pixelFormats = codecCtx.getSupportedConfig(
+  ffmpeg.constants.codecConfig.PIX_FORMAT
+)
+if (pixelFormats) {
+  console.log('Supported pixel formats:', pixelFormats)
+}
+
+const frameRates = codecCtx.getSupportedConfig(
+  ffmpeg.constants.codecConfig.FRAME_RATE
+)
+if (frameRates) {
+  frameRates.forEach((rate) => {
+    console.log(`${rate.numerator}/${rate.denominator} fps`)
+  })
+}
+
+const layouts = codecCtx.getSupportedConfig(
+  ffmpeg.constants.codecConfig.CHANNEL_LAYOUT
+)
+if (layouts) {
+  console.log('Supported channel layouts:', layouts)
+}
+```
+
 ##### `CodecContext.destroy()`
 
 Destroys the `CodecContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
