@@ -2635,8 +2635,6 @@ bare_ffmpeg_packet_get_side_data_by_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
   int32_t type
 ) {
-  int err;
-
   size_t size;
   uint8_t* data = av_packet_get_side_data(
     packet->handle,
@@ -2650,7 +2648,7 @@ bare_ffmpeg_packet_get_side_data_by_type(
 
   js_arraybuffer_t handle;
   uint8_t *buf;
-  err = js_create_arraybuffer(env, size, buf, handle);
+  int err = js_create_arraybuffer(env, size, buf, handle);
   assert(err == 0);
 
   memcpy(buf, data, size);
