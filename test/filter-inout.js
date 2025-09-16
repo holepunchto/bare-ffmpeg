@@ -69,8 +69,10 @@ test('it should expose a next getter', (t) => {
 test('it should expose a next setter', (t) => {
   const filterInOut = new ffmpeg.FilterInOut()
   const next = new ffmpeg.FilterInOut()
+  next.name = 'in'
 
   filterInOut.next = next
 
   t.ok(filterInOut.next instanceof ffmpeg.FilterInOut)
+  t.is(filterInOut.next.name, 'in')
 })
