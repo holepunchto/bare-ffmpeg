@@ -2205,14 +2205,14 @@ bare_ffmpeg_image_get_line_size(
   );
 }
 
-static js_arraybuffer_t
-bare_ffmpeg_samples_init(
+static uint32_t
+bare_ffmpeg_samples_sizeof(
   js_env_t *env,
   js_receiver_t,
   int32_t sample_format,
   int32_t nb_channels,
   int32_t nb_samples,
-  int32_t align
+  bool no_alignment
 ) {
   int err;
 
@@ -2221,7 +2221,7 @@ bare_ffmpeg_samples_init(
     nb_channels,
     nb_samples,
     static_cast<AVSampleFormat>(sample_format),
-    align
+    no_alignment
   );
 
   if (len < 0) {
@@ -2231,45 +2231,61 @@ bare_ffmpeg_samples_init(
     throw js_pending_exception;
   }
 
-  js_arraybuffer_t handle;
-  err = js_create_arraybuffer(env, static_cast<size_t>(len), handle);
-  assert(err == 0);
-
-  return handle;
+  return static_cast<uint32_t>(len);
 }
 
 static int
 bare_ffmpeg_samples_fill(
   js_env_t *env,
   js_receiver_t,
-  int32_t sample_format,
-  int32_t nb_channels,
-  int32_t nb_samples,
-  int32_t align,
-  js_arraybuffer_span_t data,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_t target,
   uint64_t offset,
-  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+  uint64_t len,
+  bool no_alignment
 ) {
   int err;
+  assert(target.size() >= offset + len);
 
-  auto len = av_samples_fill_arrays(
-    frame->handle->data,
-    frame->handle->linesize,
-    &data[static_cast<size_t>(offset)],
-    nb_channels,
-    nb_samples,
-    static_cast<AVSampleFormat>(sample_format),
-    align
+  auto required = av_samples_get_buffer_size(
+    NULL,
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    static_cast<AVSampleFormat>(frame->handle->format),
+    no_alignment
   );
 
-  if (len < 0) {
+  if (required < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
 
     throw js_pending_exception;
   }
 
-  return len;
+  if (required < len) {
+    js_throw_errorf(env, NULL, "required at least %zu bytes, got %zu", required, len);
+
+    throw js_pending_exception;
+  }
+
+  auto res = av_samples_fill_arrays(
+    frame->handle->data,
+    frame->handle->linesize,
+    &target[offset],
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    static_cast<AVSampleFormat>(frame->handle->format),
+    no_alignment
+  );
+
+  if (res < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return res;
 }
 
 static js_arraybuffer_t
@@ -3336,7 +3352,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("readImage", bare_ffmpeg_image_read)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
-  V("initSamples", bare_ffmpeg_samples_init)
+  V("sizeofSamples", bare_ffmpeg_samples_sizeof)
   V("fillSamples", bare_ffmpeg_samples_fill)
 
   V("initPacket", bare_ffmpeg_packet_init)
