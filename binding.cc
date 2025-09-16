@@ -116,6 +116,10 @@ typedef struct {
   AVFilterContext *handle;
 } bare_ffmpeg_filter_context_t;
 
+typedef struct {
+  AVFilterGraph *handle;
+} bare_ffmpeg_filter_graph_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static inline bool
@@ -3186,14 +3190,37 @@ bare_ffmpeg_filter_context_init(
   js_env_t *env,
   js_receiver_t
 ) {
-  int err;
-
   js_arraybuffer_t handle;
   bare_ffmpeg_filter_context_t *filter_ctx;
-  err = js_create_arraybuffer(env, filter_ctx, handle);
+  int err = js_create_arraybuffer(env, filter_ctx, handle);
   assert(err == 0);
 
   return handle;
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_filter_graph_init(
+  js_env_t *env,
+  js_receiver_t
+) {
+  js_arraybuffer_t handle;
+  bare_ffmpeg_filter_graph_t *filter_graph;
+  int err = js_create_arraybuffer(env, filter_graph, handle);
+  assert(err == 0);
+
+  filter_graph->handle = avfilter_graph_alloc();
+  assert(filter_graph->handle != nullptr);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_filter_graph_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_graph_t, 1> filter_graph
+) {
+  avfilter_graph_free(&filter_graph->handle);
 }
 
 static js_value_t *
@@ -3422,6 +3449,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFilterByName", bare_ffmpeg_filter_get_by_name)
 
   V("initFilterContext", bare_ffmpeg_filter_context_init)
+
+  V("initFilterGraph", bare_ffmpeg_filter_graph_init)
+  V("destroyFilterGraph", bare_ffmpeg_filter_graph_destroy)
 #undef V
 
 #define V(name) \
