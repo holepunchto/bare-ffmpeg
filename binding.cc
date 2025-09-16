@@ -837,12 +837,10 @@ bare_ffmpeg_codec_get_supported_config(
   int err;
 
   const AVCodecContext *ctx = context->handle;
-  const AVCodec *c = codec->handle;
-
   int count = 0;
   const void *list = nullptr;
 
-  err = avcodec_get_supported_config(ctx, c, static_cast<AVCodecConfig>(cfg), 0, &list, &count);
+  err = avcodec_get_supported_config(ctx, codec->handle, static_cast<AVCodecConfig>(cfg), 0, &list, &count);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
