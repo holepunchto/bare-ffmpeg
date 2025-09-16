@@ -493,7 +493,7 @@ const frameRates = codecCtx.getSupportedConfig(
 )
 if (frameRates) {
   frameRates.forEach((rate) => {
-    console.log(`${rate.numerator}/${rate.denominator} fps`)
+    console.log(`${rate.toNumber()} fps`)
   })
 }
 
