@@ -75,4 +75,10 @@ test('it should expose a next setter', (t) => {
 
   t.ok(filterInOut.next instanceof ffmpeg.FilterInOut)
   t.is(filterInOut.next.name, 'in')
+
+  t.teardown(() => {
+    // Next is it cleaned via filterInOut as member of the
+    // linked list.
+    filterInOut.destroy()
+  })
 })
