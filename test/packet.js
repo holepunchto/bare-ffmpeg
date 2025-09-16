@@ -229,7 +229,6 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   sourcePacket.flags = 1
   sourcePacket.timeBase = new ffmpeg.Rational(1, 48000)
   sourcePacket.isKeyframe = true
-
   sourcePacket.sideData = [
     ffmpeg.Packet.SideData.fromData(
       Buffer.from('extra'),
