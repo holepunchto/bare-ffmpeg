@@ -211,15 +211,6 @@ test('sideData object should expose a data method', (t) => {
   t.alike(sideDataObject.data, buf)
 })
 
-function fillPacket(packet) {
-  const image = require('./fixtures/image/sample.jpeg', {
-    with: { type: 'binary' }
-  })
-  const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.InputFormatContext(io)
-  format.readFrame(packet)
-}
-
 test('packet copyPropsFrom should copy all properties', (t) => {
   const sourcePacket = new ffmpeg.Packet()
   sourcePacket.streamIndex = 5
@@ -245,7 +236,7 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   t.is(destPacket.duration, sourcePacket.duration)
   t.is(destPacket.flags, sourcePacket.flags)
   t.alike(destPacket.timeBase, sourcePacket.timeBase)
-  t.is(destPacket.isKeyframe, sourcePacket.isKeyFrame)
+  t.is(destPacket.isKeyframe, sourcePacket.isKeyframe)
 
   const sideData = destPacket.sideData
   t.is(sideData.length, 1)
@@ -277,6 +268,11 @@ test('packet getSideDataByType should return specific side data', (t) => {
   )
   t.ok(h263Data instanceof Buffer)
   t.alike(h263Data, Buffer.from('h263info'))
+})
+
+test('packet with missing side data returns null', (t) => {
+  const packet = new ffmpeg.Packet()
+  packet.sideData = []
 
   const missing = packet.getSideDataByType(
     ffmpeg.constants.packetSideDataType.PARAM_CHANGE
@@ -303,7 +299,35 @@ test('packet addSideData should add side data by type', (t) => {
   t.is(sideData.length, 2)
 })
 
-test('packet inspect should show side data info', (t) => {
+test('packet can retrieve data added with addSideData', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA,
+    Buffer.from('test data')
+  )
+
+  const retrieved = packet.getSideDataByType(
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
+
+  t.ok(retrieved instanceof Buffer)
+})
+
+test('packet addSideData increments length', (t) => {
+  const packet = new ffmpeg.Packet()
+
+  t.is(packet.sideData.length, 0)
+
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA,
+    Buffer.from('test data')
+  )
+
+  t.is(packet.sideData.length, 1)
+})
+
+test('packet inspect should return side data info', (t) => {
   const packet = new ffmpeg.Packet()
   packet.data = Buffer.from('sample data')
   packet.streamIndex = 1
@@ -325,15 +349,16 @@ test('packet inspect should show side data info', (t) => {
   t.is(inspected.streamIndex, 1)
   t.is(inspected.dts, 500)
   t.is(inspected.pts, 500)
-  t.is(inspected.dataSize, 11)
+  t.is(inspected.data.length, 11)
 
   t.ok(Array.isArray(inspected.sideData))
   t.is(inspected.sideData.length, 2)
+
   t.is(
     inspected.sideData[0].type,
     ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
   )
-  t.is(inspected.sideData[0].size, 9)
+  t.is(inspected.sideData[0].data.length, 9)
   t.is(
     inspected.sideData[1].type,
     ffmpeg.constants.packetSideDataType.PARAM_CHANGE
@@ -346,7 +371,6 @@ test('packet inspect should show side data info', (t) => {
 test('packet inspect without codec changes', (t) => {
   const packet = new ffmpeg.Packet()
   packet.data = Buffer.from('data')
-
   packet.sideData = [
     ffmpeg.Packet.SideData.fromData(
       Buffer.from('other'),
@@ -356,8 +380,8 @@ test('packet inspect without codec changes', (t) => {
 
   const inspected = packet[Symbol.for('bare.inspect')]()
 
-  t.is(inspected.hasNewExtradata, undefined)
-  t.is(inspected.hasParamChange, undefined)
+  t.is(inspected.hasNewExtradata, false)
+  t.is(inspected.hasParamChange, false)
 })
 
 test('SideData inspect should show size not full data', (t) => {
@@ -372,3 +396,12 @@ test('SideData inspect should show size not full data', (t) => {
   t.is(inspected.type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
   t.is(inspected.data.length, 1024)
 })
+
+function fillPacket(packet) {
+  const image = require('./fixtures/image/sample.jpeg', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(image)
+  const format = new ffmpeg.InputFormatContext(io)
+  format.readFrame(packet)
+}
