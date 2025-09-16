@@ -66,8 +66,7 @@ test('it should expose a next setter', (t) => {
   const filterInOut = new ffmpeg.FilterInOut()
   const next = new ffmpeg.FilterInOut()
 
-  filterInOut.next = next;
+  filterInOut.next = next
 
   t.ok(filterInOut.next instanceof ffmpeg.FilterInOut)
 })
-
