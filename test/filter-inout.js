@@ -49,15 +49,13 @@ test('it should expose a filterContext getter', (t) => {
   t.is(filterInOut.filterContext, null)
 })
 
-// Note: should be un-skipped after after exposing avfilter_graph_create_filter API
-// Before that FilterContext remains empty
-test.skip('it should expose a filterContext setter', (t) => {
+test('it should expose a filterContext setter', (t) => {
   using filterInOut = new ffmpeg.FilterInOut()
   const filterContext = new ffmpeg.FilterContext()
 
   filterInOut.filterContext = filterContext
 
-  t.ok(filterInOut.filterContext instanceof ffmpeg.FilterContext)
+  t.alike(filterInOut.filterContext, filterContext)
 })
 
 test('it should expose a next getter', (t) => {
@@ -73,7 +71,7 @@ test('it should expose a next setter', (t) => {
 
   filterInOut.next = next
 
-  t.ok(filterInOut.next instanceof ffmpeg.FilterInOut)
+  t.alike(filterInOut.next, next)
   t.is(filterInOut.next.name, 'in')
 
   t.teardown(() => {

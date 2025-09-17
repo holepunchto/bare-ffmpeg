@@ -3276,24 +3276,6 @@ bare_ffmpeg_filter_inout_set_name(
   filter_inout->handle->name = av_strdup(name.c_str());
 }
 
-static std::optional<js_arraybuffer_t>
-bare_ffmpeg_filter_inout_get_filter_context(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
-) {
-  if (filter_inout->handle->filter_ctx == nullptr) return std::nullopt;
-
-  js_arraybuffer_t handle;
-  bare_ffmpeg_filter_context_t *context;
-  int err = js_create_arraybuffer(env, context, handle);
-  assert(err == 0);
-
-  context->handle = filter_inout->handle->filter_ctx;
-
-  return handle;
-}
-
 static void
 bare_ffmpeg_filter_inout_set_filter_context(
   js_env_t *env,
@@ -3321,24 +3303,6 @@ bare_ffmpeg_filter_inout_set_pad_idx(
   int pad_idx
 ) {
   filter_inout->handle->pad_idx = pad_idx;
-}
-
-static std::optional<js_arraybuffer_t>
-bare_ffmpeg_filter_inout_get_next(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
-) {
-  if (filter_inout->handle->next == nullptr) return std::nullopt;
-
-  js_arraybuffer_t handle;
-  bare_ffmpeg_filter_inout_t *next;
-  int err = js_create_arraybuffer(env, next, handle);
-  assert(err == 0);
-
-  next->handle = filter_inout->handle->next;
-
-  return handle;
 }
 
 static void
@@ -3585,11 +3549,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyFilterInOut", bare_ffmpeg_filter_inout_destroy)
   V("getFilterInOutName", bare_ffmpeg_filter_inout_get_name)
   V("setFilterInOutName", bare_ffmpeg_filter_inout_set_name)
-  V("getFilterInOutFilterContext", bare_ffmpeg_filter_inout_get_filter_context)
   V("setFilterInOutFilterContext", bare_ffmpeg_filter_inout_set_filter_context)
   V("getFilterInOutPadIdx", bare_ffmpeg_filter_inout_get_pad_idx)
   V("setFilterInOutPadIdx", bare_ffmpeg_filter_inout_set_pad_idx)
-  V("getFilterInOutNext", bare_ffmpeg_filter_inout_get_next)
   V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
 #undef V
 
