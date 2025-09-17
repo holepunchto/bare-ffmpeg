@@ -1234,6 +1234,56 @@ Parameters:
 const filter = new ffmpeg.Filter('buffer')
 ```
 
+### `FilterGraph`
+
+The `FilterGraph` API provides functionality to create and manage complex filter chains for audio and video processing.
+
+```js
+const graph = new ffmpeg.FilterGraph()
+```
+
+**Returns**: A new `FilterGraph` instance
+
+#### Methods
+
+##### `FilterGraph.createFilter(context, filter, name, args)`
+
+Creates a filter within the filter graph with the specified parameters.
+
+Parameters:
+
+- `context` (`FilterContext`): The filter context to associate with this filter
+- `filter` (`Filter`): The filter to create (e.g., `new ffmpeg.Filter('buffer')`)
+- `name` (`string`): A unique name for this filter instance
+- `args` (`object`): Filter-specific arguments
+  - `width` (`number`): Video width in pixels
+  - `height` (`number`): Video height in pixels
+  - `pixelFormat` (`number`): Pixel format constant
+  - `timeBase` (`Rational`): Time base for the filter
+  - `aspectRatio` (`Rational`): Pixel aspect ratio
+
+**Returns**: `boolean` indicating if the filter was created successfully
+
+```js
+using graph = new ffmpeg.FilterGraph()
+const context = new ffmpeg.FilterContext()
+const filter = new ffmpeg.Filter('buffer')
+
+const success = graph.createFilter(context, filter, 'in', {
+  width: 1920,
+  height: 1080,
+  pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
+  timeBase: new ffmpeg.Rational(1, 30),
+  aspectRatio: new ffmpeg.Rational(1, 1)
+})
+```
+
+##### `FilterGraph.destroy()`
+
+Destroys the `FilterGraph` and frees all associated resources including any created filters. Automatically called when the object is managed by a `using` declaration.
+
+**Returns**: `void`
+
 ### `AudioFIFO`
 
 The `AudioFIFO` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.

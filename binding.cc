@@ -3246,6 +3246,28 @@ bare_ffmpeg_filter_graph_destroy(
   avfilter_graph_free(&filter_graph->handle);
 }
 
+static bool
+bare_ffmpeg_filter_graph_create_filter(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_graph_t, 1> graph,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> filter_context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_t, 1> filter,
+  std::string name,
+  std::string args
+) {
+  int err = avfilter_graph_create_filter(
+    &filter_context->handle,
+    filter->handle,
+    name.c_str(),
+    args.c_str(),
+    nullptr,
+    graph->handle
+  );
+
+  return err >= 0;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_filter_inout_init(
   js_env_t *env,
@@ -3564,6 +3586,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initFilterGraph", bare_ffmpeg_filter_graph_init)
   V("destroyFilterGraph", bare_ffmpeg_filter_graph_destroy)
+  V("createFilterGraphFilter", bare_ffmpeg_filter_graph_create_filter)
 
   V("initFilterInout", bare_ffmpeg_filter_inout_init)
   V("destroyFilterInOut", bare_ffmpeg_filter_inout_destroy)
