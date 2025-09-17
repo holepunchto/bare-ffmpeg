@@ -1,3 +1,4 @@
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -119,6 +120,10 @@ typedef struct {
 typedef struct {
   AVFilterGraph *handle;
 } bare_ffmpeg_filter_graph_t;
+
+typedef struct {
+  AVFilterInOut *handle;
+} bare_ffmpeg_filter_inout_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -3241,6 +3246,93 @@ bare_ffmpeg_filter_graph_destroy(
   avfilter_graph_free(&filter_graph->handle);
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_filter_inout_init(
+  js_env_t *env,
+  js_receiver_t
+) {
+  js_arraybuffer_t handle;
+  bare_ffmpeg_filter_inout_t *filter_inout;
+  int err = js_create_arraybuffer(env, filter_inout, handle);
+  assert(err == 0);
+
+  filter_inout->handle = avfilter_inout_alloc();
+  assert(filter_inout->handle);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_filter_inout_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
+) {
+  avfilter_inout_free(&filter_inout->handle);
+}
+
+static std::optional<std::string>
+bare_ffmpeg_filter_inout_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
+) {
+  if (!filter_inout->handle->name) return std::nullopt;
+  return filter_inout->handle->name;
+}
+
+static void
+bare_ffmpeg_filter_inout_set_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout,
+  std::string name
+) {
+  if (filter_inout->handle->name) {
+    av_free(filter_inout->handle->name);
+  }
+  filter_inout->handle->name = av_strdup(name.c_str());
+}
+
+static void
+bare_ffmpeg_filter_inout_set_filter_context(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> filter_ctx
+) {
+  filter_inout->handle->filter_ctx = filter_ctx->handle;
+}
+
+static int
+bare_ffmpeg_filter_inout_get_pad_idx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout
+) {
+  return filter_inout->handle->pad_idx;
+}
+
+static void
+bare_ffmpeg_filter_inout_set_pad_idx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout,
+  int pad_idx
+) {
+  filter_inout->handle->pad_idx = pad_idx;
+}
+
+static void
+bare_ffmpeg_filter_inout_set_next(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> next
+) {
+  filter_inout->handle->next = next->handle;
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -3472,6 +3564,15 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initFilterGraph", bare_ffmpeg_filter_graph_init)
   V("destroyFilterGraph", bare_ffmpeg_filter_graph_destroy)
+
+  V("initFilterInout", bare_ffmpeg_filter_inout_init)
+  V("destroyFilterInOut", bare_ffmpeg_filter_inout_destroy)
+  V("getFilterInOutName", bare_ffmpeg_filter_inout_get_name)
+  V("setFilterInOutName", bare_ffmpeg_filter_inout_set_name)
+  V("setFilterInOutFilterContext", bare_ffmpeg_filter_inout_set_filter_context)
+  V("getFilterInOutPadIdx", bare_ffmpeg_filter_inout_get_pad_idx)
+  V("setFilterInOutPadIdx", bare_ffmpeg_filter_inout_set_pad_idx)
+  V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
 #undef V
 
 #define V(name) \
