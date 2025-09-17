@@ -826,7 +826,7 @@ bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, uint32_t 
   return av_get_sample_fmt_name(static_cast<enum AVSampleFormat>(id));
 }
 
-static js_arraybuffer_t
+static std::vector<int32_t>
 bare_ffmpeg_codec_get_supported_config(
   js_env_t *env,
   js_receiver_t,
@@ -848,20 +848,16 @@ bare_ffmpeg_codec_get_supported_config(
     throw js_pending_exception;
   }
 
-  if (count > 0 && list) {
-    js_arraybuffer_t result;
-    int32_t *data;
-    err = js_create_arraybuffer(env, static_cast<size_t>(count), data, result);
-    assert(err == 0);
+  std::vector<int32_t> values;
 
+  if (count > 0 && list) {
     const int32_t *int_list = static_cast<const int32_t *>(list);
     for (int i = 0; i < count; i++) {
-      data[i] = int_list[i];
+      values.push_back(int_list[i]);
     }
-    return result;
+    return values;
   }
 
-  std::vector<int32_t> values;
   switch (static_cast<AVCodecConfig>(cfg)) {
   case AV_CODEC_CONFIG_PIX_FORMAT:
     for (int i = 0; i < AV_PIX_FMT_NB; i++) {
@@ -892,16 +888,7 @@ bare_ffmpeg_codec_get_supported_config(
     break;
   }
 
-  js_arraybuffer_t result;
-  int32_t *data;
-  err = js_create_arraybuffer(env, values.size(), data, result);
-  assert(err == 0);
-
-  for (size_t i = 0; i < values.size(); i++) {
-    data[i] = values[i];
-  }
-
-  return result;
+  return values;
 }
 
 static js_arraybuffer_t
