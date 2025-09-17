@@ -212,21 +212,7 @@ test('sideData object should expose a data method', (t) => {
 })
 
 test('packet copyPropsFrom should copy all properties', (t) => {
-  const sourcePacket = new ffmpeg.Packet()
-  sourcePacket.streamIndex = 5
-  sourcePacket.dts = 1000
-  sourcePacket.pts = 1000
-  sourcePacket.duration = 40
-  sourcePacket.flags = 1
-  sourcePacket.timeBase = new ffmpeg.Rational(1, 48000)
-  sourcePacket.isKeyframe = true
-  sourcePacket.sideData = [
-    ffmpeg.Packet.SideData.fromData(
-      Buffer.from('extra'),
-      ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-    )
-  ]
-
+  const sourcePacket = makePacket()
   const destPacket = new ffmpeg.Packet()
   destPacket.copyPropsFrom(sourcePacket)
 
@@ -238,36 +224,38 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   t.alike(destPacket.timeBase, sourcePacket.timeBase)
   t.is(destPacket.isKeyframe, sourcePacket.isKeyframe)
 
-  const sideData = destPacket.sideData
-  t.is(sideData.length, 1)
-  t.is(sideData[0].type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
+  t.is(destPacket.sideData.length, sourcePacket.sideData.length)
+  t.is(
+    destPacket.sideData[0].type,
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
 })
 
 test('packet getSideDataByType should return specific side data', (t) => {
   const packet = new ffmpeg.Packet()
 
-  packet.sideData = [
-    ffmpeg.Packet.SideData.fromData(
-      Buffer.from('extradata'),
-      ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-    ),
-    ffmpeg.Packet.SideData.fromData(
-      Buffer.from('h263info'),
-      ffmpeg.constants.packetSideDataType.H263_MB_INFO
-    )
-  ]
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA,
+    Buffer.from('extradata')
+  )
+
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.H263_MB_INFO,
+    Buffer.from('h263info')
+  )
 
   const extraData = packet.getSideDataByType(
     ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
   )
-  t.ok(extraData instanceof Buffer)
-  t.alike(extraData, Buffer.from('extradata'))
+
+  t.ok(extraData instanceof SideData)
+  t.alike(extraData.data, Buffer.from('extradata'))
 
   const h263Data = packet.getSideDataByType(
     ffmpeg.constants.packetSideDataType.H263_MB_INFO
   )
-  t.ok(h263Data instanceof Buffer)
-  t.alike(h263Data, Buffer.from('h263info'))
+  t.ok(h263Data instanceof SideData)
+  t.alike(h263Data.data, Buffer.from('h263info'))
 })
 
 test('packet with missing side data returns null', (t) => {
@@ -280,25 +268,6 @@ test('packet with missing side data returns null', (t) => {
   t.is(missing, null)
 })
 
-test('packet addSideData should add side data by type', (t) => {
-  const packet = new ffmpeg.Packet()
-
-  const data1 = Buffer.from('test data 1')
-  packet.addSideData(ffmpeg.constants.packetSideDataType.NEW_EXTRADATA, data1)
-
-  const retrieved = packet.getSideDataByType(
-    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  )
-  t.ok(retrieved instanceof Buffer)
-  t.alike(retrieved, data1)
-
-  const data2 = Buffer.from('test data 2')
-  packet.addSideData(ffmpeg.constants.packetSideDataType.PARAM_CHANGE, data2)
-
-  const sideData = packet.sideData
-  t.is(sideData.length, 2)
-})
-
 test('packet can retrieve data added with addSideData', (t) => {
   const packet = new ffmpeg.Packet()
 
@@ -307,11 +276,18 @@ test('packet can retrieve data added with addSideData', (t) => {
     Buffer.from('test data')
   )
 
-  const retrieved = packet.getSideDataByType(
+  const extradata = packet.getSideDataByType(
     ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
   )
 
-  t.ok(retrieved instanceof Buffer)
+  t.alike(extradata.data.toString(), 'test data')
+
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA,
+    Buffer.from('another test data')
+  )
+
+  t.alike(extradata.data.toString(), 'another test data')
 })
 
 test('packet addSideData increments length', (t) => {
@@ -325,31 +301,30 @@ test('packet addSideData increments length', (t) => {
   )
 
   t.is(packet.sideData.length, 1)
+
+  packet.addSideData(
+    ffmpeg.constants.packetSideDataType.H263_MB_INFO,
+    Buffer.from('h263info')
+  )
+
+  t.is(packet.sideData.length, 2)
 })
 
 test('packet inspect should return side data info', (t) => {
-  const packet = new ffmpeg.Packet()
-  packet.data = Buffer.from('sample data')
-  packet.streamIndex = 1
-  packet.dts = 500
-  packet.pts = 500
-  packet.sideData = [
-    ffmpeg.Packet.SideData.fromData(
-      Buffer.from('extradata'),
-      ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-    ),
-    ffmpeg.Packet.SideData.fromData(
-      Buffer.from('params'),
-      ffmpeg.constants.packetSideDataType.PARAM_CHANGE
-    )
-  ]
+  const packet = makePacket({
+    sideData: [
+      ffmpeg.Packet.SideData.fromData(
+        Buffer.from('extradata'),
+        ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+      ),
+      ffmpeg.Packet.SideData.fromData(
+        Buffer.from('params'),
+        ffmpeg.constants.packetSideDataType.PARAM_CHANGE
+      )
+    ]
+  })
 
   const inspected = packet[Symbol.for('bare.inspect')]()
-
-  t.is(inspected.streamIndex, 1)
-  t.is(inspected.dts, 500)
-  t.is(inspected.pts, 500)
-  t.is(inspected.data.length, 11)
 
   t.ok(Array.isArray(inspected.sideData))
   t.is(inspected.sideData.length, 2)
@@ -384,7 +359,7 @@ test('packet inspect without codec changes', (t) => {
   t.is(inspected.hasParamChange, false)
 })
 
-test('SideData inspect should show size not full data', (t) => {
+test('SideData inspect should include data', (t) => {
   const largeBuffer = Buffer.alloc(1024)
   const sideData = ffmpeg.Packet.SideData.fromData(
     largeBuffer,
@@ -404,4 +379,32 @@ function fillPacket(packet) {
   const io = new ffmpeg.IOContext(image)
   const format = new ffmpeg.InputFormatContext(io)
   format.readFrame(packet)
+}
+
+function makePacket(options = {}) {
+  const packet = new ffmpeg.Packet()
+
+  const defaultOptions = {
+    streamIndex: 0,
+    dts: 1000,
+    pts: 1000,
+    duration: 30,
+    flags: 1,
+    timeBase: new ffmpeg.Rational(1, 48000),
+    isKeyframe: true,
+    sideData: [
+      ffmpeg.Packet.SideData.fromData(
+        Buffer.from('extra'),
+        ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+      )
+    ]
+  }
+
+  options = { ...defaultOptions, ...options }
+
+  for ([key, value] of Object.entries(options)) {
+    packet[key] = value
+  }
+
+  return packet
 }

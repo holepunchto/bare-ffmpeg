@@ -2648,28 +2648,44 @@ bare_ffmpeg_packet_get_side_data_by_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
   int32_t type
 ) {
+  int err;
+
   size_t size;
-  uint8_t* data = av_packet_get_side_data(
+  uint8_t *data = av_packet_get_side_data(
     packet->handle,
     static_cast<AVPacketSideDataType>(type),
     &size
   );
 
-  if (data == NULL) {
+  if (data == NULL || size == 0) {
+    return std::nullopt;
+  }
+
+  // find the side data that was just added
+  // because apparently there's not another way to get the pointer
+  AVPacketSideData *side_data = NULL;
+  for (int i = 0; i < packet->handle->side_data_elems; i++) {
+    if (packet->handle->side_data[i].type == static_cast<AVPacketSideDataType>(type)) {
+      side_data = &packet->handle->side_data[i];
+      break;
+    }
+  }
+
+  if (side_data == NULL) {
     return std::nullopt;
   }
 
   js_arraybuffer_t handle;
-  uint8_t *buf;
-  int err = js_create_arraybuffer(env, size, buf, handle);
+  bare_ffmpeg_side_data_t *sd;
+  err = js_create_arraybuffer(env, sd, handle);
   assert(err == 0);
 
-  memcpy(buf, data, size);
+  sd->handle = side_data;
 
   return handle;
 }
 
-static void
+static js_arraybuffer_t
 bare_ffmpeg_packet_add_side_data(
   js_env_t *env,
   js_receiver_t,
@@ -2681,7 +2697,7 @@ bare_ffmpeg_packet_add_side_data(
 ) {
   int err;
 
-  uint8_t *buf = reinterpret_cast<uint8_t*>(av_malloc(len));
+  uint8_t *buf = reinterpret_cast<uint8_t *>(av_malloc(len));
   memcpy(buf, &data[offset], len);
 
   err = av_packet_add_side_data(
@@ -2698,6 +2714,25 @@ bare_ffmpeg_packet_add_side_data(
 
     throw js_pending_exception;
   }
+
+  // find the side data that was just added
+  // because apparently there's not another way to get the pointer
+  AVPacketSideData *side_data = NULL;
+  for (int i = 0; i < packet->handle->side_data_elems; i++) {
+    if (packet->handle->side_data[i].type == static_cast<AVPacketSideDataType>(type)) {
+      side_data = &packet->handle->side_data[i];
+      break;
+    }
+  }
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_side_data_t *sd;
+  err = js_create_arraybuffer(env, sd, handle);
+  assert(err == 0);
+
+  sd->handle = side_data;
+
+  return handle;
 }
 
 static int
