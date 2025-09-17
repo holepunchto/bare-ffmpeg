@@ -1,3 +1,5 @@
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -3246,6 +3248,49 @@ bare_ffmpeg_filter_graph_destroy(
   avfilter_graph_free(&filter_graph->handle);
 }
 
+static bool
+bare_ffmpeg_filter_graph_create_filter(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_graph_t, 1> graph,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> filter_context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_t, 1> filter,
+  std::string name,
+  int width,
+  int height,
+  int pixel_format,
+  int timebase_num,
+  int timebase_den,
+  int aspect_ratio_num,
+  int aspect_ratio_den
+) {
+  char args[512];
+  int printed_size = snprintf(
+    args,
+    sizeof(args),
+    "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+    width,
+    height,
+    pixel_format,
+    timebase_num,
+    timebase_den,
+    aspect_ratio_num,
+    aspect_ratio_den
+  );
+  assert(printed_size < static_cast<int>(sizeof(args)));
+
+  int err = avfilter_graph_create_filter(
+    &filter_context->handle,
+    filter->handle,
+    name.c_str(),
+    args,
+    nullptr,
+    graph->handle
+  );
+
+  return err >= 0;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_filter_inout_init(
   js_env_t *env,
@@ -3564,6 +3609,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initFilterGraph", bare_ffmpeg_filter_graph_init)
   V("destroyFilterGraph", bare_ffmpeg_filter_graph_destroy)
+  V("createFilterGraphFilter", bare_ffmpeg_filter_graph_create_filter)
 
   V("initFilterInout", bare_ffmpeg_filter_inout_init)
   V("destroyFilterInOut", bare_ffmpeg_filter_inout_destroy)
