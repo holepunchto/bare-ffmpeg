@@ -155,15 +155,13 @@ test('CodecContext class should expose a extraData setter', (t) => {
 })
 
 test('CodecContext has read-only "frame-size"', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
   t.is(codecCtx.frameSize, 0)
-  codecCtx.destroy()
 })
 
 test('CodecContext has read-only "frame-number"', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
   t.is(codecCtx.frameNum, 0)
-  codecCtx.destroy()
 })
 
 function setDefaultOptions(ctx) {
