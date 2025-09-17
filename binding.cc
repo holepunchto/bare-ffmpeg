@@ -3254,34 +3254,13 @@ bare_ffmpeg_filter_graph_create_filter(
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> filter_context,
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_t, 1> filter,
   std::string name,
-  int width,
-  int height,
-  int pixel_format,
-  int timebase_num,
-  int timebase_den,
-  int aspect_ratio_num,
-  int aspect_ratio_den
+  std::string args
 ) {
-  char args[512];
-  int printed_size = snprintf(
-    args,
-    sizeof(args),
-    "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-    width,
-    height,
-    pixel_format,
-    timebase_num,
-    timebase_den,
-    aspect_ratio_num,
-    aspect_ratio_den
-  );
-  assert(printed_size < static_cast<int>(sizeof(args)));
-
   int err = avfilter_graph_create_filter(
     &filter_context->handle,
     filter->handle,
     name.c_str(),
-    args,
+    args.c_str(),
     nullptr,
     graph->handle
   );
