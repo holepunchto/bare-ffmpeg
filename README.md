@@ -407,6 +407,20 @@ Gets or sets the frame height for video codecs.
 
 **Returns**: `number`
 
+##### `CodecContext.frameSize`
+
+Gets the number of samples per channel in an audio frame.
+
+**Returns**: `number`
+
+##### `CodecContext.frameNum`
+
+When encoding this gets the total number of frames passed to the encoder so far.
+
+When decoding this gets the total number of frames returned from the decoder so far.
+
+**Returns**: `number`
+
 #### Methods
 
 ##### `CodecContext.open([options])`

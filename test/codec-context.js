@@ -154,6 +154,16 @@ test('CodecContext class should expose a extraData setter', (t) => {
   t.ok(codecCtx.extraData[3] === 't'.charCodeAt(0))
 })
 
+test('CodecContext has read-only "frame-size"', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
+  t.is(codecCtx.frameSize, 0)
+})
+
+test('CodecContext has read-only "frame-number"', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.encoder)
+  t.is(codecCtx.frameNum, 0)
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P

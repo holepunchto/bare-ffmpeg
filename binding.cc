@@ -1200,6 +1200,24 @@ bare_ffmpeg_codec_context_set_gop_size(
   context->handle->gop_size = gop_size;
 }
 
+static int
+bare_ffmpeg_codec_context_get_frame_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->frame_size;
+}
+
+static int64_t
+bare_ffmpeg_codec_context_get_frame_num(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->frame_num;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_get_framerate(
   js_env_t *env,
@@ -3298,6 +3316,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextFramerate", bare_ffmpeg_codec_context_set_framerate)
   V("getCodecContextExtraData", bare_ffmpeg_codec_context_get_extra_data)
   V("setCodecContextExtraData", bare_ffmpeg_codec_context_set_extra_data)
+  V("getCodecContextFrameSize", bare_ffmpeg_codec_context_get_frame_size)
+  V("getCodecContextFrameNum", bare_ffmpeg_codec_context_get_frame_num)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
