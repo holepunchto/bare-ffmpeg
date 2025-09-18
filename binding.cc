@@ -3369,6 +3369,17 @@ bare_ffmpeg_filter_inout_set_next(
   filter_inout->handle->next = next->handle;
 }
 
+static int64_t
+bare_ffmpeg_rational_rescale_q(
+  int64_t ts,
+  int32_t bq_num,
+  int32_t bq_den,
+  int32_t cq_num,
+  int32_t cq_den
+) {
+  return av_rescale_q(ts, {bq_num, bq_den}, {cq_num, cq_den});
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -3377,6 +3388,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
 #define V(name, fn) \
   err = js_set_property<fn>(env, exports, name); \
+  assert(err == 0);
+
+#define Z(name, fn) \
+  err = js_set_property<fn,{.scoped = false}>(env, exports, name); \
   assert(err == 0);
 
   V("getLogLevel", bare_ffmpeg_log_get_level);
@@ -3593,7 +3608,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
 
   V("rationalD2Q", bare_ffmpeg_rational_d2q)
-
+  Z("rationalRescaleQ", bare_ffmpeg_rational_rescale_q)
   V("getFilterByName", bare_ffmpeg_filter_get_by_name)
 
   V("initFilterContext", bare_ffmpeg_filter_context_init)
@@ -3612,6 +3627,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFilterInOutPadIdx", bare_ffmpeg_filter_inout_set_pad_idx)
   V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
 #undef V
+#undef Z
 
 #define V(name) \
   { \
