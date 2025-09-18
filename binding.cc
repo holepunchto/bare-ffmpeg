@@ -3254,13 +3254,13 @@ bare_ffmpeg_filter_graph_create_filter(
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> filter_context,
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_t, 1> filter,
   std::string name,
-  std::string args
+  std::optional<std::string> args
 ) {
   int err = avfilter_graph_create_filter(
     &filter_context->handle,
     filter->handle,
     name.c_str(),
-    args.c_str(),
+    args.has_value() ? args.value().c_str() : nullptr,
     nullptr,
     graph->handle
   );

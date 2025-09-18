@@ -29,3 +29,13 @@ test('FilterGraph should expose a createFilter method', (t) => {
 
   t.ok(succes)
 })
+
+test('FilterGraph.createFilter could be called with a null args', (t) => {
+  using graph = new ffmpeg.FilterGraph()
+  const ctx = new ffmpeg.FilterContext()
+  const filter = new ffmpeg.Filter('buffersink')
+
+  const succes = graph.createFilter(ctx, filter, 'out', null)
+
+  t.ok(succes)
+})
