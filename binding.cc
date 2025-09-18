@@ -3278,6 +3278,12 @@ bare_ffmpeg_filter_graph_parse(
   std::string filter_description
 ) {
   int err = avfilter_graph_parse(graph->handle, filter_description.c_str(), inputs->handle, outputs->handle, nullptr);
+  if (err < 0) {
+    err = js_throw_error(env, nullptr, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 
   return err >= 0;
 }
