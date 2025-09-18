@@ -1255,7 +1255,7 @@ Parameters:
 - `context` (`FilterContext`): The filter context to associate with this filter
 - `filter` (`Filter`): The filter to create (e.g., `new ffmpeg.Filter('buffer')`)
 - `name` (`string`): A unique name for this filter instance
-- `args` (`object`): Filter-specific arguments
+- `args` (`object` | `null`): Filter-specific arguments
   - `width` (`number`): Video width in pixels
   - `height` (`number`): Video height in pixels
   - `pixelFormat` (`number`): Pixel format constant
