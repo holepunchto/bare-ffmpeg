@@ -102,3 +102,33 @@ test('FilterGraph should expose a configure method', (t) => {
   const succes = graph.configure()
   t.ok(succes)
 })
+
+test('FilterGraph.configure should throw when parameters are not valid', (t) => {
+  using graph = new ffmpeg.FilterGraph()
+  const bufferContext = new ffmpeg.FilterContext()
+  const buffer = new ffmpeg.Filter('buffer')
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  const bufferSink = new ffmpeg.Filter('buffersink')
+
+  graph.createFilter(bufferContext, buffer, 'in', {
+    width: 1,
+    height: 1,
+    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
+    timeBase: new ffmpeg.Rational(1, 30),
+    aspectRatio: new ffmpeg.Rational(1, 1)
+  })
+  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+
+  const inputs = new ffmpeg.FilterInOut()
+  inputs.name = 'out'
+  inputs.filterContext = bufferSinkContext
+  inputs.padIdx = 0
+  const outputs = new ffmpeg.FilterInOut()
+
+  graph.parse('negate', inputs, outputs)
+
+  t.plan(1)
+  t.exception(() => {
+    graph.configure()
+  })
+})
