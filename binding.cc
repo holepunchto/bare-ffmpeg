@@ -3268,7 +3268,7 @@ bare_ffmpeg_filter_graph_create_filter(
   return err >= 0;
 }
 
-static bool
+static void
 bare_ffmpeg_filter_graph_parse(
   js_env_t *env,
   js_receiver_t,
@@ -3284,11 +3284,9 @@ bare_ffmpeg_filter_graph_parse(
 
     throw js_pending_exception;
   }
-
-  return err >= 0;
 }
 
-static bool
+static void
 bare_ffmpeg_filter_graph_configure(
   js_env_t *env,
   js_receiver_t,
@@ -3301,8 +3299,6 @@ bare_ffmpeg_filter_graph_configure(
 
     throw js_pending_exception;
   }
-
-  return err >= 0;
 }
 
 static js_arraybuffer_t

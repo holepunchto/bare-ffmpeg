@@ -48,9 +48,9 @@ test('FilterGraph should expose a parse method', (t) => {
   const inputs = initInputs(bufferSinkContext)
   const outputs = initOutputs(bufferContext)
 
-  const succes = graph.parse('negate', inputs, outputs)
-
-  t.ok(succes)
+  t.execution(() => {
+    graph.parse('negate', inputs, outputs)
+  })
 })
 
 test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
@@ -76,8 +76,9 @@ test('FilterGraph should expose a configure method', (t) => {
 
   graph.parse('negate', inputs, outputs)
 
-  const succes = graph.configure()
-  t.ok(succes)
+  t.execution(() => {
+    graph.configure()
+  })
 })
 
 test('FilterGraph.configure should throw when parameters are not valid', (t) => {
