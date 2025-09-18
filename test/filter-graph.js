@@ -103,26 +103,14 @@ test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
 })
 
 test('FilterGraph should expose a configure method', (t) => {
-  using graph = new ffmpeg.FilterGraph()
   const bufferContext = new ffmpeg.FilterContext()
-  const buffer = new ffmpeg.Filter('buffer')
   const bufferSinkContext = new ffmpeg.FilterContext()
-  const bufferSink = new ffmpeg.Filter('buffersink')
-
-  graph.createFilter(bufferContext, buffer, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
-  })
-  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+  using graph = initGraph(bufferContext, bufferSinkContext)
 
   const inputs = new ffmpeg.FilterInOut()
   inputs.name = 'out'
   inputs.filterContext = bufferSinkContext
   inputs.padIdx = 0
-
   const outputs = new ffmpeg.FilterInOut()
   outputs.name = 'in'
   outputs.filterContext = bufferContext
@@ -135,20 +123,9 @@ test('FilterGraph should expose a configure method', (t) => {
 })
 
 test('FilterGraph.configure should throw when parameters are not valid', (t) => {
-  using graph = new ffmpeg.FilterGraph()
   const bufferContext = new ffmpeg.FilterContext()
-  const buffer = new ffmpeg.Filter('buffer')
   const bufferSinkContext = new ffmpeg.FilterContext()
-  const bufferSink = new ffmpeg.Filter('buffersink')
-
-  graph.createFilter(bufferContext, buffer, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
-  })
-  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+  using graph = initGraph(bufferContext, bufferSinkContext)
 
   const inputs = new ffmpeg.FilterInOut()
   inputs.name = 'out'
@@ -163,3 +140,22 @@ test('FilterGraph.configure should throw when parameters are not valid', (t) => 
     graph.configure()
   })
 })
+
+// Helpers
+
+function initGraph(bufferContext, bufferSinkContext) {
+  const graph = new ffmpeg.FilterGraph()
+  const buffer = new ffmpeg.Filter('buffer')
+  const bufferSink = new ffmpeg.Filter('buffersink')
+
+  graph.createFilter(bufferContext, buffer, 'in', {
+    width: 1,
+    height: 1,
+    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
+    timeBase: new ffmpeg.Rational(1, 30),
+    aspectRatio: new ffmpeg.Rational(1, 1)
+  })
+  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+
+  return graph
+}
