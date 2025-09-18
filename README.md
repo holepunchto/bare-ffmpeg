@@ -1278,6 +1278,18 @@ const success = graph.createFilter(context, filter, 'in', {
 })
 ```
 
+##### `FilterGraph.parse(filterDescription, inputs, outputs)`
+
+Parses a filter description string and applies it to the filter graph.
+
+Parameters:
+
+- `filterDescription` (`string`): The filter description (e.g., `'negate'`, `'scale=640:480'`)
+- `inputs` (`FilterInOut`): Input filter endpoints
+- `outputs` (`FilterInOut`): Output filter endpoints
+
+**Returns**: `boolean` indicating if parsing was successful
+
 ##### `FilterGraph.destroy()`
 
 Destroys the `FilterGraph` and frees all associated resources including any created filters. Automatically called when the object is managed by a `using` declaration.
