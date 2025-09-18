@@ -1290,6 +1290,12 @@ Parameters:
 
 **Returns**: `boolean` indicating if parsing was successful
 
+##### `FilterGraph.configure()`
+
+Configures the filter graph and validates all connections.
+
+**Returns**: `boolean` indicating if configuration was successful
+
 ##### `FilterGraph.destroy()`
 
 Destroys the `FilterGraph` and frees all associated resources including any created filters. Automatically called when the object is managed by a `using` declaration.
