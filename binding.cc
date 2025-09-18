@@ -3391,7 +3391,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   assert(err == 0);
 
 #define Z(name, fn) \
-  err = js_set_property<fn,{.scoped = false}>(env, exports, name); \
+  err = js_set_property<fn, js_function_options_t{.scoped = false}>(env, exports, name); \
   assert(err == 0);
 
   V("getLogLevel", bare_ffmpeg_log_get_level);
