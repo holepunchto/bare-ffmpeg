@@ -41,26 +41,12 @@ test('FilterGraph.createFilter could be called with an undefined args', (t) => {
 })
 
 test('FilterGraph should expose a parse method', (t) => {
-  using graph = new ffmpeg.FilterGraph()
   const bufferContext = new ffmpeg.FilterContext()
-  const buffer = new ffmpeg.Filter('buffer')
   const bufferSinkContext = new ffmpeg.FilterContext()
-  const bufferSink = new ffmpeg.Filter('buffersink')
-
-  graph.createFilter(bufferContext, buffer, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
-  })
-  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+  using graph = initGraph(bufferContext, bufferSinkContext)
 
   const inputs = initInputs(bufferSinkContext)
-  const outputs = new ffmpeg.FilterInOut()
-  outputs.name = 'in'
-  outputs.filterContext = bufferContext
-  outputs.padIdx = 0
+  const outputs = initOutputs(bufferContext)
 
   const succes = graph.parse('negate', inputs, outputs)
 
@@ -68,26 +54,12 @@ test('FilterGraph should expose a parse method', (t) => {
 })
 
 test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
-  using graph = new ffmpeg.FilterGraph()
   const bufferContext = new ffmpeg.FilterContext()
-  const buffer = new ffmpeg.Filter('buffer')
   const bufferSinkContext = new ffmpeg.FilterContext()
-  const bufferSink = new ffmpeg.Filter('buffersink')
-
-  graph.createFilter(bufferContext, buffer, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
-  })
-  graph.createFilter(bufferSinkContext, bufferSink, 'out')
+  using graph = initGraph(bufferContext, bufferSinkContext)
 
   const inputs = initInputs(bufferSinkContext)
-  const outputs = new ffmpeg.FilterInOut()
-  outputs.name = 'in'
-  outputs.filterContext = bufferContext
-  outputs.padIdx = 0
+  const outputs = initOutputs(bufferContext)
 
   t.exception(() => {
     graph.parse('foo', inputs, outputs)
@@ -100,10 +72,7 @@ test('FilterGraph should expose a configure method', (t) => {
   using graph = initGraph(bufferContext, bufferSinkContext)
 
   const inputs = initInputs(bufferSinkContext)
-  const outputs = new ffmpeg.FilterInOut()
-  outputs.name = 'in'
-  outputs.filterContext = bufferContext
-  outputs.padIdx = 0
+  const outputs = initOutputs(bufferContext)
 
   graph.parse('negate', inputs, outputs)
 
@@ -152,4 +121,12 @@ function initInputs(ctx) {
   inputs.filterContext = ctx
   inputs.padIdx = 0
   return inputs
+}
+
+function initOutputs(ctx) {
+  const outputs = new ffmpeg.FilterInOut()
+  outputs.name = 'in'
+  outputs.filterContext = ctx
+  outputs.padIdx = 0
+  return outputs
 }
