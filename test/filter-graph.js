@@ -56,11 +56,7 @@ test('FilterGraph should expose a parse method', (t) => {
   })
   graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
-  const inputs = new ffmpeg.FilterInOut()
-  inputs.name = 'out'
-  inputs.filterContext = bufferSinkContext
-  inputs.padIdx = 0
-
+  const inputs = initInputs(bufferSinkContext)
   const outputs = new ffmpeg.FilterInOut()
   outputs.name = 'in'
   outputs.filterContext = bufferContext
@@ -87,11 +83,7 @@ test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
   })
   graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
-  const inputs = new ffmpeg.FilterInOut()
-  inputs.name = 'out'
-  inputs.filterContext = bufferSinkContext
-  inputs.padIdx = 0
-
+  const inputs = initInputs(bufferSinkContext)
   const outputs = new ffmpeg.FilterInOut()
   outputs.name = 'in'
   outputs.filterContext = bufferContext
@@ -107,10 +99,7 @@ test('FilterGraph should expose a configure method', (t) => {
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = new ffmpeg.FilterInOut()
-  inputs.name = 'out'
-  inputs.filterContext = bufferSinkContext
-  inputs.padIdx = 0
+  const inputs = initInputs(bufferSinkContext)
   const outputs = new ffmpeg.FilterInOut()
   outputs.name = 'in'
   outputs.filterContext = bufferContext
@@ -127,10 +116,7 @@ test('FilterGraph.configure should throw when parameters are not valid', (t) => 
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = new ffmpeg.FilterInOut()
-  inputs.name = 'out'
-  inputs.filterContext = bufferSinkContext
-  inputs.padIdx = 0
+  const inputs = initInputs(bufferSinkContext)
   const outputs = new ffmpeg.FilterInOut()
 
   graph.parse('negate', inputs, outputs)
@@ -158,4 +144,12 @@ function initGraph(bufferContext, bufferSinkContext) {
   graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
   return graph
+}
+
+function initInputs(ctx) {
+  const inputs = new ffmpeg.FilterInOut()
+  inputs.name = 'out'
+  inputs.filterContext = ctx
+  inputs.padIdx = 0
+  return inputs
 }
