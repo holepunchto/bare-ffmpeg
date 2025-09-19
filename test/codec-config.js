@@ -3,14 +3,12 @@ const ffmpeg = require('..')
 
 test('getSupportedConfig for pixel formats', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
-  const pixFormats = codecCtx.getSupportedConfig(
+  using pixFormats = codecCtx.getSupportedConfig(
     ffmpeg.constants.codecConfig.PIX_FORMAT
   )
 
   t.ok(pixFormats instanceof Int32Array, 'returns Int32Array')
   t.ok(pixFormats.length > 0, 'has pixel formats')
-
-  codecCtx.destroy()
 })
 
 test('getSupportedConfig for sample formats', (t) => {
