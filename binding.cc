@@ -2406,8 +2406,7 @@ static std::vector<js_arraybuffer_t>
 bare_ffmpeg_packet_get_side_data(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
-  std::optional<int32_t> type
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
 ) {
   std::vector<js_arraybuffer_t> res{};
 
@@ -2415,10 +2414,6 @@ bare_ffmpeg_packet_get_side_data(
   if (count == 0) return res;
 
   for (int i = 0; i < count; i++) {
-    if (type && packet->handle->side_data[i].type != *type) {
-      continue;
-    }
-
     js_arraybuffer_t handle;
     bare_ffmpeg_side_data_t *sd;
     int err = js_create_arraybuffer(env, sd, handle);
@@ -2427,10 +2422,6 @@ bare_ffmpeg_packet_get_side_data(
     sd->handle = &packet->handle->side_data[i];
 
     res.push_back(handle);
-
-    if (type) {
-      return res;
-    }
   }
 
   return res;
