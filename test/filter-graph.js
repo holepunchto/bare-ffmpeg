@@ -19,15 +19,15 @@ test('FilterGraph should expose a createFilter method', (t) => {
   const ctx = new ffmpeg.FilterContext()
   const filter = new ffmpeg.Filter('buffer')
 
-  const succes = graph.createFilter(ctx, filter, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
+  t.execution(() => {
+    graph.createFilter(ctx, filter, 'in', {
+      width: 1,
+      height: 1,
+      pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
+      timeBase: new ffmpeg.Rational(1, 30),
+      aspectRatio: new ffmpeg.Rational(1, 1)
+    })
   })
-
-  t.ok(succes)
 })
 
 test('FilterGraph.createFilter could be called with an undefined args', (t) => {
@@ -35,9 +35,20 @@ test('FilterGraph.createFilter could be called with an undefined args', (t) => {
   const ctx = new ffmpeg.FilterContext()
   const filter = new ffmpeg.Filter('buffersink')
 
-  const succes = graph.createFilter(ctx, filter, 'out')
+  t.execution(() => {
+    graph.createFilter(ctx, filter, 'out')
+  })
+})
 
-  t.ok(succes)
+test('FilterGraph.createFilter should throw an error if inputs are not valid', (t) => {
+  using graph = new ffmpeg.FilterGraph()
+  const ctx = new ffmpeg.FilterContext()
+  const filter = new ffmpeg.Filter('buffer')
+  const missingArgs = undefined
+
+  t.exception(() => {
+    graph.createFilter(ctx, filter, 'in', missingArgs)
+  })
 })
 
 test('FilterGraph should expose a parse method', (t) => {

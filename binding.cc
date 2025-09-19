@@ -3264,7 +3264,7 @@ bare_ffmpeg_filter_graph_destroy(
   avfilter_graph_free(&filter_graph->handle);
 }
 
-static bool
+static void
 bare_ffmpeg_filter_graph_create_filter(
   js_env_t *env,
   js_receiver_t,
@@ -3283,7 +3283,12 @@ bare_ffmpeg_filter_graph_create_filter(
     graph->handle
   );
 
-  return err >= 0;
+  if (err < 0) {
+    err = js_throw_error(env, nullptr, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 }
 
 static void
@@ -3643,6 +3648,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("rationalD2Q", bare_ffmpeg_rational_d2q)
   V("rationalRescaleQ", bare_ffmpeg_rational_rescale_q)
+
   V("getFilterByName", bare_ffmpeg_filter_get_by_name)
 
   V("initFilterContext", bare_ffmpeg_filter_context_init)
