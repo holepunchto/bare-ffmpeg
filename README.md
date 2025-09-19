@@ -1262,14 +1262,14 @@ Parameters:
   - `timeBase` (`Rational`): Time base for the filter
   - `aspectRatio` (`Rational`): Pixel aspect ratio
 
-**Returns**: `boolean` indicating if the filter was created successfully
+**Returns**: `void`
 
 ```js
 using graph = new ffmpeg.FilterGraph()
 const context = new ffmpeg.FilterContext()
 const filter = new ffmpeg.Filter('buffer')
 
-const success = graph.createFilter(context, filter, 'in', {
+graph.createFilter(context, filter, 'in', {
   width: 1920,
   height: 1080,
   pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
