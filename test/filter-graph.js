@@ -40,6 +40,17 @@ test('FilterGraph.createFilter could be called with an undefined args', (t) => {
   })
 })
 
+test('FilterGraph.createFilter should throw an error if inputs are not valid', (t) => {
+  using graph = new ffmpeg.FilterGraph()
+  const ctx = new ffmpeg.FilterContext()
+  const filter = new ffmpeg.Filter('buffer')
+  const missingArgs = undefined
+
+  t.exception(() => {
+    graph.createFilter(ctx, filter, 'in', missingArgs)
+  })
+})
+
 test('FilterGraph should expose a parse method', (t) => {
   const bufferContext = new ffmpeg.FilterContext()
   const bufferSinkContext = new ffmpeg.FilterContext()
