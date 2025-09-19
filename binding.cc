@@ -1,3 +1,4 @@
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -890,7 +891,7 @@ bare_ffmpeg_codec_get_supported_config(
   return values;
 }
 
-static js_arraybuffer_t
+static std::optional<js_arraybuffer_t>
 bare_ffmpeg_codec_get_supported_frame_rates(
   js_env_t *env,
   js_receiver_t,
@@ -914,15 +915,7 @@ bare_ffmpeg_codec_get_supported_frame_rates(
   }
 
   if (!list || count == 0) {
-    js_arraybuffer_t result;
-    int32_t *data;
-    err = js_create_arraybuffer(env, 2, data, result);
-    assert(err == 0);
-
-    data[0] = 0;
-    data[1] = 0;
-
-    return result;
+    return std::nullopt;
   }
 
   js_arraybuffer_t result;
@@ -939,7 +932,7 @@ bare_ffmpeg_codec_get_supported_frame_rates(
   return result;
 }
 
-static std::vector<js_arraybuffer_t>
+static std::optional<std::vector<js_arraybuffer_t>>
 bare_ffmpeg_codec_get_supported_channel_layouts(
   js_env_t *env,
   js_receiver_t,
@@ -964,7 +957,7 @@ bare_ffmpeg_codec_get_supported_channel_layouts(
   }
 
   if (!list || count == 0) {
-    return result;
+    return std::nullopt;
   }
 
   const AVChannelLayout *layout_list = static_cast<const AVChannelLayout *>(list);
