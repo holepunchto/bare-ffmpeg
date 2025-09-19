@@ -2646,6 +2646,24 @@ bare_ffmpeg_packet_set_flags(
   packet->handle->flags = value;
 }
 
+static void
+bare_ffmpeg_packet_copy_props(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> src
+) {
+  int err;
+
+  err = av_packet_copy_props(dst->handle, src->handle);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static int
 bare_ffmpeg_side_data_get_type(
   js_env_t *env,
@@ -3586,6 +3604,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setPacketDuration", bare_ffmpeg_packet_set_duration)
   V("getPacketFlags", bare_ffmpeg_packet_get_flags)
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
+  V("copyPacketProps", bare_ffmpeg_packet_copy_props)
 
   V("getSideDataType", bare_ffmpeg_side_data_get_type)
   V("getSideDataName", bare_ffmpeg_side_data_get_name)

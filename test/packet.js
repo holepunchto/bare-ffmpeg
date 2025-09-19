@@ -211,6 +211,26 @@ test('sideData object should expose a data method', (t) => {
   t.alike(sideDataObject.data, buf)
 })
 
+test('packet copyPropsFrom should copy all properties', (t) => {
+  const sourcePacket = makePacket()
+  const destPacket = new ffmpeg.Packet()
+  destPacket.copyPropsFrom(sourcePacket)
+
+  t.is(destPacket.streamIndex, sourcePacket.streamIndex)
+  t.is(destPacket.dts, sourcePacket.dts)
+  t.is(destPacket.pts, sourcePacket.pts)
+  t.is(destPacket.duration, sourcePacket.duration)
+  t.is(destPacket.flags, sourcePacket.flags)
+  t.alike(destPacket.timeBase, sourcePacket.timeBase)
+  t.is(destPacket.isKeyframe, sourcePacket.isKeyframe)
+
+  t.is(destPacket.sideData.length, sourcePacket.sideData.length)
+  t.is(
+    destPacket.sideData[0].type,
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
+})
+
 function fillPacket(packet) {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
@@ -218,4 +238,32 @@ function fillPacket(packet) {
   const io = new ffmpeg.IOContext(image)
   const format = new ffmpeg.InputFormatContext(io)
   format.readFrame(packet)
+}
+
+function makePacket(options = {}) {
+  const packet = new ffmpeg.Packet()
+
+  const defaultOptions = {
+    streamIndex: 0,
+    dts: 1000,
+    pts: 1000,
+    duration: 30,
+    flags: 1,
+    timeBase: new ffmpeg.Rational(1, 48000),
+    isKeyframe: true,
+    sideData: [
+      ffmpeg.Packet.SideData.fromData(
+        Buffer.from('extra'),
+        ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+      )
+    ]
+  }
+
+  options = { ...defaultOptions, ...options }
+
+  for ([key, value] of Object.entries(options)) {
+    packet[key] = value
+  }
+
+  return packet
 }
