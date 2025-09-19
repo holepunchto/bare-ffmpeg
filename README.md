@@ -1288,7 +1288,13 @@ Parameters:
 - `inputs` (`FilterInOut`): Input filter endpoints
 - `outputs` (`FilterInOut`): Output filter endpoints
 
-**Returns**: `boolean` indicating if parsing was successful
+**Returns**: `void`
+
+##### `FilterGraph.configure()`
+
+Configures the filter graph and validates all connections.
+
+**Returns**: `void`
 
 ##### `FilterGraph.destroy()`
 

@@ -41,10 +41,67 @@ test('FilterGraph.createFilter could be called with an undefined args', (t) => {
 })
 
 test('FilterGraph should expose a parse method', (t) => {
-  using graph = new ffmpeg.FilterGraph()
   const bufferContext = new ffmpeg.FilterContext()
-  const buffer = new ffmpeg.Filter('buffer')
   const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  t.execution(() => {
+    graph.parse('negate', inputs, outputs)
+  })
+})
+
+test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  t.exception(() => {
+    graph.parse('foo', inputs, outputs)
+  })
+})
+
+test('FilterGraph should expose a configure method', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  graph.parse('negate', inputs, outputs)
+
+  t.execution(() => {
+    graph.configure()
+  })
+})
+
+test('FilterGraph.configure should throw when parameters are not valid', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = new ffmpeg.FilterInOut()
+
+  graph.parse('negate', inputs, outputs)
+
+  t.plan(1)
+  t.exception(() => {
+    graph.configure()
+  })
+})
+
+// Helpers
+
+function initGraph(bufferContext, bufferSinkContext) {
+  const graph = new ffmpeg.FilterGraph()
+  const buffer = new ffmpeg.Filter('buffer')
   const bufferSink = new ffmpeg.Filter('buffersink')
 
   graph.createFilter(bufferContext, buffer, 'in', {
@@ -56,17 +113,21 @@ test('FilterGraph should expose a parse method', (t) => {
   })
   graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
+  return graph
+}
+
+function initInputs(ctx) {
   const inputs = new ffmpeg.FilterInOut()
   inputs.name = 'out'
-  inputs.filterContext = bufferSinkContext
+  inputs.filterContext = ctx
   inputs.padIdx = 0
+  return inputs
+}
 
+function initOutputs(ctx) {
   const outputs = new ffmpeg.FilterInOut()
-  inputs.name = 'int'
-  inputs.filterContext = bufferContext
-  inputs.padIdx = 0
-
-  const succes = graph.parse('negate', inputs, outputs)
-
-  t.ok(succes)
-})
+  outputs.name = 'in'
+  outputs.filterContext = ctx
+  outputs.padIdx = 0
+  return outputs
+}
