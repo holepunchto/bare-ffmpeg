@@ -18,7 +18,8 @@
   "addon": true,
   "scripts": {
     "test": "prettier . --check && bare test.js",
-    "format": "prettier . --write && clang-format -i binding.cc"
+    "format": "prettier . --write && clang-format -i binding.cc",
+    "example": "bare ./examples/index.js"
   },
   "repository": {
     "type": "git",
