@@ -122,6 +122,54 @@ test('FilterGraph should expose a pushFrame method', (t) => {
   t.ok(graph.pushFrame(bufferContext, inputFrame) >= 0)
 })
 
+test('FilterGraph should expose a pullFrame method', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  graph.parse('negate', inputs, outputs)
+  graph.configure()
+
+  using inputFrame = createFrame()
+  const redImage = createRedImage()
+  redImage.fill(inputFrame)
+  graph.pushFrame(bufferContext, inputFrame)
+
+  using outputFrame = createFrame()
+  t.ok(graph.pullFrame(bufferSinkContext, outputFrame) >= 0)
+})
+
+test('negate pixel (functional test)', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  graph.parse('negate', inputs, outputs)
+  graph.configure()
+
+  using inputFrame = createFrame()
+  const redImage = createRedImage()
+  redImage.fill(inputFrame)
+  graph.pushFrame(bufferContext, inputFrame)
+
+  using outputFrame = createFrame()
+  graph.pullFrame(bufferSinkContext, outputFrame)
+  const outputImage = new ffmpeg.Image(
+    ffmpeg.constants.pixelFormats.RGB24,
+    1,
+    1
+  )
+  outputImage.read(outputFrame)
+
+  t.ok(outputImage.data.at(0) === 0)
+  t.ok(outputImage.data.at(1) === 255)
+  t.ok(outputImage.data.at(2) === 255)
+})
+
 // Helpers
 
 function initGraph(bufferContext, bufferSinkContext) {
@@ -164,4 +212,21 @@ function createFrame(width = 1, height = 1) {
   frame.format = ffmpeg.constants.pixelFormats.RGB24
   frame.alloc()
   return frame
+}
+
+function createRedImage(width = 1, height = 1) {
+  const image = new ffmpeg.Image(
+    ffmpeg.constants.pixelFormats.RGB24,
+    width,
+    height
+  )
+
+  // Fill with red pixels (255, 0, 0)
+  for (let i = 0; i < image.data.length; i += 3) {
+    image.data[i] = 255 // Red
+    image.data[i + 1] = 0 // Green
+    image.data[i + 2] = 0 // Blue
+  }
+
+  return image
 }

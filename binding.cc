@@ -18,6 +18,7 @@ extern "C" {
 #include <libavcodec/packet.h>
 #include <libavdevice/avdevice.h>
 #include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
@@ -3325,16 +3326,24 @@ bare_ffmpeg_filter_graph_configure(
   }
 }
 
-int
+static int
 bare_ffmpeg_filter_graph_push_frame(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> ctx,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
 ) {
-  int result = av_buffersrc_add_frame(ctx->handle, frame->handle);
+  return av_buffersrc_add_frame(ctx->handle, frame->handle);
+}
 
-  return result;
+static int
+bare_ffmpeg_filter_graph_pull_frame(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_filter_context_t, 1> ctx,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return av_buffersink_get_frame(ctx->handle, frame->handle);
 }
 
 static js_arraybuffer_t
@@ -3672,6 +3681,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("parseFilterGraph", bare_ffmpeg_filter_graph_parse)
   V("configureFilterGraph", bare_ffmpeg_filter_graph_configure)
   V("pushFilterGraphFrame", bare_ffmpeg_filter_graph_push_frame)
+  V("pullFilterGraphFrame", bare_ffmpeg_filter_graph_pull_frame)
 
   V("initFilterInout", bare_ffmpeg_filter_inout_init)
   V("destroyFilterInOut", bare_ffmpeg_filter_inout_destroy)
