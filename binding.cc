@@ -2641,56 +2641,6 @@ bare_ffmpeg_packet_copy_props(
   }
 }
 
-static js_arraybuffer_t
-bare_ffmpeg_packet_add_side_data(
-  js_env_t *env,
-  js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet,
-  int32_t type,
-  js_arraybuffer_span_t data,
-  uint32_t offset,
-  uint32_t len
-) {
-  int err;
-
-  uint8_t *buf = reinterpret_cast<uint8_t *>(av_malloc(len));
-  memcpy(buf, &data[offset], len);
-
-  err = av_packet_add_side_data(
-    packet->handle,
-    static_cast<AVPacketSideDataType>(type),
-    buf,
-    len
-  );
-
-  if (err < 0) {
-    av_free(buf);
-    err = js_throw_error(env, NULL, av_err2str(err));
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
-  // find the side data that was just added
-  // because apparently there's not another way to get the pointer
-  AVPacketSideData *side_data = NULL;
-  for (int i = 0; i < packet->handle->side_data_elems; i++) {
-    if (packet->handle->side_data[i].type == static_cast<AVPacketSideDataType>(type)) {
-      side_data = &packet->handle->side_data[i];
-      break;
-    }
-  }
-
-  js_arraybuffer_t handle;
-  bare_ffmpeg_side_data_t *sd;
-  err = js_create_arraybuffer(env, sd, handle);
-  assert(err == 0);
-
-  sd->handle = side_data;
-
-  return handle;
-}
-
 static int
 bare_ffmpeg_side_data_get_type(
   js_env_t *env,
@@ -3477,7 +3427,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getPacketFlags", bare_ffmpeg_packet_get_flags)
   V("setPacketFlags", bare_ffmpeg_packet_set_flags)
   V("copyPacketProps", bare_ffmpeg_packet_copy_props)
-  V("addPacketSideData", bare_ffmpeg_packet_add_side_data)
 
   V("getSideDataType", bare_ffmpeg_side_data_get_type)
   V("getSideDataName", bare_ffmpeg_side_data_get_name)
