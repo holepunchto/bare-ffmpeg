@@ -3390,10 +3390,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   err = js_set_property<fn>(env, exports, name); \
   assert(err == 0);
 
-#define Z(name, fn) \
-  err = js_set_property<fn, js_function_options_t{.scoped = false}>(env, exports, name); \
-  assert(err == 0);
-
   V("getLogLevel", bare_ffmpeg_log_get_level);
   V("setLogLevel", bare_ffmpeg_log_set_level);
 
@@ -3608,7 +3604,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getAudioFifoSpace", bare_ffmpeg_audio_fifo_space)
 
   V("rationalD2Q", bare_ffmpeg_rational_d2q)
-  Z("rationalRescaleQ", bare_ffmpeg_rational_rescale_q)
+  V("rationalRescaleQ", bare_ffmpeg_rational_rescale_q)
   V("getFilterByName", bare_ffmpeg_filter_get_by_name)
 
   V("initFilterContext", bare_ffmpeg_filter_context_init)
@@ -3627,7 +3623,6 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFilterInOutPadIdx", bare_ffmpeg_filter_inout_set_pad_idx)
   V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
 #undef V
-#undef Z
 
 #define V(name) \
   { \
