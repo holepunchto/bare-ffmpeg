@@ -2889,7 +2889,6 @@ bare_ffmpeg_resampler_convert_frames(
     throw js_pending_exception;
   }
 
-
   return result;
 }
 
