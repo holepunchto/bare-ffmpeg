@@ -844,6 +844,155 @@ bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, uint32_t 
   return av_get_sample_fmt_name(static_cast<enum AVSampleFormat>(id));
 }
 
+static std::vector<int32_t>
+bare_ffmpeg_codec_get_supported_config(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec,
+  int32_t cfg
+) {
+  int err;
+
+  int count = 0;
+  const void *list = nullptr;
+
+  err = avcodec_get_supported_config(context->handle, codec->handle, static_cast<AVCodecConfig>(cfg), 0, &list, &count);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::vector<int32_t> values;
+
+  if (count > 0 && list) {
+    const int32_t *int_list = static_cast<const int32_t *>(list);
+    for (int i = 0; i < count; i++) {
+      values.push_back(int_list[i]);
+    }
+    return values;
+  }
+
+  switch (static_cast<AVCodecConfig>(cfg)) {
+  case AV_CODEC_CONFIG_PIX_FORMAT:
+    for (int i = 0; i < AV_PIX_FMT_NB; i++) {
+      if (av_pix_fmt_desc_get(static_cast<AVPixelFormat>(i)) != nullptr) {
+        values.push_back(i);
+      }
+    }
+    break;
+  case AV_CODEC_CONFIG_SAMPLE_FORMAT:
+    for (int i = 0; i < AV_SAMPLE_FMT_NB; i++) {
+      values.push_back(i);
+    }
+    break;
+  case AV_CODEC_CONFIG_COLOR_RANGE:
+    values.push_back(AVCOL_RANGE_UNSPECIFIED);
+    values.push_back(AVCOL_RANGE_MPEG);
+    values.push_back(AVCOL_RANGE_JPEG);
+    break;
+  case AV_CODEC_CONFIG_COLOR_SPACE:
+    for (int i = 0; i < AVCOL_SPC_NB; i++) {
+      values.push_back(i);
+    }
+    break;
+  case AV_CODEC_CONFIG_SAMPLE_RATE:
+    values.push_back(0);
+    break;
+  default:
+    break;
+  }
+
+  return values;
+}
+
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_codec_get_supported_frame_rates(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+) {
+  int err;
+
+  const AVCodecContext *ctx = context->handle;
+  const AVCodec *c = codec->handle;
+
+  int count = 0;
+  const void *list = nullptr;
+
+  err = avcodec_get_supported_config(ctx, c, AV_CODEC_CONFIG_FRAME_RATE, 0, &list, &count);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  if (!list || count == 0) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t result;
+  int32_t *data;
+  err = js_create_arraybuffer(env, static_cast<size_t>(count * 2), data, result);
+  assert(err == 0);
+
+  const AVRational *rational_list = static_cast<const AVRational *>(list);
+  for (int i = 0; i < count; i++) {
+    data[i * 2] = rational_list[i].num;
+    data[i * 2 + 1] = rational_list[i].den;
+  }
+
+  return result;
+}
+
+static std::optional<std::vector<js_arraybuffer_t>>
+bare_ffmpeg_codec_get_supported_channel_layouts(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+) {
+  int err;
+  std::vector<js_arraybuffer_t> result;
+
+  const AVCodecContext *ctx = context->handle;
+  const AVCodec *c = codec->handle;
+
+  int count = 0;
+  const void *list = nullptr;
+
+  err = avcodec_get_supported_config(ctx, c, AV_CODEC_CONFIG_CHANNEL_LAYOUT, 0, &list, &count);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  if (!list || count == 0) {
+    return std::nullopt;
+  }
+
+  const AVChannelLayout *layout_list = static_cast<const AVChannelLayout *>(list);
+  for (int i = 0; i < count; i++) {
+    js_arraybuffer_t handle;
+    bare_ffmpeg_channel_layout_t *layout;
+    err = js_create_arraybuffer(env, layout, handle);
+    assert(err == 0);
+
+    err = av_channel_layout_copy(&layout->handle, &layout_list[i]);
+    assert(err >= 0);
+
+    result.push_back(handle);
+  }
+
+  return result;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_codec_context_init(
   js_env_t *env,
@@ -3470,6 +3619,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
   V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
+  V("getSupportedConfig", bare_ffmpeg_codec_get_supported_config)
+  V("getSupportedFrameRates", bare_ffmpeg_codec_get_supported_frame_rates)
+  V("getSupportedChannelLayouts", bare_ffmpeg_codec_get_supported_channel_layouts)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
@@ -3943,6 +4095,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PKT_DATA_3D_REFERENCE_DISPLAYS)
   V(AV_PKT_DATA_RTCP_SR)
   V(AV_PKT_DATA_NB)
+
+  V(AV_CODEC_CONFIG_PIX_FORMAT)
+  V(AV_CODEC_CONFIG_FRAME_RATE)
+  V(AV_CODEC_CONFIG_SAMPLE_RATE)
+  V(AV_CODEC_CONFIG_SAMPLE_FORMAT)
+  V(AV_CODEC_CONFIG_CHANNEL_LAYOUT)
+  V(AV_CODEC_CONFIG_COLOR_RANGE)
+  V(AV_CODEC_CONFIG_COLOR_SPACE)
 
 #undef V
 
