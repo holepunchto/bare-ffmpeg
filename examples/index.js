@@ -1,0 +1,1 @@
+require('./negate-pixel')
