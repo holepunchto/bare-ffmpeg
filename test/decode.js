@@ -153,7 +153,7 @@ function decodeAudio(audio) {
         output.nbSamples = raw.nbSamples
         output.sampleRate = stream.codecParameters.sampleRate
 
-        const samples = new ffmpeg.Samples('S16', 2, output.nbSamples)
+        const samples = new ffmpeg.Samples()
         samples.fill(output)
 
         resampler.convert(raw, output)
@@ -168,11 +168,7 @@ function decodeAudio(audio) {
     output.format = ffmpeg.constants.sampleFormats.S16
     output.nbSamples = 1024
 
-    const samples = new ffmpeg.Samples(
-      output.format,
-      output.channelLayout.nbChannels,
-      output.nbSamples
-    )
+    const samples = new ffmpeg.Samples()
     samples.fill(output)
 
     while (resampler.flush(output) > 0) {
