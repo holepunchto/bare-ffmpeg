@@ -71,6 +71,18 @@ test('Samples sould expose a pts getter', (t) => {
   t.alike(samples.pts, audioFrame.pts)
 })
 
+test('Samples sould expose bufferSize static method', (t) => {
+  using audioFrame = makeAudioFrame()
+
+  const len = ffmpeg.Samples.bufferSize(
+    audioFrame.format,
+    2,
+    audioFrame.nbSamples
+  )
+
+  t.is(len, 4096)
+})
+
 // Helpers
 
 function makeAudioFrame() {
