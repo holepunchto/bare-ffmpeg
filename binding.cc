@@ -3323,7 +3323,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("readImage", bare_ffmpeg_image_read)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
-  V("sizeofSamples", bare_ffmpeg_samples_buffer_size)
+  V("samplesBufferSize", bare_ffmpeg_samples_buffer_size)
   V("fillSamples", bare_ffmpeg_samples_fill)
 
   V("initPacket", bare_ffmpeg_packet_init)
