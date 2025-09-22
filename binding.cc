@@ -2205,8 +2205,8 @@ bare_ffmpeg_image_get_line_size(
   );
 }
 
-static uint32_t
-bare_ffmpeg_samples_sizeof(
+static int
+bare_ffmpeg_samples_buffer_size(
   js_env_t *env,
   js_receiver_t,
   int32_t sample_format,
@@ -2214,8 +2214,6 @@ bare_ffmpeg_samples_sizeof(
   int32_t nb_samples,
   bool no_alignment
 ) {
-  int err;
-
   auto len = av_samples_get_buffer_size(
     NULL,
     nb_channels,
@@ -2225,13 +2223,13 @@ bare_ffmpeg_samples_sizeof(
   );
 
   if (len < 0) {
-    err = js_throw_error(env, NULL, av_err2str(len));
+    int err = js_throw_error(env, NULL, av_err2str(len));
     assert(err == 0);
 
     throw js_pending_exception;
   }
 
-  return static_cast<uint32_t>(len);
+  return len;
 }
 
 static int
@@ -3325,7 +3323,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("readImage", bare_ffmpeg_image_read)
   V("getImageLineSize", bare_ffmpeg_image_get_line_size)
 
-  V("sizeofSamples", bare_ffmpeg_samples_sizeof)
+  V("sizeofSamples", bare_ffmpeg_samples_buffer_size)
   V("fillSamples", bare_ffmpeg_samples_fill)
 
   V("initPacket", bare_ffmpeg_packet_init)
