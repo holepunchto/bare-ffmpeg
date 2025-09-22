@@ -108,6 +108,37 @@ test('FilterGraph.configure should throw when parameters are not valid', (t) => 
   })
 })
 
+test('FilterGraph should expose a pushFrame method', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  graph.parse('negate', inputs, outputs)
+  graph.configure()
+
+  using inputFrame = createFrame()
+  t.ok(graph.pushFrame(bufferContext, inputFrame) >= 0)
+})
+
+test('FilterGraph should expose a pullFrame method', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = initGraph(bufferContext, bufferSinkContext)
+  const inputs = initInputs(bufferSinkContext)
+  const outputs = initOutputs(bufferContext)
+
+  graph.parse('negate', inputs, outputs)
+  graph.configure()
+
+  using inputFrame = createFrame()
+  graph.pushFrame(bufferContext, inputFrame)
+
+  using outputFrame = createFrame()
+  t.ok(graph.pullFrame(bufferSinkContext, outputFrame) >= 0)
+})
+
 // Helpers
 
 function initGraph(bufferContext, bufferSinkContext) {
@@ -141,4 +172,13 @@ function initOutputs(ctx) {
   outputs.filterContext = ctx
   outputs.padIdx = 0
   return outputs
+}
+
+function createFrame(width = 1, height = 1) {
+  const frame = new ffmpeg.Frame()
+  frame.width = width
+  frame.height = height
+  frame.format = ffmpeg.constants.pixelFormats.RGB24
+  frame.alloc()
+  return frame
 }

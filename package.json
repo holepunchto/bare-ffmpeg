@@ -18,7 +18,8 @@
   "addon": true,
   "scripts": {
     "test": "prettier . --check && bare test.js",
-    "format": "prettier . --write && clang-format -i binding.cc"
+    "format": "prettier . --write && clang-format -i binding.cc",
+    "example": "bare ./examples/index.js"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
   },
   "homepage": "https://github.com/holepunchto/bare-ffmpeg#readme",
   "devDependencies": {
+    "bare-assert": "^1.1.0",
     "brittle": "^3.4.0",
     "cmake-bare": "^1.1.2",
     "cmake-harden": "^1.0.2",
