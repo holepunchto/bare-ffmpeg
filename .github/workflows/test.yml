@@ -82,6 +82,18 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
+      - name: Debug Ninja binary (macOS only)
+        if: ${{ matrix.platform == 'darwin' }}
+        run: |
+          NINJA="$RUNNER_TOOL_CACHE/node/22.19.0/arm64/lib/node_modules/bare-make/node_modules/ninja-runtime-darwin-universal/bin/ninja"
+
+          echo "Checking Ninja at: $NINJA"
+
+          ls -l "$NINJA" || true
+
+          file "$NINJA" || true
+
+          xattr -l "$NINJA" || true
       - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
       - run: bare-make build
       - run: bare-make install
