@@ -2241,33 +2241,8 @@ bare_ffmpeg_samples_fill(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
   js_arraybuffer_span_t target,
   uint64_t offset,
-  uint64_t len,
   bool no_alignment
 ) {
-  int err;
-  assert(target.size() >= offset + len);
-
-  auto required = av_samples_get_buffer_size(
-    NULL,
-    frame->handle->ch_layout.nb_channels,
-    frame->handle->nb_samples,
-    static_cast<AVSampleFormat>(frame->handle->format),
-    no_alignment
-  );
-
-  if (required < 0) {
-    err = js_throw_error(env, NULL, av_err2str(len));
-    assert(err == 0);
-
-    throw js_pending_exception;
-  }
-
-  if (len < required) {
-    js_throw_errorf(env, NULL, "required at least %zu bytes, got %zu", required, len);
-
-    throw js_pending_exception;
-  }
-
   auto res = av_samples_fill_arrays(
     frame->handle->data,
     frame->handle->linesize,
@@ -2279,7 +2254,7 @@ bare_ffmpeg_samples_fill(
   );
 
   if (res < 0) {
-    err = js_throw_error(env, NULL, av_err2str(len));
+    int err = js_throw_error(env, NULL, av_err2str(res));
     assert(err == 0);
 
     throw js_pending_exception;
