@@ -3669,8 +3669,16 @@ bare_ffmpeg_list_option_names(
     if (!name) {
       return;
     }
-    if (std::find(names.begin(), names.end(), name) == names.end()) {
-      names.emplace_back(name);
+
+    bool found = false;
+    for (const auto& existing : names) {
+      if (existing == name) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      names.push_back(name);
     }
   };
 
