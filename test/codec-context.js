@@ -175,6 +175,65 @@ test('CodecContext exports requestSampleFormat setter', (t) => {
   t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
 })
 
+test('CodecContext can get an option', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const threadCount = codecCtx.getOption('threads')
+  t.is(threadCount, '1')
+})
+
+test('CodecContext can get and set options', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('crf', '23')
+  t.is(codecCtx.getOption('crf'), '23')
+
+  codecCtx.setOption(
+    'threads',
+    '4',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
+  )
+  t.is(
+    codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN),
+    '4'
+  )
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: '20',
+    preset: '1',
+    threads: '8'
+  })
+
+  codecCtx.setOptionDictionary(options)
+  t.is(codecCtx.getOption('crf'), '20')
+  t.is(codecCtx.getOption('preset'), '1')
+  t.is(codecCtx.getOption('threads'), '8')
+})
+
+test('CodecContext can set option defaults', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.execution(() => {
+    codecCtx.setOptionDefaults()
+  })
+})
+
+test('CodecContext can copy options from another context', (t) => {
+  using sourceCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using targetCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  sourceCtx.setOption('b', '128000')
+  sourceCtx.setOption('threads', '2')
+
+  targetCtx.copyOptionsFrom(sourceCtx)
+  t.is(targetCtx.getOption('b'), '128000')
+  t.is(targetCtx.getOption('threads'), '2')
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
