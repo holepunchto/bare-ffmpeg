@@ -22,7 +22,8 @@ const outputStream = outputFormat.createStream()
 outputStream.type = ffmpeg.constants.mediaTypes.AUDIO
 outputStream.codecParameters.id = ffmpeg.Codec.OPUS.id
 outputStream.codecParameters.sampleRate = SAMPLE_RATE
-outputStream.codecParameters.channelLayout = inputStream.codecParameters.channelLayout
+outputStream.codecParameters.channelLayout =
+  inputStream.codecParameters.channelLayout
 outputStream.codecParameters.format = ffmpeg.constants.sampleFormats.S16
 outputStream.timeBase = new ffmpeg.Rational(1, SAMPLE_RATE)
 console.log(outputStream.codecParameters.sampleRate)
@@ -38,7 +39,7 @@ const resampler = new ffmpeg.Resampler(
   inputStream.codecParameters.format,
   outputStream.codecParameters.sampleRate,
   outputStream.codecParameters.channelLayout,
-  outputStream.codecParameters.format,
+  outputStream.codecParameters.format
 )
 
 const resampledFrame = new ffmpeg.Frame()
@@ -53,7 +54,11 @@ bufferedFrame.format = outputStream.codecParameters.format
 bufferedFrame.channelLayout = outputStream.codecParameters.channelLayout
 bufferedFrame.alloc()
 
-const fifo = new ffmpeg.AudioFIFO(inputStream.codecParameters.format, inputStream.codecParameters.nbChannels, 64)
+const fifo = new ffmpeg.AudioFIFO(
+  inputStream.codecParameters.format,
+  inputStream.codecParameters.nbChannels,
+  64
+)
 
 const packet = new ffmpeg.Packet()
 while (inputFormat.readFrame(packet)) {
@@ -64,7 +69,8 @@ while (inputFormat.readFrame(packet)) {
   packet.unref()
 
   while (encoder.receiveFrame(frame)) {
-    if (pts === -1) { // TODO: negative infinity if keeping
+    if (pts === -1) {
+      // TODO: negative infinity if keeping
       pts = Rational.rescaleQ(
         frame.pts,
         inputStream.timeBase,
@@ -80,7 +86,11 @@ while (inputFormat.readFrame(packet)) {
     while (fifo.size >= outputFrameSize) {
       const n = fifo.read(bufferedFrame, outputFrameSize)
 
-      bufferedFrame.pts = ffmpeg.Rational.rescaleQ(pts, outputStream.timeBase, OPUS_CLOCK)
+      bufferedFrame.pts = ffmpeg.Rational.rescaleQ(
+        pts,
+        outputStream.timeBase,
+        OPUS_CLOCK
+      )
       bufferedFrame.packetDTS = bufferedFrame.pts
       pts += n
 
@@ -94,7 +104,6 @@ while (inputFormat.readFrame(packet)) {
         outputFormat.writeFrame(p)
         p.unref()
       }
-
     }
   }
 }
@@ -138,7 +147,7 @@ function sine(duration = 3000, opts = {}) {
 
 function createBufferedOutput(formatType = 'webm') {
   const chunks = []
-  const onwrite = chunk => chunks.push(chunk)
+  const onwrite = (chunk) => chunks.push(chunk)
   const io = new ffmpeg.IOContext(Buffer.alloc(4096), { onwrite })
   const outputFormat = new ffmpeg.OutputFormatContext(formatType, io)
 
