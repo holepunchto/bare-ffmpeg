@@ -503,6 +503,15 @@ bare_ffmpeg_format_context_open_output(
   return handle;
 }
 
+static std::string
+bare_ffmpeg_output_format_get_extensions(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> context
+) {
+  return context->handle->extensions;
+}
+
 static void
 bare_ffmpeg_format_context_close_output(
   js_env_t *env,
@@ -3599,13 +3608,16 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
   V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
+  V("getOutputFormatExtensions", bare_ffmpeg_output_format_get_extensions)
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
   V("openInputFormatContextWithFormat", bare_ffmpeg_format_context_open_input_with_format)
   V("closeInputFormatContext", bare_ffmpeg_format_context_close_input)
+
   V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
+
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
