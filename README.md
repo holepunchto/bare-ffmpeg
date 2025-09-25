@@ -720,6 +720,28 @@ Parameters:
 
 **Returns**: A new `OutputFormat` instance
 
+#### Properties
+
+##### `OutputFormat.extensions`
+
+Gets the file extensions associated with this output format.
+
+**Returns**: `string` - Comma-separated list of file extensions (e.g., `'webm'`, `'mp4,m4a,m4v'`)
+
+##### `OutputFormat.mimeType`
+
+Gets the MIME type for this output format.
+
+**Returns**: `string` - The MIME type (e.g., `'video/webm'`, `'video/mp4'`)
+
+#### Example
+
+```js
+const format = new ffmpeg.OutputFormat('webm')
+console.log(format.extensions) // 'webm'
+console.log(format.mimeType) // 'video/webm'
+```
+
 #### Methods
 
 ##### `OutputFormat.destroy()`
