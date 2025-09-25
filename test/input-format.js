@@ -4,3 +4,16 @@ const ffmpeg = require('..')
 test('input format should instantiate', (t) => {
   t.ok(new ffmpeg.InputFormat())
 })
+
+test('InputFormat should expose an extensions getter', (t) => {
+  const inputFormat = new ffmpeg.InputFormat('webm')
+  t.is(inputFormat.extensions, 'mkv,mk3d,mka,mks,webm')
+})
+
+test('InputFormat should expose an mimeType getter', (t) => {
+  const inputFormat = new ffmpeg.InputFormat('webm')
+  t.is(
+    inputFormat.mimeType,
+    'audio/webm,audio/x-matroska,video/webm,video/x-matroska'
+  )
+})
