@@ -698,6 +698,28 @@ Parameters:
 
 **Returns**: A new `InputFormat` instance
 
+#### Properties
+
+##### `InputFormat.extensions`
+
+Gets the file extensions associated with this input format.
+
+**Returns**: `string` - Comma-separated list of file extensions (e.g., `'mkv,mk3d,mka,mks,webm'`)
+
+##### `InputFormat.mimeType`
+
+Gets the MIME type for this input format.
+
+**Returns**: `string` - The MIME type (e.g., `'audio/webm,audio/x-matroska,video/webm,video/x-matroska'`)
+
+#### Example
+
+```js
+const format = new ffmpeg.InputFormat('webm')
+console.log(format.extensions) // 'mkv,mk3d,mka,mks,webm'
+console.log(format.mimeType) // 'audio/webm,audio/x-matroska,video/webm,video/x-matroska'
+```
+
 #### Methods
 
 ##### `InputFormat.destroy()`
@@ -719,6 +741,28 @@ Parameters:
 - `name` (`string`): The output format name (e.g., `'mp4'`, `'avi'`, `'mov'`)
 
 **Returns**: A new `OutputFormat` instance
+
+#### Properties
+
+##### `OutputFormat.extensions`
+
+Gets the file extensions associated with this output format.
+
+**Returns**: `string` - Comma-separated list of file extensions (e.g., `'webm'`, `'mp4,m4a,m4v'`)
+
+##### `OutputFormat.mimeType`
+
+Gets the MIME type for this output format.
+
+**Returns**: `string` - The MIME type (e.g., `'video/webm'`, `'video/mp4'`)
+
+#### Example
+
+```js
+const format = new ffmpeg.OutputFormat('webm')
+console.log(format.extensions) // 'webm'
+console.log(format.mimeType) // 'video/webm'
+```
 
 #### Methods
 

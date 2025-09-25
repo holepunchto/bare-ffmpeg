@@ -376,6 +376,24 @@ bare_ffmpeg_input_format_get_flags(
   return format->handle->flags;
 }
 
+static std::string
+bare_ffmpeg_input_format_get_extensions(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> context
+) {
+  return context->handle->extensions;
+}
+
+static std::string
+bare_ffmpeg_input_format_get_mime_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> context
+) {
+  return context->handle->mime_type;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_format_context_open_input_with_io(
   js_env_t *env,
@@ -501,6 +519,24 @@ bare_ffmpeg_format_context_open_output(
   context->handle->opaque = (void *) context;
 
   return handle;
+}
+
+static std::string
+bare_ffmpeg_output_format_get_extensions(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> context
+) {
+  return context->handle->extensions;
+}
+
+static std::string
+bare_ffmpeg_output_format_get_mime_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> context
+) {
+  return context->handle->mime_type;
 }
 
 static void
@@ -3596,16 +3632,23 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("initIOContext", bare_ffmpeg_io_context_init)
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
-  V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("initInputFormat", bare_ffmpeg_input_format_init)
-  V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
+  V("getInputFormatExtensions", bare_ffmpeg_input_format_get_extensions)
+  V("getInputFormatMimeType", bare_ffmpeg_input_format_get_mime_type)
+
+  V("initOutputFormat", bare_ffmpeg_output_format_init)
+  V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
+  V("getOutputFormatExtensions", bare_ffmpeg_output_format_get_extensions)
+  V("getOutputFormatMimeType", bare_ffmpeg_output_format_get_mime_type)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
   V("openInputFormatContextWithFormat", bare_ffmpeg_format_context_open_input_with_format)
   V("closeInputFormatContext", bare_ffmpeg_format_context_close_input)
+
   V("openOutputFormatContext", bare_ffmpeg_format_context_open_output)
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
+
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
