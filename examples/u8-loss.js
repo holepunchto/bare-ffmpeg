@@ -4,12 +4,10 @@ const assert = require('bare-assert')
 const DEBUG_ENABLED = true
 const SAMPLE_RATE = 48000
 const RFRAME_SIZE = 2000
-const OPUS_OP_FREQ = 48e3 /* 48kHz */
-const OPUS_CLOCK = new ffmpeg.Rational(1, OPUS_OP_FREQ)
 
-let pts = -1
+let pts = -Infinity
 
-const inputFormat = sine(3000, {
+const inputFormat = sine(500, {
   sampleRate: SAMPLE_RATE,
   sampleFormat: 'u8'
 })
@@ -96,9 +94,9 @@ while (inputFormat.readFrame(packet)) {
       debug('6', 'Read from fifo')
 
       bufferedFrame.pts = ffmpeg.Rational.rescaleQ(
-        pts,
+        bufferedFrame.pts,
         outputStream.timeBase,
-        OPUS_CLOCK
+        new ffmpeg.Rational(1, 1000)
       )
       debug('7', 'Rescaled')
       bufferedFrame.packetDTS = bufferedFrame.pts
@@ -117,6 +115,7 @@ while (inputFormat.readFrame(packet)) {
         debug('10', 'Packet writed to output format')
         p.unref()
       }
+
     }
   }
 }
