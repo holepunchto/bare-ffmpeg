@@ -698,6 +698,28 @@ Parameters:
 
 **Returns**: A new `InputFormat` instance
 
+#### Properties
+
+##### `InputFormat.extensions`
+
+Gets the file extensions associated with this input format.
+
+**Returns**: `string` - Comma-separated list of file extensions (e.g., `'mkv,mk3d,mka,mks,webm'`)
+
+##### `InputFormat.mimeType`
+
+Gets the MIME type for this input format.
+
+**Returns**: `string` - The MIME type (e.g., `'audio/webm,audio/x-matroska,video/webm,video/x-matroska'`)
+
+#### Example
+
+```js
+const format = new ffmpeg.InputFormat('webm')
+console.log(format.extensions) // 'mkv,mk3d,mka,mks,webm'
+console.log(format.mimeType) // 'audio/webm,audio/x-matroska,video/webm,video/x-matroska'
+```
+
 #### Methods
 
 ##### `InputFormat.destroy()`
