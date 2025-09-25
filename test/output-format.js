@@ -9,3 +9,8 @@ test('OutputFormat should expose an extensions getter', (t) => {
   const outputFormat = new ffmpeg.OutputFormat('webm')
   t.is(outputFormat.extensions, 'webm')
 })
+
+test('OutputFormat should expose an mimeType getter', (t) => {
+  const outputFormat = new ffmpeg.OutputFormat('webm')
+  t.is(outputFormat.mimeType, 'video/webm')
+})
