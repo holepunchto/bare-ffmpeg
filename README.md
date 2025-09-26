@@ -828,6 +828,25 @@ Destroys the `Frame` and frees all associated resources. Automatically called wh
 
 **Returns**: `void`
 
+##### `Frame.copyProperties(otherFrame)`
+
+Copies all metadata properties such as timestamps, timebase and width/height for videoframes and
+sampleRate channelLayout for audioFrames.
+
+see `av_frame_copy_props()` for details.
+
+```js
+const src = new ffmpeg.Frame()
+const dst = new ffmpeg.Frame()
+
+decoder.receiveFrame(src)
+rescaler.convert(src, dst)
+
+dst.copyProperties(src) // transfer all meta-data
+```
+
+**Returns**: `void`
+
 ### `Packet`
 
 This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.

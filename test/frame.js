@@ -96,3 +96,15 @@ test('frame expose getter for picture type', (t) => {
   const fr = new ffmpeg.Frame()
   t.is(fr.pictType, ffmpeg.constants.pictureTypes.NONE)
 })
+
+test('copy frame properties', (t) => {
+  const a = new ffmpeg.Frame()
+  a.pts = 12
+
+  const b = new ffmpeg.Frame()
+  t.not(b.pts, 12)
+
+  b.copyProperties(a)
+
+  t.is(b.pts, 12)
+})
