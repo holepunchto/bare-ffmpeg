@@ -26,6 +26,7 @@ const Samples = require('./lib/samples')
 const Scaler = require('./lib/scaler')
 const Stream = require('./lib/stream')
 const log = require('./lib/log')
+const options = require('./lib/options')
 
 exports.AudioFIFO = AudioFIFO
 exports.ChannelLayout = ChannelLayout
@@ -53,5 +54,6 @@ exports.Stream = Stream
 exports.Rational = Rational
 exports.Resampler = Resampler
 exports.log = log
+exports.options = options
 
 exports.constants = require('./lib/constants')
