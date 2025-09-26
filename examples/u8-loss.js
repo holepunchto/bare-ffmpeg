@@ -115,7 +115,6 @@ while (inputFormat.readFrame(packet)) {
         debug('10', 'Packet writed to output format')
         p.unref()
       }
-
     }
   }
 }
