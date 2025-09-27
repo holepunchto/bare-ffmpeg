@@ -127,16 +127,14 @@ test('rescale packet timestamps & timebase', (t) => {
 
   packet.dts = ts
   packet.pts = ts
-  packet.timeBase = new ffmpeg.Rational(1, 1000)
+  const src = new ffmpeg.Rational(1, 1000)
 
   const dst = new ffmpeg.Rational(1, 100)
 
-  const success = packet.rescaleTimestamps(dst)
-  t.ok(success)
+  packet.rescaleTimestamps(src, dst)
 
   t.is(packet.dts, packet.pts)
   t.is(packet.dts, 700)
-  t.alike(packet.timeBase, dst)
 })
 
 test('packet should expose a sideData getter', (t) => {
