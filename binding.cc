@@ -706,6 +706,48 @@ bare_ffmpeg_format_context_dump(
   }
 }
 
+static std::optional<js_arraybuffer_t>
+get_bare_ffmpeg_format_context_output_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int err;
+
+  if (!context->handle->oformat) return std::nullopt;
+
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_output_format_t *format;
+  err = js_create_arraybuffer(env, format, handle);
+  assert(err == 0);
+
+  format->handle = context->handle->oformat;
+
+  return handle;
+}
+
+static std::optional<js_arraybuffer_t>
+get_bare_ffmpeg_format_context_input_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  int err;
+
+  if (!context->handle->iformat) return std::nullopt;
+
+  js_arraybuffer_t handle;
+
+  bare_ffmpeg_input_format_t *format;
+  err = js_create_arraybuffer(env, format, handle);
+  assert(err == 0);
+
+  format->handle = context->handle->iformat;
+
+  return handle;
+}
+
 static int32_t
 bare_ffmpeg_stream_get_index(
   js_env_t *env,
@@ -3660,6 +3702,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("writeFormatContextFrame", bare_ffmpeg_format_context_write_frame)
   V("writeFormatContextTrailer", bare_ffmpeg_format_context_write_trailer)
   V("dumpFormatContext", bare_ffmpeg_format_context_dump)
+  V("getFormatContextOutputFormat", get_bare_ffmpeg_format_context_output_format)
+  V("getFormatContextInputFormat", get_bare_ffmpeg_format_context_input_format)
 
   V("getStreamIndex", bare_ffmpeg_stream_get_index)
   V("getStreamId", bare_ffmpeg_stream_get_id)
