@@ -4,6 +4,8 @@ const ffmpeg = require('..')
 const fallbackName = 'lavfi'
 const fallbackURL = 'testsrc=size=640x480:rate=30'
 
+// InputFormatContext
+
 test('InputFormatContext should be instantiate with IOContext', (t) => {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
@@ -74,6 +76,22 @@ test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) =>
 
   t.ok(inputFormat instanceof ffmpeg.InputFormat)
 })
+
+// OutputFormatContext
+
+test('OutputFormatContext should expose an outputFormat getter', (t) => {
+  const io = new ffmpeg.IOContext(4096)
+  const outContext = new ffmpeg.OutputFormatContext(
+    new ffmpeg.OutputFormat('webm'),
+    io
+  )
+
+  const outputFormat = outContext.outputFormat
+
+  t.ok(outputFormat instanceof ffmpeg.OutputFormat)
+})
+
+// Helpers
 
 function getOptions() {
   const options = new ffmpeg.Dictionary()

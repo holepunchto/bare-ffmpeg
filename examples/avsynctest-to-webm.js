@@ -1,29 +1,14 @@
-const test = require('brittle')
 const ffmpeg = require('..')
+const assert = require('bare-assert')
 
 const { formatFlags, codecFlags, mediaTypes, sampleFormats, pixelFormats } =
   ffmpeg.constants
-
-// ffmpeg.log.level = ffmpeg.log.INFO
 
 const FRAMERATE = 50
 const SAMPLERATE = 48000
 const DURATION = 1
 
-test('OutputFormatContext should expose an outputFormat getter', (t) => {
-  const io = new ffmpeg.IOContext(4096)
-  const outContext = new ffmpeg.OutputFormatContext(
-    new ffmpeg.OutputFormat('webm'),
-    io
-  )
-
-  const outputFormat = outContext.outputFormat
-
-  t.ok(outputFormat instanceof ffmpeg.OutputFormat)
-})
-
-// TODO: convert this test as an example
-test('write webm', async (t) => {
+async function run() {
   // Input
   const inContext = avsynctestInput()
 
@@ -46,14 +31,14 @@ test('write webm', async (t) => {
     decoder: audioDecoder,
     encoder: audioEncoder,
     outputStream: audioOutputStream
-  } = addAudioStream(t, outFormat, inContext, outContext)
+  } = addAudioStream(outFormat, inContext, outContext)
 
   const {
     inputStream: videoInputStream,
     decoder: videoDecoder,
     encoder: videoEncoder,
     outputStream: videoOutputStream
-  } = addVideoStream(t, outFormat, inContext, outContext)
+  } = addVideoStream(outFormat, inContext, outContext)
 
   outContext.dump(0) // print output format (logLevel.TRACE)
 
@@ -118,7 +103,6 @@ test('write webm', async (t) => {
 
     await delay(waitMs)
   }
-
   function pumpOutput() {
     while (audioEncoder.receivePacket(packet)) {
       packet.streamIndex = audioOutputStream.index
@@ -146,7 +130,7 @@ test('write webm', async (t) => {
 
   outContext.writeTrailer()
 
-  t.is(captured, encoded - 1, 'transcoding complete')
+  assert.equal(captured, encoded - 1, 'transcoding complete')
 
   audioFrame.destroy()
   frame.destroy()
@@ -157,8 +141,12 @@ test('write webm', async (t) => {
   outContext.destroy()
   inContext.destroy()
 
-  validateOutput(t, Buffer.concat(buffers))
-})
+  validateOutput(Buffer.concat(buffers))
+}
+
+run()
+
+// Helpers
 
 function avsynctestInput() {
   const options = new ffmpeg.Dictionary()
@@ -193,27 +181,28 @@ function avsynctestInput() {
  * @param {ffmpeg.OutputFormatContext} outContext
  * @param {ffmpeg.InputFormatContext} inContext
  */
-function addAudioStream(t, format, inContext, outContext) {
+function addAudioStream(format, inContext, outContext) {
   const inputStream = inContext.getBestStream(mediaTypes.AUDIO)
   if (!inputStream) throw new Error('getStream failed')
 
-  t.alike(inputStream.timeBase, new ffmpeg.Rational(1, SAMPLERATE))
+  assert.equal(inputStream.timeBase.numerator, 1)
+  assert.equal(inputStream.timeBase.denominator, SAMPLERATE)
 
   const audioIdx = inputStream.index
-  t.is(audioIdx, 0, 'audio stream index')
+  assert.equal(audioIdx, 0, 'audio stream index')
 
   const { sampleRate, channelLayout, bitRate } = inputStream.codecParameters
-  t.is(sampleRate, SAMPLERATE, 'samplerate')
-  t.is(channelLayout.nbChannels, 1, 'mono input')
+  assert.equal(sampleRate, SAMPLERATE, 'samplerate')
+  assert.equal(channelLayout.nbChannels, 1, 'mono input')
 
   const decoder = inputStream.decoder()
-  t.is(decoder.sampleRate, sampleRate)
-  t.is(decoder.channelLayout.mask, channelLayout.mask, 'channel layout')
+  assert.equal(decoder.sampleRate, sampleRate)
+  assert.equal(decoder.channelLayout.mask, channelLayout.mask, 'channel layout')
 
   const calcBitrate =
     inputStream.codecParameters.bitsPerCodedSample * sampleRate
 
-  t.is(bitRate, calcBitrate, 'bitrate')
+  assert.equal(bitRate, calcBitrate, 'bitrate')
 
   const outputStream = outContext.createStream()
 
@@ -236,15 +225,32 @@ function addAudioStream(t, format, inContext, outContext) {
   outputStream.id = 1 // user defined
   outputStream.codecParameters.bitRate = bitRate
 
-  t.is(outputStream.id, 1, 'id')
-  t.is(outputStream.index, 0, 'stream index')
-  t.alike(outputStream.timeBase, inputStream.timeBase, 'time base')
-  t.is(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
+  assert.equal(outputStream.id, 1, 'id')
+  assert.equal(outputStream.index, 0, 'stream index')
+  assert.equal(
+    outputStream.timeBase.numerator,
+    inputStream.timeBase.numerator,
+    'time base numerator'
+  )
+  assert.equal(
+    outputStream.timeBase.denominator,
+    inputStream.timeBase.denominator,
+    'time base denominator'
+  )
+  assert.equal(outputStream.codec, ffmpeg.Codec.OPUS, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.type, mediaTypes.AUDIO, 'media type')
-  t.is(outputStream.codecParameters.id, ffmpeg.Codec.OPUS.id, 'codec')
-  t.is(outputStream.codecParameters.sampleRate, sampleRate, 'output samplerate')
+  assert.equal(
+    outputStream.codecParameters.type,
+    mediaTypes.AUDIO,
+    'media type'
+  )
+  assert.equal(outputStream.codecParameters.id, ffmpeg.Codec.OPUS.id, 'codec')
+  assert.equal(
+    outputStream.codecParameters.sampleRate,
+    sampleRate,
+    'output samplerate'
+  )
 
   return { inputStream, decoder, encoder, outputStream }
 }
@@ -254,27 +260,37 @@ function addAudioStream(t, format, inContext, outContext) {
  * @param {ffmpeg.OutputFormatContext} outContext
  * @param {ffmpeg.InputFormatContext} inContext
  */
-function addVideoStream(t, format, inContext, outContext) {
+function addVideoStream(format, inContext, outContext) {
   // Decoder
 
   const inputStream = inContext.getBestStream(mediaTypes.VIDEO)
   if (!inputStream) throw new Error('getStream failed')
 
-  t.alike(inputStream.timeBase, new ffmpeg.Rational(1, FRAMERATE))
+  assert.equal(inputStream.timeBase.numerator, 1)
+  assert.equal(inputStream.timeBase.denominator, FRAMERATE)
 
   const videoIdx = inputStream.index
-  t.is(videoIdx, 1, 'video stream index')
+  assert.equal(videoIdx, 1, 'video stream index')
 
   const { width, height } = inputStream.codecParameters
-  t.is(width, 1280)
-  t.is(height, 720)
+  assert.equal(width, 1280)
+  assert.equal(height, 720)
 
   const decoder = inputStream.decoder()
 
   decoder.timeBase = inputStream.timeBase
-  t.alike(decoder.timeBase, inputStream.timeBase, 'decoder.timebase')
+  assert.equal(
+    decoder.timeBase.numerator,
+    inputStream.timeBase.numerator,
+    'decoder.timebase.numerator'
+  )
+  assert.equal(
+    decoder.timeBase.denominator,
+    inputStream.timeBase.denominator,
+    'decoder.timebase.denominator'
+  )
 
-  t.is(decoder.pixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
+  assert.equal(decoder.pixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
   decoder.open()
 
   // Encoder
@@ -301,16 +317,29 @@ function addVideoStream(t, format, inContext, outContext) {
   outputStream.id = 0 // user defined
 
   // assert props
-  t.is(outputStream.id, 0, 'id')
-  t.is(outputStream.index, 1, 'stream index')
-  t.alike(outputStream.timeBase, inputStream.timeBase, 'timeBase')
-  t.is(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
+  assert.equal(outputStream.id, 0, 'id')
+  assert.equal(outputStream.index, 1, 'stream index')
+  assert.equal(
+    outputStream.timeBase.numerator,
+    inputStream.timeBase.numerator,
+    'timeBase numerator'
+  )
+  assert.equal(
+    outputStream.timeBase.denominator,
+    inputStream.timeBase.denominator,
+    'timeBase denominator'
+  )
+  assert.equal(outputStream.codec, ffmpeg.Codec.AV1, 'codec set')
 
   // assert param's props
-  t.is(outputStream.codecParameters.type, mediaTypes.VIDEO, 'media type')
-  t.is(outputStream.codecParameters.id, ffmpeg.Codec.AV1.id, 'codec')
-  t.is(outputStream.codecParameters.width, width, 'width')
-  t.is(outputStream.codecParameters.height, height, 'height')
+  assert.equal(
+    outputStream.codecParameters.type,
+    mediaTypes.VIDEO,
+    'media type'
+  )
+  assert.equal(outputStream.codecParameters.id, ffmpeg.Codec.AV1.id, 'codec')
+  assert.equal(outputStream.codecParameters.width, width, 'width')
+  assert.equal(outputStream.codecParameters.height, height, 'height')
 
   return { inputStream, decoder, encoder, outputStream }
 }
@@ -319,47 +348,46 @@ function delay(millis) {
   return new Promise((resolve) => setTimeout(resolve, millis))
 }
 
-function validateOutput(t, data) {
-  t.ok(data, 'webm encoded')
-  // require('fs').writeFileSync('out_dump.webm', data)
+function validateOutput(data) {
+  assert(data, 'webm encoded')
 
   const io = new ffmpeg.IOContext(data)
 
   const format = new ffmpeg.InputFormatContext(io)
-  t.is(format.streams.length, 2, 'contains audio+video')
-
-  // format.dump()
+  assert.equal(format.streams.length, 2, 'contains audio+video')
 
   // verify audio
 
   const audioStream = format.getBestStream(mediaTypes.AUDIO)
 
-  t.is(audioStream.index, 0)
-  t.alike(audioStream.timeBase, new ffmpeg.Rational(1, 1000))
+  assert.equal(audioStream.index, 0)
+  assert.equal(audioStream.timeBase.numerator, 1)
+  assert.equal(audioStream.timeBase.denominator, 1000)
 
-  t.is(audioStream.codec.name, 'opus', 'codec')
+  assert.equal(audioStream.codec.name, 'opus', 'codec')
 
   const ap = audioStream.codecParameters
 
-  t.is(ap.sampleRate, 48000, 'samplerate')
-  t.is(ap.format, sampleFormats.FLTP, 'sample format')
+  assert.equal(ap.sampleRate, 48000, 'samplerate')
+  assert.equal(ap.format, sampleFormats.FLTP, 'sample format')
 
-  t.is(ap.nbChannels, 1, 'nbChannels')
-  t.alike(ap.channelLayout.nbChannels, 1, 'channelLayout')
+  assert.equal(ap.nbChannels, 1, 'nbChannels')
+  assert.equal(ap.channelLayout.nbChannels, 1, 'channelLayout')
 
   // verify video
 
   const videoStream = format.getBestStream(mediaTypes.VIDEO)
 
-  t.is(videoStream.index, 1)
-  t.alike(videoStream.timeBase, new ffmpeg.Rational(1, 1000))
-  t.is(videoStream.codec.name, 'av1', 'codec')
+  assert.equal(videoStream.index, 1)
+  assert.equal(videoStream.timeBase.numerator, 1)
+  assert.equal(videoStream.timeBase.denominator, 1000)
+  assert.equal(videoStream.codec.name, 'av1', 'codec')
 
   const vp = videoStream.codecParameters
 
-  t.is(vp.width, 1280, 'width')
-  t.is(vp.height, 720, 'height')
-  t.is(vp.format, pixelFormats.YUV420P, 'pixel format')
+  assert.equal(vp.width, 1280, 'width')
+  assert.equal(vp.height, 720, 'height')
+  assert.equal(vp.format, pixelFormats.YUV420P, 'pixel format')
 
   format.destroy()
 }
