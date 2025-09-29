@@ -266,6 +266,12 @@ Parameters:
 
 #### Methods
 
+##### `InputFormatContext.inputFormat`
+
+Gets the input format associated with this context.
+
+**Returns**: `InputFormat` instance or `undefined` if not available
+
 ##### `InputFormatContext.destroy()`
 
 Destroys the `InputFormatContext` and closes the input format. Automatically called when the object is managed by a `using` declaration.
@@ -298,6 +304,12 @@ Parameters:
 - `codec` (`Codec`): The codec to use for the stream
 
 **Returns**: A new `Stream` instance
+
+##### `OutputFormatContext.outputFormat`
+
+Gets the output format associated with this context.
+
+**Returns**: `OutputFormat` instance or `undefined` if not available
 
 ##### `OutputFormatContext.destroy()`
 
