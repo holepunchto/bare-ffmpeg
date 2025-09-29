@@ -63,6 +63,18 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
   t.is(bestStream, null)
 })
 
+test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) => {
+  using inputFormatContext = new ffmpeg.InputFormatContext(
+    new ffmpeg.InputFormat(fallbackName),
+    getOptions(),
+    fallbackURL
+  )
+
+  const inputFormat = inputFormatContext.inputFormat
+
+  t.ok(inputFormat instanceof ffmpeg.InputFormat)
+})
+
 function getOptions() {
   const options = new ffmpeg.Dictionary()
   options.set('framerate', '30')

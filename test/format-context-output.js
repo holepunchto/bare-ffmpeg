@@ -10,6 +10,19 @@ const FRAMERATE = 50
 const SAMPLERATE = 48000
 const DURATION = 1
 
+test('OutputFormatContext should expose an outputFormat getter', (t) => {
+  const io = new ffmpeg.IOContext(4096)
+  const outContext = new ffmpeg.OutputFormatContext(
+    new ffmpeg.OutputFormat('webm'),
+    io
+  )
+
+  const outputFormat = outContext.outputFormat
+
+  t.ok(outputFormat instanceof ffmpeg.OutputFormat)
+})
+
+// TODO: convert this test as an example
 test('write webm', async (t) => {
   // Input
   const inContext = avsynctestInput()
