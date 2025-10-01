@@ -3686,21 +3686,6 @@ bare_ffmpeg_rational_rescale_q(
   );
 }
 
-static inline void *
-bare__unwrap_avclass_owner(js_env_t *env, js_arraybuffer_span_t handle) {
-  void **handle_ptr = reinterpret_cast<void **>(handle.data());
-  void *owner_ptr = *handle_ptr;
-
-  AVClass **owner = reinterpret_cast<AVClass **>(owner_ptr);
-  if (!owner || !*owner) {
-    int err = js_throw_error(env, NULL, "object does not have AVClass");
-    assert(err == 0);
-    throw js_pending_exception;
-  }
-
-  return owner_ptr;
-}
-
 static void
 bare_ffmpeg_set_option(
   js_env_t *env,
@@ -3711,10 +3696,16 @@ bare_ffmpeg_set_option(
   int flags
 ) {
   int err;
-  void *avclass_owner = bare__unwrap_avclass_owner(env, handle);
+
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
 
   err = av_opt_set(
-    avclass_owner,
+    *owner,
     key.c_str(),
     value.c_str(),
     flags
@@ -3736,10 +3727,15 @@ bare_ffmpeg_get_option(
 ) {
   int err;
   char *buf = NULL;
-  void *avclass_owner = bare__unwrap_avclass_owner(env, handle);
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
 
   err = av_opt_get(
-    avclass_owner,
+    *owner,
     key.c_str(),
     flags,
     reinterpret_cast<uint8_t **>(&buf)
@@ -3766,7 +3762,13 @@ bare_ffmpeg_list_option_names(
   js_arraybuffer_span_t avclass_owner_handle,
   int flags
 ) {
-  void *owner = bare__unwrap_avclass_owner(env, avclass_owner_handle);
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 
   std::vector<std::string> names;
 
@@ -3776,7 +3778,7 @@ bare_ffmpeg_list_option_names(
     }
 
     bool found = false;
-    for (const auto& existing : names) {
+    for (const auto &existing : names) {
       if (existing == name) {
         found = true;
         break;
@@ -3794,11 +3796,11 @@ bare_ffmpeg_list_option_names(
     }
   };
 
-  collect(owner);
+  collect(*owner);
 
   if (flags & AV_OPT_SEARCH_CHILDREN) {
     void *child = nullptr;
-    while ((child = av_opt_child_next(owner, child))) {
+    while ((child = av_opt_child_next(*owner, child))) {
       collect(child);
     }
   }
@@ -3815,9 +3817,14 @@ bare_ffmpeg_set_option_dictionary(
   int flags
 ) {
   int err;
-  void *owner = bare__unwrap_avclass_owner(env, avclass_owner_handle);
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
 
-  err = av_opt_set_dict2(owner, &dict->handle, flags);
+  err = av_opt_set_dict2(*owner, &dict->handle, flags);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -3831,8 +3838,14 @@ bare_ffmpeg_set_option_defaults(
   js_receiver_t,
   js_arraybuffer_span_t avclass_owner_handle
 ) {
-  void *owner = bare__unwrap_avclass_owner(env, avclass_owner_handle);
-  av_opt_set_defaults(owner);
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  av_opt_set_defaults(*owner);
 }
 
 static void
@@ -3842,10 +3855,21 @@ bare_ffmpeg_copy_options(
   js_arraybuffer_span_t target_avclass_owner_handle,
   js_arraybuffer_span_t source_avclass_owner_handle
 ) {
-  void *target_owner = bare__unwrap_avclass_owner(env, target_avclass_owner_handle);
-  void *source_owner = bare__unwrap_avclass_owner(env, source_avclass_owner_handle);
+  AVClass **target_owner = reinterpret_cast<AVClass **>(target_avclass_owner_handle.data());
+  if (!target_owner || !*target_owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
 
-  int err = av_opt_copy(target_owner, source_owner);
+  AVClass **source_owner = reinterpret_cast<AVClass **>(source_avclass_owner_handle.data());
+  if (!source_owner || !*source_owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  int err = av_opt_copy(*target_owner, *source_owner);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
