@@ -915,12 +915,12 @@ bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
 }
 
 static std::string
-bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, int32_t id) {
+bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, int id) {
   return av_get_sample_fmt_name(static_cast<enum AVSampleFormat>(id));
 }
 
 static std::string
-bare_ffmpeg_get_pixel_format_name_by_id(js_env_t *env, js_receiver_t, int32_t id) {
+bare_ffmpeg_get_pixel_format_name_by_id(js_env_t *env, js_receiver_t, int id) {
   return av_get_pix_fmt_name(static_cast<enum AVPixelFormat>(id));
 }
 
