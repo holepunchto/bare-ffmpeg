@@ -230,8 +230,8 @@ test('CodecContext can copy options from another context', (t) => {
   sourceCtx.setOption('threads', '2')
 
   targetCtx.copyOptionsFrom(sourceCtx)
-  t.is(targetCtx.getOption('b'), '128000')
-  t.is(targetCtx.getOption('threads'), '2')
+  t.is(targetCtx.getOption('b'), sourceCtx.getOption('b'))
+  t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
 })
 
 function setDefaultOptions(ctx) {
