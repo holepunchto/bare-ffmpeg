@@ -437,8 +437,7 @@ When decoding this gets the total number of frames returned from the decoder so 
 
 _Only when decoding_
 
-Set to before calling `context.open()`
-to hint decoder of preferred output format if supported.
+Set to before calling `context.open()` to hint decoder of preferred output format if supported.
 
 Always rely on `CodecContext.sampleFormat` for actual decoded format.
 
