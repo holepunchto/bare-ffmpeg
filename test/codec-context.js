@@ -170,10 +170,9 @@ test('CodecContext exports requestSampleFormat getter', (t) => {
 })
 
 test('CodecContext exports requestSampleFormat setter', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
   codecCtx.requestSampleFormat = ffmpeg.constants.sampleFormats.S16
   t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
-  codecCtx.destroy()
 })
 
 function setDefaultOptions(ctx) {
