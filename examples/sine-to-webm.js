@@ -12,9 +12,7 @@ const inputFormat = createSineWaveInput(3, {
 })
 
 // Get audio stream from the inputFormat
-const inputStream = inputFormat.getBestStream(
-  ffmpeg.constants.mediaTypes.AUDIO
-)
+const inputStream = inputFormat.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
 
 // Create WebM output in memory (Opus audio in WebM container)
 const audioChunks = []
@@ -27,8 +25,7 @@ const outputFormat = new ffmpeg.OutputFormatContext('webm', audioIO)
 const outputStream = outputFormat.createStream()
 outputStream.codecParameters.type = ffmpeg.constants.mediaTypes.AUDIO
 outputStream.codecParameters.id = ffmpeg.constants.codecs.OPUS // Use Opus codec
-outputStream.codecParameters.sampleRate =
-  inputStream.codecParameters.sampleRate
+outputStream.codecParameters.sampleRate = inputStream.codecParameters.sampleRate
 outputStream.codecParameters.channelLayout =
   inputStream.codecParameters.channelLayout
 outputStream.codecParameters.format = ffmpeg.constants.sampleFormats.FLTP // Opus requires FLTP
@@ -153,4 +150,3 @@ function createSineWaveInput(duration = 3, opts = {}) {
 
   return format
 }
-
