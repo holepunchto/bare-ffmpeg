@@ -7,3 +7,10 @@ test('constants should expose a getSampleFormatName function', (t) => {
     's16'
   )
 })
+
+test('constants should expose a getPixelFormatName function', (t) => {
+  t.is(
+    ffmpeg.constants.getPixelFormatName(ffmpeg.constants.pixelFormats.RGB24),
+    'rgb24'
+  )
+})
