@@ -1,12 +1,13 @@
 const ffmpeg = require('..')
 const assert = require('bare-assert')
+const fs = require('bare-fs')
 
 // Generate a sine wave and encode it to WebM format (Opus audio)
 function main() {
   console.log('Generating sine wave audio...')
 
-  // Create sine wave input (1 second, 440Hz tone)
-  const inputFormat = createSineWaveInput(1000, {
+  // Create sine wave input (3 second, 440Hz tone)
+  const inputFormat = createSineWaveInput(3000, {
     frequency: 440,
     sampleRate: 48000,
     sampleFormat: 's16'
@@ -127,19 +128,26 @@ function main() {
   // WebM files start with EBML header
   assert(
     audioData[0] === 0x1a &&
-      audioData[1] === 0x45 &&
-      audioData[2] === 0xdf &&
-      audioData[3] === 0xa3,
+    audioData[1] === 0x45 &&
+    audioData[2] === 0xdf &&
+    audioData[3] === 0xa3,
     'Should have EBML header'
   )
 
   console.log('✓ WebM file format validation passed!')
+
+  // Write the file to disk
+  const filename = 'sine_wave_440hz.webm'
+  fs.writeFileSync(filename, audioData)
+
+  console.log(`✓ Audio file saved as ${filename}`)
   console.log(
-    'Note: In a real application, you would save this Buffer to a .webm file'
+    'You can now play this file with any media player that supports WebM/Opus!'
   )
+  console.log(`Example: vlc ${filename} or ffplay ${filename}`)
 }
 
-function createSineWaveInput(duration = 1000, opts = {}) {
+function createSineWaveInput(duration = 3000, opts = {}) {
   const sampleRate = opts.sampleRate || 48000
   const sampleFormat = opts.sampleFormat || 's16'
   const frequency = opts.frequency || 440
