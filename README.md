@@ -541,6 +541,92 @@ if (layouts) {
 }
 ```
 
+##### `CodecContext.getOption(name[, flags])`
+
+Gets the value of a codec option.
+
+Parameters:
+
+- `name` (`string`): The option name (for example, `'threads'` or `'crf'`)
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `string` value or `null` when the option is unset
+
+##### `CodecContext.setOption(name, value[, flags])`
+
+Sets a codec option.
+
+Parameters:
+
+- `name` (`string`): The option name to set
+- `value` (`string`): The option value
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `CodecContext.setOptionDictionary(dictionary[, flags])`
+
+Sets options from a `Dictionary`. Ownership of the dictionary is retained by the caller.
+
+Parameters:
+
+- `dictionary` (`Dictionary`): Dictionary of option key/value pairs
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `CodecContext.setOptionDefaults()`
+
+Resets codec options to their defaults.
+
+**Returns**: `void`
+
+##### `CodecContext.listOptionNames([flags])`
+
+Lists option names available on the codec context.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `Array<string>` of option names
+
+##### `CodecContext.getOptions([flags])`
+
+Collects option values into a plain object.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `object` mapping option names to string values
+
+##### `CodecContext.copyOptionsFrom(context)`
+
+Copies options from another codec context.
+
+Parameters:
+
+- `context` (`CodecContext`): Source context whose options should be copied
+
+**Returns**: `void`
+
+Example:
+
+```js
+using source = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+using target = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+source.setOption('crf', '28')
+source.setOption('threads', '4')
+source.setOptionDictionary(ffmpeg.Dictionary.from({ preset: 'slow' }))
+
+target.setOptionDefaults()
+target.copyOptionsFrom(source)
+
+console.log(target.getOptions())
+```
+
 ##### `CodecContext.destroy()`
 
 Destroys the `CodecContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
