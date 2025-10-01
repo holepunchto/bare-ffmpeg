@@ -165,9 +165,8 @@ test('CodecContext has read-only "frame-number"', (t) => {
 })
 
 test('CodecContext exports requestSampleFormat getter', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
   t.is(codecCtx.requestSampleFormat, -1)
-  codecCtx.destroy()
 })
 
 test('CodecContext exports requestSampleFormat setter', (t) => {
