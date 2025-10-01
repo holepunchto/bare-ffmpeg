@@ -915,8 +915,13 @@ bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
 }
 
 static std::string
-bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
+bare_ffmpeg_get_sample_format_name_by_id(js_env_t *env, js_receiver_t, int id) {
   return av_get_sample_fmt_name(static_cast<enum AVSampleFormat>(id));
+}
+
+static std::string
+bare_ffmpeg_get_pixel_format_name_by_id(js_env_t *env, js_receiver_t, int id) {
+  return av_get_pix_fmt_name(static_cast<enum AVPixelFormat>(id));
 }
 
 static std::vector<int32_t>
@@ -3718,6 +3723,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
   V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
+  V("getPixelFormatNameByID", bare_ffmpeg_get_pixel_format_name_by_id)
   V("getSupportedConfig", bare_ffmpeg_codec_get_supported_config)
   V("getSupportedFrameRates", bare_ffmpeg_codec_get_supported_frame_rates)
   V("getSupportedChannelLayouts", bare_ffmpeg_codec_get_supported_channel_layouts)
@@ -3970,6 +3976,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_YUVJ420P)
   V(AV_PIX_FMT_YUV420P)
   V(AV_PIX_FMT_UYVY422)
+  V(AV_PIX_FMT_NV12)
+  V(AV_PIX_FMT_NV21)
+  V(AV_PIX_FMT_NV24)
 
   V(AVMEDIA_TYPE_UNKNOWN)
   V(AVMEDIA_TYPE_VIDEO)
