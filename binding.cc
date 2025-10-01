@@ -1521,6 +1521,25 @@ bare_ffmpeg_codec_context_send_packet(
   return err == 0;
 }
 
+static int64_t
+bare_ffmpeg_codec_context_get_request_sample_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  return context->handle->request_sample_fmt;
+}
+
+static void
+bare_ffmpeg_codec_context_set_request_sample_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  int64_t sample_format
+) {
+  context->handle->request_sample_fmt = static_cast<AVSampleFormat>(sample_format);
+}
+
 static bool
 bare_ffmpeg_codec_context_receive_packet(
   js_env_t *env,
@@ -3756,6 +3775,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecContextExtraData", bare_ffmpeg_codec_context_set_extra_data)
   V("getCodecContextFrameSize", bare_ffmpeg_codec_context_get_frame_size)
   V("getCodecContextFrameNum", bare_ffmpeg_codec_context_get_frame_num)
+  V("getCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_get_request_sample_format)
+  V("setCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_set_request_sample_format)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
