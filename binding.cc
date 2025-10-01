@@ -3977,6 +3977,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_YUV420P)
   V(AV_PIX_FMT_UYVY422)
   V(AV_PIX_FMT_NV12)
+  V(AV_PIX_FMT_NV21)
   V(AV_PIX_FMT_NV24)
 
   V(AVMEDIA_TYPE_UNKNOWN)
