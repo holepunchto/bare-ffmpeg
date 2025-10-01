@@ -164,6 +164,19 @@ test('CodecContext has read-only "frame-number"', (t) => {
   t.is(codecCtx.frameNum, 0)
 })
 
+test('CodecContext exports requestSampleFormat getter', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  t.is(codecCtx.requestSampleFormat, -1)
+  codecCtx.destroy()
+})
+
+test('CodecContext exports requestSampleFormat setter', (t) => {
+  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  codecCtx.requestSampleFormat = ffmpeg.constants.sampleFormats.S16
+  t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
+  codecCtx.destroy()
+})
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
