@@ -75,6 +75,7 @@ while (inputFormat.readFrame(packet)) {
     // Resample S16 → FLTP
     const samplesConverted = resampler.convert(frame, resampledFrame)
     resampledFrame.nbSamples = samplesConverted
+    resampledFrame.copyProperties(frame)
 
     // Encode frame to output
     const hasCapacity = encoder.sendFrame(resampledFrame)
