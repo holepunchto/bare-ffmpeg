@@ -2510,6 +2510,33 @@ bare_ffmpeg_samples_fill(
   return res;
 }
 
+static void
+bare_ffmpeg_samples_copy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> src,
+  int32_t dst_offset,
+  int32_t src_offset,
+  int32_t nb_samples
+) {
+  int err = av_samples_copy(
+    dst->handle->data,
+    src->handle->data,
+    dst_offset,
+    src_offset,
+    nb_samples,
+    src->handle->ch_layout.nb_channels,
+    static_cast<AVSampleFormat>(src->handle->format)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static int
 bare_ffmpeg_samples_read(
   js_env_t *env,
@@ -2520,7 +2547,6 @@ bare_ffmpeg_samples_read(
   bool no_alignment
 ) {
   int err;
-
   uint8_t *dst_data[8];
   int dst_linesize[4];
 
@@ -3863,6 +3889,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("samplesBufferSize", bare_ffmpeg_samples_buffer_size)
   V("fillSamples", bare_ffmpeg_samples_fill)
+  V("copySamples", bare_ffmpeg_samples_copy)
   V("readSamples", bare_ffmpeg_samples_read)
 
   V("initPacket", bare_ffmpeg_packet_init)

@@ -16,9 +16,9 @@ test('Samples should expose a fill method', (t) => {
 })
 
 test('Samples.read copies PCM data back out of a frame', (t) => {
-  using sourceFrame = makeAudioFrame()
+  using frameA = makeAudioFrame()
   const samplesA = new ffmpeg.Samples()
-  const len = samplesA.fill(sourceFrame)
+  const len = samplesA.fill(frameA)
 
   const view = new Int16Array(
     samplesA.data.buffer,
@@ -30,18 +30,10 @@ test('Samples.read copies PCM data back out of a frame', (t) => {
   }
 
   const samplesB = new ffmpeg.Samples()
-  using scratchFrame = makeAudioFrame()
-  samplesB.fill(scratchFrame)
-  samplesB.data.fill(0)
-
-  samplesB.read(sourceFrame)
-
-  t.is(samplesB.data.length, samplesA.data.length, 'same byte length')
-  for (let i = 0; i < view.length; i++) {
-    if (samplesB.data.readInt16LE(i * 2) !== samplesA.data.readInt16LE(i * 2)) {
-      t.fail('data does not match')
-    }
-  }
+  using frameB = makeAudioFrame()
+  samplesB.fill(frameB)
+  samplesB.read(frameA)
+  t.alike(samplesB.data, samplesA.data)
 })
 
 test('Samples should expose a data getter', (t) => {
@@ -98,6 +90,31 @@ test('Samples should expose a pts getter', (t) => {
   samples.fill(audioFrame)
 
   t.alike(samples.pts, audioFrame.pts)
+})
+
+test('Samples.copy copies data between buffers', (t) => {
+  using sourceFrame = makeAudioFrame()
+  using targetFrame = makeAudioFrame()
+
+  const source = new ffmpeg.Samples()
+  const target = new ffmpeg.Samples()
+
+  const len = source.fill(sourceFrame)
+  target.fill(targetFrame)
+
+  const view = new Int16Array(
+    source.data.buffer,
+    source.data.byteOffset,
+    len / Int16Array.BYTES_PER_ELEMENT
+  )
+
+  for (let i = 0; i < view.length; i++) {
+    view[i] = (i * 11) % 32768
+  }
+
+  source.copy(targetFrame)
+
+  t.alike(target.data, source.data)
 })
 
 test('Samples should expose bufferSize static method', (t) => {
