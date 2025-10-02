@@ -7,13 +7,13 @@ const bufferSink = new ffmpeg.Filter('buffersink')
 const bufferSinkContext = new ffmpeg.FilterContext()
 
 const graph = new ffmpeg.FilterGraph()
-graph.createFilter(bufferContext, buffer, 'in', {
-  width: 1,
-  height: 1,
-  pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-  timeBase: new ffmpeg.Rational(1, 30),
-  aspectRatio: new ffmpeg.Rational(1, 1)
-})
+
+graph.createFilter(
+  bufferContext,
+  buffer,
+  'in',
+  `video_size=1x1:pix_fmt=${ffmpeg.constants.pixelFormats.RGB24}:time_base=1/30:pixel_aspect=1/1`
+)
 graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
 const inputs = new ffmpeg.FilterInOut()

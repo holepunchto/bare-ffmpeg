@@ -20,17 +20,16 @@ test('FilterGraph should expose a createFilter method', (t) => {
   const filter = new ffmpeg.Filter('buffer')
 
   t.execution(() => {
-    graph.createFilter(ctx, filter, 'in', {
-      width: 1,
-      height: 1,
-      pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-      timeBase: new ffmpeg.Rational(1, 30),
-      aspectRatio: new ffmpeg.Rational(1, 1)
-    })
+    graph.createFilter(
+      ctx,
+      filter,
+      'in',
+      'video_size=1x1:pix_fmt=2:time_base=1/30:pixel_aspect=1/1'
+    )
   })
 })
 
-test('FilterGraph.createFilter could be called with an undefined args', (t) => {
+test('FilterGraph.createFilter could be called with null/undefined args', (t) => {
   using graph = new ffmpeg.FilterGraph()
   const ctx = new ffmpeg.FilterContext()
   const filter = new ffmpeg.Filter('buffersink')
@@ -38,16 +37,28 @@ test('FilterGraph.createFilter could be called with an undefined args', (t) => {
   t.execution(() => {
     graph.createFilter(ctx, filter, 'out')
   })
+
+  t.execution(() => {
+    graph.createFilter(ctx, filter, 'out', null)
+  })
+
+  t.execution(() => {
+    graph.createFilter(ctx, filter, 'out', undefined)
+  })
 })
 
-test('FilterGraph.createFilter should throw an error if inputs are not valid', (t) => {
+test('FilterGraph.createFilter should work with audio filters', (t) => {
   using graph = new ffmpeg.FilterGraph()
   const ctx = new ffmpeg.FilterContext()
-  const filter = new ffmpeg.Filter('buffer')
-  const missingArgs = undefined
+  const filter = new ffmpeg.Filter('abuffer')
 
-  t.exception(() => {
-    graph.createFilter(ctx, filter, 'in', missingArgs)
+  t.execution(() => {
+    graph.createFilter(
+      ctx,
+      filter,
+      'ain',
+      'sample_rate=48000:sample_fmt=s16:channel_layout=mono:time_base=1/48000'
+    )
   })
 })
 
@@ -146,13 +157,12 @@ function initGraph(bufferContext, bufferSinkContext) {
   const buffer = new ffmpeg.Filter('buffer')
   const bufferSink = new ffmpeg.Filter('buffersink')
 
-  graph.createFilter(bufferContext, buffer, 'in', {
-    width: 1,
-    height: 1,
-    pixelFormat: ffmpeg.constants.pixelFormats.RGB24,
-    timeBase: new ffmpeg.Rational(1, 30),
-    aspectRatio: new ffmpeg.Rational(1, 1)
-  })
+  graph.createFilter(
+    bufferContext,
+    buffer,
+    'in',
+    `video_size=1x1:pix_fmt=${ffmpeg.constants.pixelFormats.RGB24}:time_base=1/30:pixel_aspect=1/1`
+  )
   graph.createFilter(bufferSinkContext, bufferSink, 'out')
 
   return graph
