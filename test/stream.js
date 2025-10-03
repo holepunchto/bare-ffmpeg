@@ -83,6 +83,16 @@ test('it should expose avgFramerate', (t) => {
   t.alike(stream.avgFramerate, updated, 'avgFramerate set')
 })
 
+test('it should expose a duration getter', (t) => {
+  const outputFormat = new ffmpeg.OutputFormatContext(
+    'webm',
+    new ffmpeg.IOContext(Buffer.alloc(4096))
+  )
+  const outputStream = outputFormat.createStream()
+
+  t.is(typeof outputStream.duration, 'number')
+})
+
 // Helpers
 
 function getInputFormatContext() {

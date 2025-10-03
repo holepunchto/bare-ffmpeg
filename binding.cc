@@ -859,6 +859,19 @@ bare_ffmpeg_stream_get_codec_parameters(
   return handle;
 }
 
+static int64_t
+bare_ffmpeg_stream_get_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  if (stream->handle->duration == AV_NOPTS_VALUE) {
+    return 0;
+  }
+
+  return stream->handle->duration;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   int err;
@@ -3737,6 +3750,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getStreamAverageFramerate", bare_ffmpeg_stream_get_avg_framerate)
   V("setStreamAverageFramerate", bare_ffmpeg_stream_set_avg_framerate)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
+  V("getStreamDuration", bare_ffmpeg_stream_get_duration)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
