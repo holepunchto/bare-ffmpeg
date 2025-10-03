@@ -1198,6 +1198,12 @@ Example:
 const fps = stream.avgFramerate.toNumber()
 ```
 
+##### `Stream.duration`
+
+Gets or sets the duration of the stream in time base units.
+
+**Returns**: `number` - Duration in time base units, or `0` if unknown
+
 #### Methods
 
 ##### `Stream.decoder()`
