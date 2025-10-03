@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -870,6 +871,16 @@ bare_ffmpeg_stream_get_duration(
   }
 
   return stream->handle->duration;
+}
+
+static void
+bare_ffmpeg_stream_set_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream,
+  int64_t duration
+) {
+  stream->handle->duration = duration;
 }
 
 static js_arraybuffer_t
@@ -3751,6 +3762,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setStreamAverageFramerate", bare_ffmpeg_stream_set_avg_framerate)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
   V("getStreamDuration", bare_ffmpeg_stream_get_duration)
+  V("setStreamDuration", bare_ffmpeg_stream_set_duration)
 
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)

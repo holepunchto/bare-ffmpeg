@@ -93,6 +93,18 @@ test('it should expose a duration getter', (t) => {
   t.is(typeof outputStream.duration, 'number')
 })
 
+test('it should expose a duration setter', (t) => {
+  const outputFormat = new ffmpeg.OutputFormatContext(
+    'webm',
+    new ffmpeg.IOContext(Buffer.alloc(4096))
+  )
+  const outputStream = outputFormat.createStream()
+
+  outputStream.duration = 1000
+
+  t.is(outputStream.duration, 1000)
+})
+
 // Helpers
 
 function getInputFormatContext() {
