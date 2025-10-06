@@ -182,6 +182,26 @@ test('CodecContext can get an option', (t) => {
   t.is(threadCount, '1')
 })
 
+test('CodecContext.getOption returns null if option is unset', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const params = codecCtx.getOption(
+    'svtav1-params',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN |
+      ffmpeg.constants.optionFlags.ALLOW_NULL
+  )
+
+  t.absent(params)
+})
+
+test('CodecContext.getOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.getOption('nope-throws')
+  }, /Option not found/)
+})
+
 test('CodecContext can get and set options', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
@@ -199,6 +219,14 @@ test('CodecContext can get and set options', (t) => {
   )
 })
 
+test('CodecContext.setOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.setOption('nope-throws', 'error')
+  }, /Option not found/)
+})
+
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
@@ -212,6 +240,18 @@ test('CodecContext can set options via dictionary', (t) => {
   t.is(codecCtx.getOption('crf'), '20')
   t.is(codecCtx.getOption('preset'), '1')
   t.is(codecCtx.getOption('threads'), '8')
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: 'throws'
+  })
+
+  t.exception(() => {
+    codecCtx.setOptionDictionary(options)
+  }, /Invalid argument/)
 })
 
 test('CodecContext can set option defaults', (t) => {
