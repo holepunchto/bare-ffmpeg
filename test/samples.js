@@ -6,7 +6,7 @@ test('it should expose a Samples API', (t) => {
   t.ok(samples)
 })
 
-test('Samples sould expose a fill method', (t) => {
+test('Samples should expose a fill method', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -15,7 +15,28 @@ test('Samples sould expose a fill method', (t) => {
   t.is(typeof len, 'number')
 })
 
-test('Samples sould expose a data getter', (t) => {
+test('Samples.read copies PCM data back out of a frame', (t) => {
+  using frameA = makeAudioFrame()
+  const samplesA = new ffmpeg.Samples()
+  const len = samplesA.fill(frameA)
+
+  const view = new Int16Array(
+    samplesA.data.buffer,
+    samplesA.data.byteOffset,
+    len / 2
+  )
+  for (let i = 0; i < view.length; i++) {
+    view[i] = (i * 13) % 32768
+  }
+
+  const samplesB = new ffmpeg.Samples()
+  using frameB = makeAudioFrame()
+  samplesB.fill(frameB)
+  samplesB.read(frameA)
+  t.alike(samplesB.data, samplesA.data)
+})
+
+test('Samples should expose a data getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -26,7 +47,7 @@ test('Samples sould expose a data getter', (t) => {
   t.is(data.byteLength, len)
 })
 
-test('Samples sould expose a channelLayout getter', (t) => {
+test('Samples should expose a channelLayout getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -35,7 +56,7 @@ test('Samples sould expose a channelLayout getter', (t) => {
   t.alike(samples.channelLayout, audioFrame.channelLayout)
 })
 
-test('Samples sould expose a format getter', (t) => {
+test('Samples should expose a format getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -44,7 +65,7 @@ test('Samples sould expose a format getter', (t) => {
   t.alike(samples.format, audioFrame.format)
 })
 
-test('Samples sould expose a nbChannels getter', (t) => {
+test('Samples should expose a nbChannels getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -53,7 +74,7 @@ test('Samples sould expose a nbChannels getter', (t) => {
   t.alike(samples.nbChannels, 2)
 })
 
-test('Samples sould expose a nbSamples getter', (t) => {
+test('Samples should expose a nbSamples getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -62,7 +83,7 @@ test('Samples sould expose a nbSamples getter', (t) => {
   t.alike(samples.nbSamples, audioFrame.nbSamples)
 })
 
-test('Samples sould expose a pts getter', (t) => {
+test('Samples should expose a pts getter', (t) => {
   using audioFrame = makeAudioFrame()
   const samples = new ffmpeg.Samples()
 
@@ -71,7 +92,32 @@ test('Samples sould expose a pts getter', (t) => {
   t.alike(samples.pts, audioFrame.pts)
 })
 
-test('Samples sould expose bufferSize static method', (t) => {
+test('Samples.copy copies data between buffers', (t) => {
+  using sourceFrame = makeAudioFrame()
+  using targetFrame = makeAudioFrame()
+
+  const source = new ffmpeg.Samples()
+  const target = new ffmpeg.Samples()
+
+  const len = source.fill(sourceFrame)
+  target.fill(targetFrame)
+
+  const view = new Int16Array(
+    source.data.buffer,
+    source.data.byteOffset,
+    len / Int16Array.BYTES_PER_ELEMENT
+  )
+
+  for (let i = 0; i < view.length; i++) {
+    view[i] = (i * 11) % 32768
+  }
+
+  source.copy(targetFrame)
+
+  t.alike(target.data, source.data)
+})
+
+test('Samples should expose bufferSize static method', (t) => {
   using audioFrame = makeAudioFrame()
 
   const len = ffmpeg.Samples.bufferSize(

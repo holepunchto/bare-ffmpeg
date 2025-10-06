@@ -2382,6 +2382,25 @@ bare_ffmpeg_frame_set_time_base(
   frame->handle->time_base.den = den;
 }
 
+static int32_t
+bare_ffmpeg_frame_get_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->sample_rate;
+}
+
+static void
+bare_ffmpeg_frame_set_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t rate
+) {
+  frame->handle->sample_rate = rate;
+}
+
 static void
 bare_ffmpeg_frame_alloc(
   js_env_t *env,
@@ -2578,6 +2597,81 @@ bare_ffmpeg_samples_fill(
   }
 
   return res;
+}
+
+static void
+bare_ffmpeg_samples_copy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> src,
+  int32_t dst_offset,
+  int32_t src_offset,
+  int32_t nb_samples
+) {
+  int err = av_samples_copy(
+    dst->handle->data,
+    src->handle->data,
+    dst_offset,
+    src_offset,
+    nb_samples,
+    src->handle->ch_layout.nb_channels,
+    static_cast<AVSampleFormat>(src->handle->format)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static int
+bare_ffmpeg_samples_read(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_t target,
+  uint64_t offset,
+  bool no_alignment
+) {
+  int err;
+  uint8_t *dst_data[8];
+  int dst_linesize[4];
+
+  auto len = av_samples_fill_arrays(
+    dst_data,
+    dst_linesize,
+    &target[offset],
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    static_cast<AVSampleFormat>(frame->handle->format),
+    no_alignment
+  );
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  err = av_samples_copy(
+    dst_data,
+    frame->handle->data,
+    0,
+    0,
+    frame->handle->nb_samples,
+    frame->handle->ch_layout.nb_channels,
+    static_cast<AVSampleFormat>(frame->handle->format)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return len;
 }
 
 static js_arraybuffer_t
@@ -3879,6 +3973,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFramePacketDTS", bare_ffmpeg_frame_set_pkt_dts)
   V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
   V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
+  V("getFrameSampleRate", bare_ffmpeg_frame_get_sample_rate)
+  V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
@@ -3889,6 +3985,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("samplesBufferSize", bare_ffmpeg_samples_buffer_size)
   V("fillSamples", bare_ffmpeg_samples_fill)
+  V("copySamples", bare_ffmpeg_samples_copy)
+  V("readSamples", bare_ffmpeg_samples_read)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
