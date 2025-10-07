@@ -1600,9 +1600,6 @@ bare_ffmpeg_codec_context_set_get_format(
   assert(err == 0);
 
   context->handle->get_format = bare_ffmpeg__on_codec_context_get_format;
-
-  // TODO: move that on init func
-  context->handle->opaque = context;
 }
 
 static bool
