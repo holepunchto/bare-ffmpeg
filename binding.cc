@@ -190,7 +190,9 @@ bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
   assert(err == 0);
 
   int32_t result;
-  int call_status = js_call_function<js_type_options_t{}, int32_t, js_arraybuffer_t, int32_t>(env, callback, arraybuffer, len, result);
+  int call_status = js_call_function<js_type_options_t{}, int32_t, js_arraybuffer_t, int32_t>(
+    env, callback, arraybuffer, len, result
+  );
 
   err = js_detach_arraybuffer(env, arraybuffer);
   assert(err == 0);
@@ -1583,7 +1585,15 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
   }
 
   int result;
-  err = js_call_function(context->env, callback, formats, result);
+  err = js_call_function<
+    js_type_options_t{},
+    int,
+    std::vector<int>>(
+    context->env,
+    callback,
+    formats,
+    result
+  );
 
   if (err < 0) {
     return AV_PIX_FMT_NONE;
