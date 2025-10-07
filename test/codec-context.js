@@ -175,6 +175,16 @@ test('CodecContext exports requestSampleFormat setter', (t) => {
   t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
 })
 
+test('CodecContext should expose a getFormat callback setter', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+
+  t.execution(() => {
+    codecCtx.getFormat = function getFormat(pixelFormats) {}
+  })
+})
+
+// Helpers
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
