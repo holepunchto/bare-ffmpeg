@@ -227,6 +227,22 @@ test('CodecContext.setOption throws if option is not found', (t) => {
   }, /Option not found/)
 })
 
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = codecCtx.getOptions()
+  t.ok(Object.hasOwn(options, 'svtav1-params'))
+})
+
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const names = codecCtx.listOptionNames()
+  t.ok(Array.isArray(names))
+  t.ok(names.length > 0)
+  t.ok(names.includes('svtav1-params'))
+})
+
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
