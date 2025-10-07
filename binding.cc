@@ -1576,8 +1576,11 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
   err = js_get_reference_value(context->env, context->get_format_cb, callback);
   assert(err == 0);
 
-  // TODO: add for,ats from fmt
   std::vector<int> formats{};
+  while (*fmt != AV_PIX_FMT_NONE) {
+    formats.push_back(static_cast<int>(*fmt));
+    fmt++;
+  }
 
   int result;
   err = js_call_function(context->env, callback, formats, result);
