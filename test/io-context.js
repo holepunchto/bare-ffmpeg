@@ -170,6 +170,8 @@ function runStreams(io) {
   while (format.readFrame(packet)) {
     const { stream, decoder } = streams[packet.streamIndex]
     const mediaType = stream.codecParameters.type
+
+    decoder.open()
     decoder.sendPacket(packet)
 
     while (decoder.receiveFrame(new ffmpeg.Frame())) {}

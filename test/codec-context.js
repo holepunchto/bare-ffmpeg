@@ -5,7 +5,9 @@ test('codec context could be open without options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open())
+  t.execution(() => {
+    codecCtx.open()
+  })
 })
 
 test('codec context could not open wihtout timebase', (t) => {
@@ -56,7 +58,9 @@ test('codec context could be open with options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open(getEncoderOptions()))
+  t.execution(() => {
+    codecCtx.open(getEncoderOptions())
+  })
 })
 
 test('codec context should expose a sendFrame method', (t) => {

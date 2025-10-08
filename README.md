@@ -453,7 +453,7 @@ Parameters:
 
 - `options` (`Dictionary`, optional): Codec-specific options
 
-**Returns**: `CodecContext` instance (for chaining)
+**Returns**: `void`
 
 ##### `CodecContext.sendFrame(frame)`
 
@@ -1294,13 +1294,13 @@ Gets or sets the duration of the stream in time base units.
 
 ##### `Stream.decoder()`
 
-Creates and opens a decoder for this stream.
+Creates a decoder for this stream.
 
 **Returns**: `CodecContext` instance
 
 ##### `Stream.encoder()`
 
-Creates and opens an encoder for this stream.
+Creates an encoder for this stream.
 
 **Returns**: `CodecContext` instance
 

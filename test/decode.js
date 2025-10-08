@@ -100,6 +100,7 @@ function decodeImage(image) {
     using rgba = new ffmpeg.Frame()
 
     using decoder = stream.decoder()
+    decoder.open()
     decoder.sendPacket(packet)
     decoder.receiveFrame(raw)
 
@@ -141,6 +142,7 @@ function decodeAudio(audio) {
     )
 
     using decoder = stream.decoder()
+    decoder.open()
     const buffers = []
 
     while (format.readFrame(packet)) {
@@ -211,6 +213,7 @@ function decodeVideo(video) {
   while (format.readFrame(packet)) {
     const { stream, decoder } = streams[packet.streamIndex]
 
+    decoder.open()
     decoder.sendPacket(packet)
 
     while (decoder.receiveFrame(frame)) {}
