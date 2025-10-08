@@ -213,10 +213,6 @@ function decodeVideo(video) {
   while (format.readFrame(packet)) {
     const { stream, decoder } = streams[packet.streamIndex]
 
-    decoder.getFormat = function getFormat(pixelFormats) {
-      return pixelFormats[1]
-    }
-
     decoder.open()
     decoder.sendPacket(packet)
 
