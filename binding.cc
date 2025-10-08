@@ -1,5 +1,7 @@
+#include <cstdio>
 #include <optional>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 #include <assert.h>
@@ -31,6 +33,7 @@ extern "C" {
 #include <libavutil/log.h>
 #include <libavutil/mathematics.h>
 #include <libavutil/mem.h>
+#include <libavutil/opt.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libavutil/samplefmt.h>
@@ -2434,6 +2437,25 @@ bare_ffmpeg_frame_set_time_base(
   frame->handle->time_base.den = den;
 }
 
+static int32_t
+bare_ffmpeg_frame_get_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  return frame->handle->sample_rate;
+}
+
+static void
+bare_ffmpeg_frame_set_sample_rate(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t rate
+) {
+  frame->handle->sample_rate = rate;
+}
+
 static void
 bare_ffmpeg_frame_alloc(
   js_env_t *env,
@@ -2630,6 +2652,81 @@ bare_ffmpeg_samples_fill(
   }
 
   return res;
+}
+
+static void
+bare_ffmpeg_samples_copy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> src,
+  int32_t dst_offset,
+  int32_t src_offset,
+  int32_t nb_samples
+) {
+  int err = av_samples_copy(
+    dst->handle->data,
+    src->handle->data,
+    dst_offset,
+    src_offset,
+    nb_samples,
+    src->handle->ch_layout.nb_channels,
+    static_cast<AVSampleFormat>(src->handle->format)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
+static int
+bare_ffmpeg_samples_read(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_t target,
+  uint64_t offset,
+  bool no_alignment
+) {
+  int err;
+  uint8_t *dst_data[8];
+  int dst_linesize[4];
+
+  auto len = av_samples_fill_arrays(
+    dst_data,
+    dst_linesize,
+    &target[offset],
+    frame->handle->ch_layout.nb_channels,
+    frame->handle->nb_samples,
+    static_cast<AVSampleFormat>(frame->handle->format),
+    no_alignment
+  );
+  if (len < 0) {
+    err = js_throw_error(env, NULL, av_err2str(len));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  err = av_samples_copy(
+    dst_data,
+    frame->handle->data,
+    0,
+    0,
+    frame->handle->nb_samples,
+    frame->handle->ch_layout.nb_channels,
+    static_cast<AVSampleFormat>(frame->handle->format)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return len;
 }
 
 static js_arraybuffer_t
@@ -3760,6 +3857,183 @@ bare_ffmpeg_rational_rescale_q(
   );
 }
 
+static void
+bare_ffmpeg_set_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  std::string value,
+  int flags
+) {
+  int err;
+
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = av_opt_set(
+    *owner,
+    key.c_str(),
+    value.c_str(),
+    flags
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+}
+
+static std::optional<std::string>
+bare_ffmpeg_get_option(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  int flags
+) {
+  int err;
+  char *buf = NULL;
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+  if (!owner || !*owner) {
+    err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = av_opt_get(
+    *owner,
+    key.c_str(),
+    flags,
+    reinterpret_cast<uint8_t **>(&buf)
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  if (!buf) {
+    return std::nullopt;
+  }
+
+  std::string result(buf);
+  av_freep(&buf);
+  return result;
+}
+
+static std::vector<std::string>
+bare_ffmpeg_list_option_names(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t avclass_owner_handle,
+  int flags
+) {
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::unordered_set<std::string> unique_names;
+
+  auto collect = [&](void *target) {
+    const AVOption *opt = nullptr;
+    while ((opt = av_opt_next(target, opt))) {
+      if (opt->name) {
+        unique_names.insert(opt->name);
+      }
+    }
+  };
+
+  collect(*owner);
+
+  if (flags & AV_OPT_SEARCH_CHILDREN) {
+    void *child = nullptr;
+    while ((child = av_opt_child_next(*owner, child))) {
+      collect(child);
+    }
+  }
+
+  return { unique_names.begin(), unique_names.end() };
+}
+
+static void
+bare_ffmpeg_set_option_dictionary(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t avclass_owner_handle,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
+  int flags
+) {
+  int err;
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = av_opt_set_dict2(*owner, &dict->handle, flags);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+}
+
+static void
+bare_ffmpeg_set_option_defaults(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t avclass_owner_handle
+) {
+  AVClass **owner = reinterpret_cast<AVClass **>(avclass_owner_handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  av_opt_set_defaults(*owner);
+}
+
+static void
+bare_ffmpeg_copy_options(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t target_avclass_owner_handle,
+  js_arraybuffer_span_t source_avclass_owner_handle
+) {
+  int err;
+  AVClass **target_owner = reinterpret_cast<AVClass **>(target_avclass_owner_handle.data());
+  if (!target_owner || !*target_owner) {
+    err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  AVClass **source_owner = reinterpret_cast<AVClass **>(source_avclass_owner_handle.data());
+  if (!source_owner || !*source_owner) {
+    err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = av_opt_copy(*target_owner, *source_owner);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+}
+
 static js_value_t *
 bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   uv_once(&bare_ffmpeg__init_guard, bare_ffmpeg__on_init);
@@ -3932,6 +4206,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFramePacketDTS", bare_ffmpeg_frame_set_pkt_dts)
   V("getFrameTimeBase", bare_ffmpeg_frame_get_time_base)
   V("setFrameTimeBase", bare_ffmpeg_frame_set_time_base)
+  V("getFrameSampleRate", bare_ffmpeg_frame_get_sample_rate)
+  V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
@@ -3942,6 +4218,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("samplesBufferSize", bare_ffmpeg_samples_buffer_size)
   V("fillSamples", bare_ffmpeg_samples_fill)
+  V("copySamples", bare_ffmpeg_samples_copy)
+  V("readSamples", bare_ffmpeg_samples_read)
 
   V("initPacket", bare_ffmpeg_packet_init)
   V("initPacketFromBuffer", bare_ffmpeg_packet_init_from_buffer)
@@ -4026,6 +4304,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFilterInOutPadIdx", bare_ffmpeg_filter_inout_get_pad_idx)
   V("setFilterInOutPadIdx", bare_ffmpeg_filter_inout_set_pad_idx)
   V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
+
+  V("setOption", bare_ffmpeg_set_option)
+  V("getOption", bare_ffmpeg_get_option)
+  V("listOptionNames", bare_ffmpeg_list_option_names)
+  V("setOptionDictionary", bare_ffmpeg_set_option_dictionary)
+  V("setOptionDefaults", bare_ffmpeg_set_option_defaults)
+  V("copyOptions", bare_ffmpeg_copy_options)
 #undef V
 
 #define V(name) \
@@ -4320,6 +4605,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_ROUND_UP)
   V(AV_ROUND_NEAR_INF) // default
   V(AV_ROUND_PASS_MINMAX)
+
+  V(AV_OPT_SEARCH_CHILDREN)
+  V(AV_OPT_SEARCH_FAKE_OBJ)
+  V(AV_OPT_ALLOW_NULL)
+  V(AV_OPT_ARRAY_REPLACE)
+  V(AV_OPT_MULTI_COMPONENT_RANGE)
 #undef V
 
   return exports;

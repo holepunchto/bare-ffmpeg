@@ -5,7 +5,9 @@ test('codec context could be open without options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open())
+  t.execution(() => {
+    codecCtx.open()
+  })
 })
 
 test('codec context could not open wihtout timebase', (t) => {
@@ -56,7 +58,9 @@ test('codec context could be open with options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open(getEncoderOptions()))
+  t.execution(() => {
+    codecCtx.open(getEncoderOptions())
+  })
 })
 
 test('codec context should expose a sendFrame method', (t) => {
@@ -183,7 +187,120 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   })
 })
 
-// Helpers
+test('CodecContext can get an option', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const threadCount = codecCtx.getOption('threads')
+  t.is(threadCount, '1')
+})
+
+test('CodecContext.getOption returns null if option is unset', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const params = codecCtx.getOption(
+    'svtav1-params',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN |
+      ffmpeg.constants.optionFlags.ALLOW_NULL
+  )
+
+  t.absent(params)
+})
+
+test('CodecContext.getOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.getOption('nope-throws')
+  }, /Option not found/)
+})
+
+test('CodecContext can get and set options', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('crf', '23')
+  t.is(codecCtx.getOption('crf'), '23')
+
+  codecCtx.setOption(
+    'threads',
+    '4',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
+  )
+  t.is(
+    codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN),
+    '4'
+  )
+})
+
+test('CodecContext.setOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.setOption('nope-throws', 'error')
+  }, /Option not found/)
+})
+
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = codecCtx.getOptions()
+  t.ok(Object.hasOwn(options, 'svtav1-params'))
+})
+
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const names = codecCtx.listOptionNames()
+  t.ok(Array.isArray(names))
+  t.ok(names.length > 0)
+  t.ok(names.includes('svtav1-params'))
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: '20',
+    preset: '1',
+    threads: '8'
+  })
+
+  codecCtx.setOptionDictionary(options)
+  t.is(codecCtx.getOption('crf'), '20')
+  t.is(codecCtx.getOption('preset'), '1')
+  t.is(codecCtx.getOption('threads'), '8')
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: 'throws'
+  })
+
+  t.exception(() => {
+    codecCtx.setOptionDictionary(options)
+  }, /Invalid argument/)
+})
+
+test('CodecContext can set option defaults', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.execution(() => {
+    codecCtx.setOptionDefaults()
+  })
+})
+
+test('CodecContext can copy options from another context', (t) => {
+  using sourceCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using targetCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  sourceCtx.setOption('b', '128000')
+  sourceCtx.setOption('threads', '2')
+
+  targetCtx.copyOptionsFrom(sourceCtx)
+  t.is(targetCtx.getOption('b'), sourceCtx.getOption('b'))
+  t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
+})
 
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
