@@ -187,41 +187,38 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   })
 })
 
-test.solo(
-  'CodecContext getFormat callback should expose pixelFormats as an Array',
-  (t) => {
-    const video = require('./fixtures/video/sample.webm', {
-      with: { type: 'binary' }
-    })
-    const io = new ffmpeg.IOContext(video)
-    using format = new ffmpeg.InputFormatContext(io)
+test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  using format = new ffmpeg.InputFormatContext(io)
 
-    using packet = new ffmpeg.Packet()
-    using frame = new ffmpeg.Frame()
+  using packet = new ffmpeg.Packet()
+  using frame = new ffmpeg.Frame()
 
-    const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
-    const decoder = stream.decoder()
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const decoder = stream.decoder()
 
-    t.plan(1)
-    decoder.getFormat = function getFormat(pixelFormats) {
-      t.ok(Array.isArray(pixelFormats))
-      const pixelFormat = pixelFormats.find(
-        (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-      )
-      return pixelFormat && -1
-    }
-
-    while (format.readFrame(packet)) {
-      if (packet.streamIndex != stream.index) continue
-
-      decoder.open()
-      decoder.sendPacket(packet)
-      decoder.receiveFrame(frame)
-      packet.unref()
-      break
-    }
+  t.plan(1)
+  decoder.getFormat = function getFormat(pixelFormats) {
+    t.ok(Array.isArray(pixelFormats))
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && -1
   }
-)
+
+  while (format.readFrame(packet)) {
+    if (packet.streamIndex != stream.index) continue
+
+    decoder.open()
+    decoder.sendPacket(packet)
+    decoder.receiveFrame(frame)
+    packet.unref()
+    break
+  }
+})
 
 test('CodecContext can get an option', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
