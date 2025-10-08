@@ -1585,9 +1585,8 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
   assert(err == 0);
 
   std::vector<int> formats{};
-  while (*fmt != AV_PIX_FMT_NONE) {
-    formats.push_back(static_cast<int>(*fmt));
-    fmt++;
+  for (const enum AVPixelFormat *p = fmt; *p != AV_PIX_FMT_NONE; ++p) {
+    formats.push_back(static_cast<int>(*p));
   }
 
   int result;
