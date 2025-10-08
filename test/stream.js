@@ -105,6 +105,24 @@ test('it should expose a duration setter', (t) => {
   t.is(outputStream.duration, 1000)
 })
 
+test('it should expose an encoder helper', (t) => {
+  using inputFormatContext = getInputFormatContext()
+  const stream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaTypes.VIDEO
+  )
+
+  t.ok(stream.encoder() instanceof ffmpeg.CodecContext)
+})
+
+test('it should expose a decoder helper', (t) => {
+  using inputFormatContext = getInputFormatContext()
+  const stream = inputFormatContext.getBestStream(
+    ffmpeg.constants.mediaTypes.VIDEO
+  )
+
+  t.ok(stream.decoder() instanceof ffmpeg.CodecContext)
+})
+
 // Helpers
 
 function getInputFormatContext() {
