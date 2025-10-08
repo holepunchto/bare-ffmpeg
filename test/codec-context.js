@@ -187,6 +187,39 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   })
 })
 
+test('CodecContext getFormat callback should expose context as an CodecContext instance', (t) => {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  using format = new ffmpeg.InputFormatContext(io)
+
+  using packet = new ffmpeg.Packet()
+  using frame = new ffmpeg.Frame()
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const decoder = stream.decoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(context, pixelFormats) {
+    t.ok(context instanceof ffmpeg.CodecContext)
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && -1
+  }
+
+  while (format.readFrame(packet)) {
+    if (packet.streamIndex != stream.index) continue
+
+    decoder.open()
+    decoder.sendPacket(packet)
+    decoder.receiveFrame(frame)
+    packet.unref()
+    break
+  }
+})
+
 test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
   const video = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
@@ -201,7 +234,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
   const decoder = stream.decoder()
 
   t.plan(1)
-  decoder.getFormat = function getFormat(pixelFormats) {
+  decoder.getFormat = function getFormat(_context, pixelFormats) {
     t.ok(Array.isArray(pixelFormats))
     const pixelFormat = pixelFormats.find(
       (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
