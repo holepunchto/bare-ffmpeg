@@ -451,10 +451,11 @@ Sets a callback function for pixel format negotiation during decoding. Called wh
 
 **Type**: `function` (setter only)
 
-**Callback Signature**: `(formats: number[]) => number`
+**Callback Signature**: `(context: CodecContext, formats: number[]) => number`
 
 Parameters:
 
+- `context` (`CodecContext`): The codec context instance
 - `formats` (`number[]`): Array of available pixel format constants
 
 **Returns**: `number` - The chosen pixel format constant from the provided array
