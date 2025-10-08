@@ -183,8 +183,38 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
 
   t.execution(() => {
-    codecCtx.getFormat = function getFormat(pixelFormats) {}
+    codecCtx.getFormat = function getFormat() {}
   })
+})
+
+test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  using format = new ffmpeg.InputFormatContext(io)
+
+  using packet = new ffmpeg.Packet()
+  using frame = new ffmpeg.Frame()
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  using decoder = stream.decoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(pixelFormats) {
+    t.ok(Array.isArray(pixelFormats))
+    return pixelFormats[1]
+  }
+
+  while (format.readFrame(packet)) {
+    if (packet.streamIndex != stream.index) continue
+
+    decoder.open()
+    decoder.sendPacket(packet)
+    decoder.receiveFrame(frame)
+    packet.unref()
+    break
+  }
 })
 
 test('CodecContext can get an option', (t) => {
