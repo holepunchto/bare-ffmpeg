@@ -1577,6 +1577,9 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
 
   auto context = static_cast<bare_ffmpeg_codec_context_t *>(input_context->opaque);
 
+  assert(context->env);
+  assert(context->get_format_cb);
+
   bare_ffmpeg_codec_context_get_format_cb_t callback;
   err = js_get_reference_value(context->env, context->get_format_cb, callback);
   assert(err == 0);
@@ -1588,10 +1591,7 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
   }
 
   int result;
-  err = js_call_function<
-    js_type_options_t{},
-    int,
-    std::vector<int>>(
+  err = js_call_function<js_type_options_t{}, int, std::vector<int>>(
     context->env,
     callback,
     formats,
@@ -1616,6 +1616,7 @@ bare_ffmpeg_codec_context_set_get_format(
   assert(err == 0);
 
   context->handle->get_format = bare_ffmpeg__on_codec_context_get_format;
+  context->env = env;
 }
 
 static bool
@@ -3961,7 +3962,7 @@ bare_ffmpeg_list_option_names(
     }
   }
 
-  return { unique_names.begin(), unique_names.end() };
+  return {unique_names.begin(), unique_names.end()};
 }
 
 static void
