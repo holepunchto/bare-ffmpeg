@@ -4355,6 +4355,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_FLAG_INTERLACED_ME)
   V(AV_CODEC_FLAG_CLOSED_GOP)
 
+  V(AV_PIX_FMT_NONE)
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_RGB24)
   V(AV_PIX_FMT_YUVJ420P)

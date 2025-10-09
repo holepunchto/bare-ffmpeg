@@ -196,7 +196,7 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
     const pixelFormat = pixelFormats.find(
       (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
     )
-    return pixelFormat && -1
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
   decodeOnce()
@@ -211,7 +211,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
     const pixelFormat = pixelFormats.find(
       (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
     )
-    return pixelFormat && -1
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
   decodeOnce()
