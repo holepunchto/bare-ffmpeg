@@ -188,7 +188,7 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
 })
 
 test('CodecContext getFormat callback should expose context as an CodecContext instance', (t) => {
-  const { readOnce, decoder } = setupReader()
+  const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
   decoder.getFormat = function getFormat(context, pixelFormats) {
@@ -199,11 +199,11 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
     return pixelFormat && -1
   }
 
-  readOnce()
+  decodeOnce()
 })
 
 test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
-  const { readOnce, decoder } = setupReader()
+  const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
   decoder.getFormat = function getFormat(_context, pixelFormats) {
@@ -214,7 +214,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
     return pixelFormat && -1
   }
 
-  readOnce()
+  decodeOnce()
 })
 
 test('CodecContext can get an option', (t) => {
@@ -356,7 +356,7 @@ function fakeFrame() {
   return frame
 }
 
-function setupReader() {
+function setupDecoder() {
   const video = require('./fixtures/video/sample.webm', {
     with: { type: 'binary' }
   })
@@ -369,7 +369,7 @@ function setupReader() {
   const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
   const decoder = stream.decoder()
 
-  function readOnce() {
+  function decodeOnce() {
     while (format.readFrame(packet)) {
       if (packet.streamIndex != stream.index) continue
 
@@ -387,7 +387,7 @@ function setupReader() {
   }
 
   return {
-    readOnce,
+    decodeOnce,
     decoder
   }
 }
