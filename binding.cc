@@ -1131,6 +1131,7 @@ bare_ffmpeg_codec_context_destroy(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
 ) {
   avcodec_free_context(&context->handle);
+  context->get_format_cb.reset();
 }
 
 static bool
