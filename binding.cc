@@ -1596,10 +1596,7 @@ bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, c
     formats,
     result
   );
-
-  if (err < 0) {
-    return AV_PIX_FMT_NONE;
-  }
+  assert(err == 0);
 
   return static_cast<enum AVPixelFormat>(result);
 }
