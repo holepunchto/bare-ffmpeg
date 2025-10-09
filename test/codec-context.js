@@ -179,6 +179,44 @@ test('CodecContext exports requestSampleFormat setter', (t) => {
   t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
 })
 
+test('CodecContext should expose a getFormat callback setter', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+
+  t.execution(() => {
+    codecCtx.getFormat = function getFormat() {}
+  })
+})
+
+test('CodecContext getFormat callback should expose context as an CodecContext instance', (t) => {
+  const { decodeOnce, decoder } = setupDecoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(context, pixelFormats) {
+    t.ok(context instanceof ffmpeg.CodecContext)
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
+  }
+
+  decodeOnce()
+})
+
+test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
+  const { decodeOnce, decoder } = setupDecoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(_context, pixelFormats) {
+    t.ok(Array.isArray(pixelFormats))
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
+  }
+
+  decodeOnce()
+})
+
 test('CodecContext can get an option', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
@@ -294,6 +332,8 @@ test('CodecContext can copy options from another context', (t) => {
   t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
 })
 
+// Helpers
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -314,4 +354,40 @@ function fakeFrame() {
   frame.alloc()
 
   return frame
+}
+
+function setupDecoder() {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  const format = new ffmpeg.InputFormatContext(io)
+
+  const packet = new ffmpeg.Packet()
+  const frame = new ffmpeg.Frame()
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const decoder = stream.decoder()
+
+  function decodeOnce() {
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex != stream.index) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+      decoder.receiveFrame(frame)
+      packet.unref()
+      break
+    }
+
+    decoder.destroy()
+    frame.destroy()
+    packet.destroy()
+    format.destroy()
+  }
+
+  return {
+    decodeOnce,
+    decoder
+  }
 }

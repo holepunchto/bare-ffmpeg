@@ -443,6 +443,25 @@ Always rely on `CodecContext.sampleFormat` for actual decoded format.
 
 **Returns**: `number`
 
+##### `CodecContext.getFormat`
+
+_Only when decoding_
+
+Sets a callback function for pixel format negotiation during decoding. Called when FFmpeg needs to choose between multiple supported formats, typically for hardware acceleration.
+
+**Type**: `function` (setter only)
+
+**Callback Signature**: `(context: CodecContext, formats: number[]) => number`
+
+Parameters:
+
+- `context` (`CodecContext`): The codec context instance
+- `formats` (`number[]`): Array of available pixel format constants
+
+**Returns**: `number` - The chosen pixel format constant from the provided array
+
+Must be set before calling `context.open()`.
+
 #### Methods
 
 ##### `CodecContext.open([options])`

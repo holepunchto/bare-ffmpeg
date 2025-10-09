@@ -44,6 +44,7 @@ extern "C" {
 using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
 using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_arraybuffer_t, int32_t>;
 using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, int>;
+using bare_ffmpeg_codec_context_get_format_cb_t = js_function_t<int, std::vector<int>>;
 
 typedef struct {
   AVIOContext *handle;
@@ -81,6 +82,8 @@ typedef struct {
 
 typedef struct {
   AVCodecContext *handle;
+  js_env_t *env;
+  js_persistent_t<bare_ffmpeg_codec_context_get_format_cb_t> get_format_cb;
 } bare_ffmpeg_codec_context_t;
 
 typedef struct {
@@ -190,7 +193,9 @@ bare_ffmpeg__on_io_context_read(void *opaque, uint8_t *buf, int len) {
   assert(err == 0);
 
   int32_t result;
-  int call_status = js_call_function<js_type_options_t{}, int32_t, js_arraybuffer_t, int32_t>(env, callback, arraybuffer, len, result);
+  int call_status = js_call_function<js_type_options_t{}, int32_t, js_arraybuffer_t, int32_t>(
+    env, callback, arraybuffer, len, result
+  );
 
   err = js_detach_arraybuffer(env, arraybuffer);
   assert(err == 0);
@@ -1126,6 +1131,7 @@ bare_ffmpeg_codec_context_destroy(
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
 ) {
   avcodec_free_context(&context->handle);
+  context->get_format_cb.reset();
 }
 
 static bool
@@ -1564,6 +1570,50 @@ bare_ffmpeg_codec_context_set_request_sample_format(
   int64_t sample_format
 ) {
   context->handle->request_sample_fmt = static_cast<AVSampleFormat>(sample_format);
+}
+
+static enum AVPixelFormat
+bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, const enum AVPixelFormat *fmt) {
+  int err;
+
+  auto context = static_cast<bare_ffmpeg_codec_context_t *>(input_context->opaque);
+
+  assert(context->env);
+  assert(context->get_format_cb);
+
+  bare_ffmpeg_codec_context_get_format_cb_t callback;
+  err = js_get_reference_value(context->env, context->get_format_cb, callback);
+  assert(err == 0);
+
+  std::vector<int> formats{};
+  for (const enum AVPixelFormat *p = fmt; *p != AV_PIX_FMT_NONE; ++p) {
+    formats.push_back(static_cast<int>(*p));
+  }
+
+  int result;
+  err = js_call_function<js_type_options_t{}, int, std::vector<int>>(
+    context->env,
+    callback,
+    formats,
+    result
+  );
+  assert(err == 0);
+
+  return static_cast<enum AVPixelFormat>(result);
+}
+
+static void
+bare_ffmpeg_codec_context_set_get_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  bare_ffmpeg_codec_context_get_format_cb_t callback
+) {
+  int err = js_create_reference(env, callback, context->get_format_cb);
+  assert(err == 0);
+
+  context->handle->get_format = bare_ffmpeg__on_codec_context_get_format;
+  context->env = env;
 }
 
 static bool
@@ -3909,7 +3959,7 @@ bare_ffmpeg_list_option_names(
     }
   }
 
-  return { unique_names.begin(), unique_names.end() };
+  return {unique_names.begin(), unique_names.end()};
 }
 
 static void
@@ -4076,6 +4126,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecContextFrameNum", bare_ffmpeg_codec_context_get_frame_num)
   V("getCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_get_request_sample_format)
   V("setCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_set_request_sample_format)
+  V("setCodecContextGetFormat", bare_ffmpeg_codec_context_set_get_format)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
@@ -4302,6 +4353,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_FLAG_INTERLACED_ME)
   V(AV_CODEC_FLAG_CLOSED_GOP)
 
+  V(AV_PIX_FMT_NONE)
   V(AV_PIX_FMT_RGBA)
   V(AV_PIX_FMT_RGB24)
   V(AV_PIX_FMT_YUVJ420P)
