@@ -188,17 +188,7 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
 })
 
 test('CodecContext getFormat callback should expose context as an CodecContext instance', (t) => {
-  const video = require('./fixtures/video/sample.webm', {
-    with: { type: 'binary' }
-  })
-  const io = new ffmpeg.IOContext(video)
-  using format = new ffmpeg.InputFormatContext(io)
-
-  using packet = new ffmpeg.Packet()
-  using frame = new ffmpeg.Frame()
-
-  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
-  const decoder = stream.decoder()
+  const { readOnce, decoder } = setupReader()
 
   t.plan(1)
   decoder.getFormat = function getFormat(context, pixelFormats) {
@@ -209,29 +199,11 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
     return pixelFormat && -1
   }
 
-  while (format.readFrame(packet)) {
-    if (packet.streamIndex != stream.index) continue
-
-    decoder.open()
-    decoder.sendPacket(packet)
-    decoder.receiveFrame(frame)
-    packet.unref()
-    break
-  }
+  readOnce()
 })
 
 test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
-  const video = require('./fixtures/video/sample.webm', {
-    with: { type: 'binary' }
-  })
-  const io = new ffmpeg.IOContext(video)
-  using format = new ffmpeg.InputFormatContext(io)
-
-  using packet = new ffmpeg.Packet()
-  using frame = new ffmpeg.Frame()
-
-  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
-  const decoder = stream.decoder()
+  const { readOnce, decoder } = setupReader()
 
   t.plan(1)
   decoder.getFormat = function getFormat(_context, pixelFormats) {
@@ -242,15 +214,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
     return pixelFormat && -1
   }
 
-  while (format.readFrame(packet)) {
-    if (packet.streamIndex != stream.index) continue
-
-    decoder.open()
-    decoder.sendPacket(packet)
-    decoder.receiveFrame(frame)
-    packet.unref()
-    break
-  }
+  readOnce()
 })
 
 test('CodecContext can get an option', (t) => {
@@ -368,6 +332,8 @@ test('CodecContext can copy options from another context', (t) => {
   t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
 })
 
+// Helpers
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -388,4 +354,40 @@ function fakeFrame() {
   frame.alloc()
 
   return frame
+}
+
+function setupReader() {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  const format = new ffmpeg.InputFormatContext(io)
+
+  const packet = new ffmpeg.Packet()
+  const frame = new ffmpeg.Frame()
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const decoder = stream.decoder()
+
+  function readOnce() {
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex != stream.index) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+      decoder.receiveFrame(frame)
+      packet.unref()
+      break
+    }
+
+    decoder.destroy()
+    frame.destroy()
+    packet.destroy()
+    format.destroy()
+  }
+
+  return {
+    readOnce,
+    decoder
+  }
 }
