@@ -5,7 +5,9 @@ test('codec context could be open without options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open())
+  t.execution(() => {
+    codecCtx.open()
+  })
 })
 
 test('codec context could not open wihtout timebase', (t) => {
@@ -56,7 +58,9 @@ test('codec context could be open with options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
-  t.ok(codecCtx.open(getEncoderOptions()))
+  t.execution(() => {
+    codecCtx.open(getEncoderOptions())
+  })
 })
 
 test('codec context should expose a sendFrame method', (t) => {
@@ -164,6 +168,172 @@ test('CodecContext has read-only "frame-number"', (t) => {
   t.is(codecCtx.frameNum, 0)
 })
 
+test('CodecContext exports requestSampleFormat getter', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  t.is(codecCtx.requestSampleFormat, -1)
+})
+
+test('CodecContext exports requestSampleFormat setter', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+  codecCtx.requestSampleFormat = ffmpeg.constants.sampleFormats.S16
+  t.is(codecCtx.requestSampleFormat, ffmpeg.constants.sampleFormats.S16)
+})
+
+test('CodecContext should expose a getFormat callback setter', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
+
+  t.execution(() => {
+    codecCtx.getFormat = function getFormat() {}
+  })
+})
+
+test('CodecContext getFormat callback should expose context as an CodecContext instance', (t) => {
+  const { decodeOnce, decoder } = setupDecoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(context, pixelFormats) {
+    t.ok(context instanceof ffmpeg.CodecContext)
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
+  }
+
+  decodeOnce()
+})
+
+test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
+  const { decodeOnce, decoder } = setupDecoder()
+
+  t.plan(1)
+  decoder.getFormat = function getFormat(_context, pixelFormats) {
+    t.ok(Array.isArray(pixelFormats))
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
+  }
+
+  decodeOnce()
+})
+
+test('CodecContext can get an option', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const threadCount = codecCtx.getOption('threads')
+  t.is(threadCount, '1')
+})
+
+test('CodecContext.getOption returns null if option is unset', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const params = codecCtx.getOption(
+    'svtav1-params',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN |
+      ffmpeg.constants.optionFlags.ALLOW_NULL
+  )
+
+  t.absent(params)
+})
+
+test('CodecContext.getOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.getOption('nope-throws')
+  }, /Option not found/)
+})
+
+test('CodecContext can get and set options', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('crf', '23')
+  t.is(codecCtx.getOption('crf'), '23')
+
+  codecCtx.setOption(
+    'threads',
+    '4',
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
+  )
+  t.is(
+    codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN),
+    '4'
+  )
+})
+
+test('CodecContext.setOption throws if option is not found', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception(() => {
+    codecCtx.setOption('nope-throws', 'error')
+  }, /Option not found/)
+})
+
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = codecCtx.getOptions()
+  t.ok(Object.hasOwn(options, 'svtav1-params'))
+})
+
+test('CodecContext.listOptionNames returns array of names', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const names = codecCtx.listOptionNames()
+  t.ok(Array.isArray(names))
+  t.ok(names.length > 0)
+  t.ok(names.includes('svtav1-params'))
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: '20',
+    preset: '1',
+    threads: '8'
+  })
+
+  codecCtx.setOptionDictionary(options)
+  t.is(codecCtx.getOption('crf'), '20')
+  t.is(codecCtx.getOption('preset'), '1')
+  t.is(codecCtx.getOption('threads'), '8')
+})
+
+test('CodecContext can set options via dictionary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  const options = ffmpeg.Dictionary.from({
+    crf: 'throws'
+  })
+
+  t.exception(() => {
+    codecCtx.setOptionDictionary(options)
+  }, /Invalid argument/)
+})
+
+test('CodecContext can set option defaults', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.execution(() => {
+    codecCtx.setOptionDefaults()
+  })
+})
+
+test('CodecContext can copy options from another context', (t) => {
+  using sourceCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using targetCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  sourceCtx.setOption('b', '128000')
+  sourceCtx.setOption('threads', '2')
+
+  targetCtx.copyOptionsFrom(sourceCtx)
+  t.is(targetCtx.getOption('b'), sourceCtx.getOption('b'))
+  t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
+})
+
+// Helpers
+
 function setDefaultOptions(ctx) {
   ctx.timeBase = new ffmpeg.Rational(1, 30)
   ctx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
@@ -184,4 +354,40 @@ function fakeFrame() {
   frame.alloc()
 
   return frame
+}
+
+function setupDecoder() {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  const io = new ffmpeg.IOContext(video)
+  const format = new ffmpeg.InputFormatContext(io)
+
+  const packet = new ffmpeg.Packet()
+  const frame = new ffmpeg.Frame()
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const decoder = stream.decoder()
+
+  function decodeOnce() {
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex != stream.index) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+      decoder.receiveFrame(frame)
+      packet.unref()
+      break
+    }
+
+    decoder.destroy()
+    frame.destroy()
+    packet.destroy()
+    format.destroy()
+  }
+
+  return {
+    decodeOnce,
+    decoder
+  }
 }

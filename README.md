@@ -433,6 +433,35 @@ When decoding this gets the total number of frames returned from the decoder so 
 
 **Returns**: `number`
 
+##### `CodecContext.requestSampleFormat`
+
+_Only when decoding_
+
+Set to before calling `context.open()` to hint decoder of preferred output format if supported.
+
+Always rely on `CodecContext.sampleFormat` for actual decoded format.
+
+**Returns**: `number`
+
+##### `CodecContext.getFormat`
+
+_Only when decoding_
+
+Sets a callback function for pixel format negotiation during decoding. Called when FFmpeg needs to choose between multiple supported formats, typically for hardware acceleration.
+
+**Type**: `function` (setter only)
+
+**Callback Signature**: `(context: CodecContext, formats: number[]) => number`
+
+Parameters:
+
+- `context` (`CodecContext`): The codec context instance
+- `formats` (`number[]`): Array of available pixel format constants
+
+**Returns**: `number` - The chosen pixel format constant from the provided array
+
+Must be set before calling `context.open()`.
+
 #### Methods
 
 ##### `CodecContext.open([options])`
@@ -443,7 +472,7 @@ Parameters:
 
 - `options` (`Dictionary`, optional): Codec-specific options
 
-**Returns**: `CodecContext` instance (for chaining)
+**Returns**: `void`
 
 ##### `CodecContext.sendFrame(frame)`
 
@@ -529,6 +558,92 @@ const layouts = codecCtx.getSupportedConfig(
 if (layouts) {
   console.log('Supported channel layouts:', layouts)
 }
+```
+
+##### `CodecContext.getOption(name[, flags])`
+
+Gets the value of a codec option.
+
+Parameters:
+
+- `name` (`string`): The option name (for example, `'threads'` or `'crf'`)
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `string` value or `null` when the option is unset
+
+##### `CodecContext.setOption(name, value[, flags])`
+
+Sets a codec option.
+
+Parameters:
+
+- `name` (`string`): The option name to set
+- `value` (`string`): The option value
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `CodecContext.setOptionDictionary(dictionary[, flags])`
+
+Sets options from a `Dictionary`. Ownership of the dictionary is retained by the caller.
+
+Parameters:
+
+- `dictionary` (`Dictionary`): Dictionary of option key/value pairs
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `CodecContext.setOptionDefaults()`
+
+Resets codec options to their defaults.
+
+**Returns**: `void`
+
+##### `CodecContext.listOptionNames([flags])`
+
+Lists option names available on the codec context.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `Array<string>` of option names
+
+##### `CodecContext.getOptions([flags])`
+
+Collects option values into a plain object.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `object` mapping option names to string values
+
+##### `CodecContext.copyOptionsFrom(context)`
+
+Copies options from another codec context.
+
+Parameters:
+
+- `context` (`CodecContext`): Source context whose options should be copied
+
+**Returns**: `void`
+
+Example:
+
+```js
+using source = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+using target = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+source.setOption('crf', '28')
+source.setOption('threads', '4')
+source.setOptionDictionary(ffmpeg.Dictionary.from({ preset: 'slow' }))
+
+target.setOptionDefaults()
+target.copyOptionsFrom(source)
+
+console.log(target.getOptions())
 ```
 
 ##### `CodecContext.destroy()`
@@ -1188,17 +1303,23 @@ Example:
 const fps = stream.avgFramerate.toNumber()
 ```
 
+##### `Stream.duration`
+
+Gets or sets the duration of the stream in time base units.
+
+**Returns**: `number` - Duration in time base units, or `0` if unknown
+
 #### Methods
 
 ##### `Stream.decoder()`
 
-Creates and opens a decoder for this stream.
+Creates a decoder for this stream.
 
 **Returns**: `CodecContext` instance
 
 ##### `Stream.encoder()`
 
-Creates and opens an encoder for this stream.
+Creates an encoder for this stream.
 
 **Returns**: `CodecContext` instance
 
@@ -1591,6 +1712,97 @@ head.next = next
 // Only destroy the head - 'next' is automatically freed
 head.destroy()
 // DO NOT call next.destroy() - causes double-free error
+```
+
+### Constants and Utilities
+
+The `constants` module provides utility functions for working with FFmpeg format constants and conversions.
+
+#### Methods
+
+##### `ffmpeg.constants.toPixelFormat(format)`
+
+Converts a pixel format string or number to its corresponding constant value.
+
+Parameters:
+
+- `format` (`string` | `number`): The pixel format name (e.g., `'RGB24'`, `'YUV420P'`) or constant value
+
+**Returns**: `number` - The pixel format constant
+
+**Throws**: Error if the format is unknown or invalid type
+
+```js
+const format = ffmpeg.constants.toPixelFormat('RGB24')
+console.log(format) // Outputs the RGB24 constant value
+```
+
+##### `ffmpeg.constants.toSampleFormat(format)`
+
+Converts a sample format string or number to its corresponding constant value.
+
+Parameters:
+
+- `format` (`string` | `number`): The sample format name (e.g., `'S16'`, `'FLTP'`) or constant value
+
+**Returns**: `number` - The sample format constant
+
+**Throws**: Error if the format is unknown or invalid type
+
+```js
+const format = ffmpeg.constants.toSampleFormat('S16')
+console.log(format) // Outputs the S16 constant value
+```
+
+##### `ffmpeg.constants.toChannelLayout(layout)`
+
+Converts a channel layout string or number to its corresponding constant value.
+
+Parameters:
+
+- `layout` (`string` | `number`): The channel layout name (e.g., `'STEREO'`, `'5.1'`) or constant value
+
+**Returns**: `number` - The channel layout constant
+
+**Throws**: Error if the layout is unknown or invalid type
+
+```js
+const layout = ffmpeg.constants.toChannelLayout('STEREO')
+console.log(layout) // Outputs the STEREO constant value
+```
+
+##### `ffmpeg.constants.getSampleFormatName(sampleFormat)`
+
+Gets the human-readable name of a sample format from its constant value.
+
+Parameters:
+
+- `sampleFormat` (`number`): The sample format constant
+
+**Returns**: `string` - The sample format name
+
+```js
+const name = ffmpeg.constants.getSampleFormatName(
+  ffmpeg.constants.sampleFormats.S16
+)
+console.log(name) // 's16'
+```
+
+##### `ffmpeg.constants.getPixelFormatName(pixelFormat)`
+
+Gets the human-readable name of a pixel format from its constant value.
+
+Parameters:
+
+- `pixelFormat` (`number`): The pixel format constant
+
+**Returns**: `string` - The pixel format name
+
+```js
+const name = ffmpeg.constants.getPixelFormatName(
+  ffmpeg.constants.pixelFormats.RGB24
+)
+console.log(name) // 'rgb24'
 ```
 
 ## License

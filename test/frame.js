@@ -97,6 +97,20 @@ test('frame expose getter for picture type', (t) => {
   t.is(fr.pictType, ffmpeg.constants.pictureTypes.NONE)
 })
 
+test('frame expose a setter for sampleRate', (t) => {
+  const fr = new ffmpeg.Frame()
+  t.execution(() => {
+    fr.sampleRate = 48000
+  })
+})
+
+test('frame expose a getter for sampleRate', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.sampleRate = 48000
+
+  t.ok(fr.sampleRate === 48000)
+})
+
 test('copy frame properties', (t) => {
   const a = new ffmpeg.Frame()
   a.pts = 12
