@@ -949,8 +949,8 @@ bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   return std::string(name);
 }
 
-static js_arraybuffer_t
-bare_ffmpeg_codec_get_hardware_config(
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_codec_get_hw_config(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec,
@@ -962,6 +962,7 @@ bare_ffmpeg_codec_get_hardware_config(
   assert(err == 0);
 
   hw_config->handle = avcodec_get_hw_config(codec->handle, index);
+  if (hw_config->handle == nullptr) return std::nullopt;
 
   return handle;
 }
@@ -1123,6 +1124,15 @@ bare_ffmpeg_codec_get_supported_channel_layouts(
   }
 
   return result;
+}
+
+static int
+bare_ffmpeg_codec_hw_config_get_methods(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_hw_config_t, 1> codec_hw_config
+) {
+  return codec_hw_config->handle->methods;
 }
 
 static js_arraybuffer_t
@@ -4111,12 +4121,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
-  V("getCodecHardwareConfig", bare_ffmpeg_codec_get_hardware_config)
+  V("getCodecHardwareConfig", bare_ffmpeg_codec_get_hw_config)
   V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
   V("getPixelFormatNameByID", bare_ffmpeg_get_pixel_format_name_by_id)
   V("getSupportedConfig", bare_ffmpeg_codec_get_supported_config)
   V("getSupportedFrameRates", bare_ffmpeg_codec_get_supported_frame_rates)
   V("getSupportedChannelLayouts", bare_ffmpeg_codec_get_supported_channel_layouts)
+
+  V("getCodecHardwareConfigMethods", bare_ffmpeg_codec_hw_config_get_methods)
 
   V("initCodecContext", bare_ffmpeg_codec_context_init)
   V("destroyCodecContext", bare_ffmpeg_codec_context_destroy)
