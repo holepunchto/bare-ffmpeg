@@ -77,6 +77,10 @@ typedef struct {
 } bare_ffmpeg_codec_t;
 
 typedef struct {
+  const AVCodecHWConfig *handle;
+} bare_ffmpeg_codec_hw_config_t;
+
+typedef struct {
   AVCodecParameters *handle;
 } bare_ffmpeg_codec_parameters_t;
 
@@ -943,6 +947,23 @@ bare_ffmpeg_get_codec_name_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   auto name = avcodec_get_name((enum AVCodecID) id);
 
   return std::string(name);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_codec_get_hardware_config(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec,
+  int index
+) {
+  js_arraybuffer_t handle;
+  bare_ffmpeg_codec_hw_config_t *hw_config;
+  int err = js_create_arraybuffer(env, hw_config, handle);
+  assert(err == 0);
+
+  hw_config->handle = avcodec_get_hw_config(codec->handle, index);
+
+  return handle;
 }
 
 static std::string
@@ -4090,6 +4111,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findDecoderByID", bare_ffmpeg_find_decoder_by_id)
   V("findEncoderByID", bare_ffmpeg_find_encoder_by_id)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
+  V("getCodecHardwareConfig", bare_ffmpeg_codec_get_hardware_config)
   V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
   V("getPixelFormatNameByID", bare_ffmpeg_get_pixel_format_name_by_id)
   V("getSupportedConfig", bare_ffmpeg_codec_get_supported_config)
