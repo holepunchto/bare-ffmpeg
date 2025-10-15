@@ -839,6 +839,12 @@ Gets the MIME type for this input format.
 
 **Returns**: `string` - The MIME type (e.g., `'audio/webm,audio/x-matroska,video/webm,video/x-matroska'`)
 
+##### `InputFormat.name`
+
+Returns format name
+
+**Returns**: `string` - The short-name (e.g., `webm`)
+
 #### Example
 
 ```js
@@ -882,6 +888,12 @@ Gets the file extensions associated with this output format.
 Gets the MIME type for this output format.
 
 **Returns**: `string` - The MIME type (e.g., `'video/webm'`, `'video/mp4'`)
+
+##### `OutputFormat.name`
+
+Returns format name
+
+**Returns**: `string` - The short-name (e.g., `webm`)
 
 #### Example
 

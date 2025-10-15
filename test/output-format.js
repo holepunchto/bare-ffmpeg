@@ -15,6 +15,11 @@ test('OutputFormat should expose an mimeType getter', (t) => {
   t.is(outputFormat.mimeType, 'video/webm')
 })
 
+test('OutputFormat should expose an mimeType getter', (t) => {
+  const outputFormat = new ffmpeg.OutputFormat('webm')
+  t.is(outputFormat.name, 'webm')
+})
+
 test('OutputFormat should expose a static method to create from handle', (t) => {
   const handle = new ArrayBuffer(8)
 

@@ -397,6 +397,15 @@ bare_ffmpeg_input_format_get_mime_type(
   return context->handle->mime_type;
 }
 
+static std::string
+bare_ffmpeg_input_format_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> context
+) {
+  return context->handle->name;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_format_context_open_input_with_io(
   js_env_t *env,
@@ -540,6 +549,15 @@ bare_ffmpeg_output_format_get_mime_type(
   js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> context
 ) {
   return context->handle->mime_type;
+}
+
+static std::string
+bare_ffmpeg_output_format_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> context
+) {
+  return context->handle->name;
 }
 
 static void
@@ -4052,11 +4070,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
   V("getInputFormatExtensions", bare_ffmpeg_input_format_get_extensions)
   V("getInputFormatMimeType", bare_ffmpeg_input_format_get_mime_type)
+  V("getInputFormatName", bare_ffmpeg_input_format_get_name)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
   V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
   V("getOutputFormatExtensions", bare_ffmpeg_output_format_get_extensions)
   V("getOutputFormatMimeType", bare_ffmpeg_output_format_get_mime_type)
+  V("getOutputFormatName", bare_ffmpeg_output_format_get_name)
 
   V("openInputFormatContextWithIO", bare_ffmpeg_format_context_open_input_with_io)
   V("openInputFormatContextWithFormat", bare_ffmpeg_format_context_open_input_with_format)
