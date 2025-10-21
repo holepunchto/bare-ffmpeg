@@ -202,6 +202,20 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
   decodeOnce()
 })
 
+test('pixelFormat should have been changed after negociation', (t) => {
+  const { decodeOnce, decoder } = setupDecoder()
+
+  decoder.getFormat = function getFormat(_context, pixelFormats) {
+    const pixelFormat = pixelFormats.find(
+      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
+    )
+    return pixelFormat && ffmpeg.constants.pixelFormats.NONE
+  }
+
+  const newPixelFormat = decodeOnce()
+  t.is(newPixelFormat, ffmpeg.constants.pixelFormats.YUV420P)
+})
+
 test('CodecContext getFormat callback should expose pixelFormats as an Array', (t) => {
   const { decodeOnce, decoder } = setupDecoder()
 
@@ -370,10 +384,13 @@ function setupDecoder() {
   const decoder = stream.decoder()
 
   function decodeOnce() {
+    let newPixelFormat
+
     while (format.readFrame(packet)) {
       if (packet.streamIndex != stream.index) continue
 
       decoder.open()
+      newPixelFormat = decoder.pixelFormat
       decoder.sendPacket(packet)
       decoder.receiveFrame(frame)
       packet.unref()
@@ -384,6 +401,8 @@ function setupDecoder() {
     frame.destroy()
     packet.destroy()
     format.destroy()
+
+    return newPixelFormat
   }
 
   return {
