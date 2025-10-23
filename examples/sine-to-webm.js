@@ -64,6 +64,7 @@ while (inputFormat.readFrame(packet)) {
   if (packet.streamIndex !== inputStream.index) continue
 
   // Decode input packet
+  console.log(packet)
   const status = decoder.sendPacket(packet)
   if (!status) throw new Error('Failed to decode packet')
 
