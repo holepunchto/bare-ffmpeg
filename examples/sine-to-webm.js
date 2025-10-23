@@ -60,13 +60,15 @@ resampledFrame.channelLayout = outputStream.codecParameters.channelLayout
 resampledFrame.nbSamples = 960 // Opus frame size
 resampledFrame.alloc()
 
+decoder.open()
+encoder.open()
+
 while (inputFormat.readFrame(packet)) {
   if (packet.streamIndex !== inputStream.index) continue
 
   packet.timeBase = inputStream.timeBase;
 
   // Decode input packet
-  console.log(packet)
   const status = decoder.sendPacket(packet)
   if (!status) throw new Error('Failed to decode packet')
 
