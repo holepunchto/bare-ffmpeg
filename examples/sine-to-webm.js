@@ -66,7 +66,6 @@ while (inputFormat.readFrame(packet)) {
   // Decode input packet
   const status = decoder.sendPacket(packet)
   if (!status) throw new Error('Failed to decode packet')
-  packet.unref()
 
   // Process decoded frames
   while (decoder.receiveFrame(frame)) {
@@ -88,6 +87,8 @@ while (inputFormat.readFrame(packet)) {
       outputPacket.unref()
     }
   }
+
+  packet.unref()
 }
 
 // Flush encoder
