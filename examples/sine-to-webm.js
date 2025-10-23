@@ -66,7 +66,7 @@ encoder.open()
 while (inputFormat.readFrame(packet)) {
   if (packet.streamIndex !== inputStream.index) continue
 
-  packet.timeBase = inputStream.timeBase;
+  packet.timeBase = inputStream.timeBase
 
   // Decode input packet
   const status = decoder.sendPacket(packet)
