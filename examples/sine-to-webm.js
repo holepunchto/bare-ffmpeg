@@ -71,6 +71,7 @@ while (inputFormat.readFrame(packet)) {
   // Decode input packet
   const status = decoder.sendPacket(packet)
   if (!status) throw new Error('Failed to decode packet')
+  packet.unref()
 
   // Process decoded frames
   while (decoder.receiveFrame(frame)) {
@@ -93,7 +94,6 @@ while (inputFormat.readFrame(packet)) {
     }
   }
 
-  packet.unref()
 }
 
 // Flush encoder
@@ -136,7 +136,6 @@ function createSineWaveInput(duration = 3, opts = {}) {
   const sampleRate = opts.sampleRate || 48000
   const sampleFormat = opts.sampleFormat || 's16'
   const frequency = opts.frequency || 440
-  const frameSize = opts.frameSize || 1024
 
   const options = new ffmpeg.Dictionary()
 
@@ -144,7 +143,7 @@ function createSineWaveInput(duration = 3, opts = {}) {
     sine=frequency=${frequency}:
       sample_rate=${sampleRate}:
       duration=${duration},
-      asetnsamples=n=${frameSize},
+      asetnsamples=n=960:pad=1,
       aformat=sample_fmts=${sampleFormat}[out0]
   `.replace(/\s+/g, '')
 
