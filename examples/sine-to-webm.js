@@ -63,6 +63,8 @@ resampledFrame.alloc()
 while (inputFormat.readFrame(packet)) {
   if (packet.streamIndex !== inputStream.index) continue
 
+  packet.timeBase = inputStream.timeBase;
+
   // Decode input packet
   console.log(packet)
   const status = decoder.sendPacket(packet)
