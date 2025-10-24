@@ -163,6 +163,30 @@ resampledFrame.destroy()
 // Validate the generated WebM data
 const audioData = Buffer.concat(audioChunks)
 
+// Check WebM magic bytes (EBML header)
+assert.strictEqual(
+  audioData[0],
+  0x1a,
+  'WebM file should start with EBML magic byte 0x1A'
+)
+assert.strictEqual(
+  audioData[1],
+  0x45,
+  'WebM file should have correct EBML header'
+)
+assert.strictEqual(
+  audioData[2],
+  0xdf,
+  'WebM file should have correct EBML header'
+)
+assert.strictEqual(
+  audioData[3],
+  0xa3,
+  'WebM file should have correct EBML header'
+)
+console.log('✓ All assertions passed!')
+
+// Success logs
 console.log('✓ Sine wave audio generated successfully!')
 console.log(`Processed ${frameCount} audio frames`)
 console.log(`Generated WebM file size: ${audioData.length} bytes`)
@@ -170,7 +194,6 @@ console.log(`Generated WebM file size: ${audioData.length} bytes`)
 // Write the file to disk
 const filename = 'sine_wave_440hz.webm'
 fs.writeFileSync(filename, audioData)
-
 console.log(`✓ Audio file saved as ${filename}`)
 console.log(
   'You can now play this file with any media player that supports WebM/Opus!'
