@@ -31,9 +31,6 @@ outputStream.codecParameters.channelLayout =
 outputStream.codecParameters.format = ffmpeg.constants.sampleFormats.FLTP // Opus requires FLTP
 outputStream.timeBase = inputStream.timeBase
 
-console.log('Input timeBase:', inputStream.timeBase)
-console.log('Output timeBase:', outputStream.timeBase)
-
 // Create decoder and encoder
 const decoder = inputStream.decoder()
 const encoder = outputStream.encoder()
@@ -92,11 +89,15 @@ while (inputFormat.readFrame(packet)) {
     resampledFrame.pts = outputPts
     resampledFrame.timeBase = codecTimeBase
 
-    if (frameCount <= 3) {
-      console.log(
-        `Frame ${frameCount}: pts=${outputPts}, samplesConverted=${samplesConverted}`
-      )
-    }
+    const expectedPts = 960 * (frameCount - 1)
+    assert.strictEqual(
+      outputPts,
+      expectedPts,
+      `First frame should have PTS = ${expectedPts}`
+    )
+    console.log(
+      `Frame ${frameCount}: pts=${outputPts}, samplesConverted=${samplesConverted}`
+    )
 
     // Encode frame to output
     const hasCapacity = encoder.sendFrame(resampledFrame)
@@ -175,6 +176,8 @@ console.log(
   'You can now play this file with any media player that supports WebM/Opus!'
 )
 console.log(`Example: vlc ${filename} or ffplay ${filename}`)
+
+// Helpers
 
 function createSineWaveInput(duration = 3, opts = {}) {
   const sampleRate = opts.sampleRate || 48000
