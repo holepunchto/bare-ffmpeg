@@ -120,7 +120,6 @@ while (inputFormat.readFrame(packet)) {
         codecTimeBase,
         outputStream.timeBase
       )
-      outputPacket.timeBase = outputStream.timeBase
 
       outputFormat.writeFrame(outputPacket)
       outputPacket.unref()
@@ -143,7 +142,6 @@ while (encoder.receivePacket(outputPacket)) {
     codecTimeBase,
     outputStream.timeBase
   )
-  outputPacket.timeBase = outputStream.timeBase
 
   outputFormat.writeFrame(outputPacket)
   outputPacket.unref()
