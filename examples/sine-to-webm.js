@@ -31,6 +31,9 @@ outputStream.codecParameters.channelLayout =
 outputStream.codecParameters.format = ffmpeg.constants.sampleFormats.FLTP // Opus requires FLTP
 outputStream.timeBase = inputStream.timeBase
 
+console.log('Input timeBase:', inputStream.timeBase)
+console.log('Output timeBase:', outputStream.timeBase)
+
 // Create decoder and encoder
 const decoder = inputStream.decoder()
 const encoder = outputStream.encoder()
@@ -63,6 +66,9 @@ resampledFrame.alloc()
 decoder.open()
 encoder.open()
 
+let outputPts = 0
+const codecTimeBase = new ffmpeg.Rational(1, 48000)
+
 while (inputFormat.readFrame(packet)) {
   if (packet.streamIndex !== inputStream.index) continue
 
@@ -80,26 +86,64 @@ while (inputFormat.readFrame(packet)) {
     // Resample S16 → FLTP
     const samplesConverted = resampler.convert(frame, resampledFrame)
     resampledFrame.nbSamples = samplesConverted
-    resampledFrame.copyProperties(frame)
+    // resampledFrame.copyProperties(frame)
+
+    // Set PTS on the frame BEFORE encoding
+    resampledFrame.pts = outputPts
+    resampledFrame.timeBase = codecTimeBase
+
+    if (frameCount <= 3) {
+      console.log(
+        `Frame ${frameCount}: pts=${outputPts}, samplesConverted=${samplesConverted}`
+      )
+    }
 
     // Encode frame to output
     const hasCapacity = encoder.sendFrame(resampledFrame)
     if (!hasCapacity) throw new Error('Encoder full')
 
+    // Increment PTS by the number of samples
+    outputPts += samplesConverted
+
     // Write encoded packets
     while (encoder.receivePacket(outputPacket)) {
       outputPacket.streamIndex = outputStream.index
+
+      outputPacket.pts = ffmpeg.Rational.rescaleQ(
+        outputPacket.pts,
+        codecTimeBase,
+        outputStream.timeBase
+      )
+      outputPacket.dts = ffmpeg.Rational.rescaleQ(
+        outputPacket.dts,
+        codecTimeBase,
+        outputStream.timeBase
+      )
+      outputPacket.timeBase = outputStream.timeBase
+
       outputFormat.writeFrame(outputPacket)
       outputPacket.unref()
     }
   }
-
 }
 
 // Flush encoder
 encoder.sendFrame(null)
 while (encoder.receivePacket(outputPacket)) {
   outputPacket.streamIndex = outputStream.index
+
+  outputPacket.pts = ffmpeg.Rational.rescaleQ(
+    outputPacket.pts,
+    codecTimeBase,
+    outputStream.timeBase
+  )
+  outputPacket.dts = ffmpeg.Rational.rescaleQ(
+    outputPacket.dts,
+    codecTimeBase,
+    outputStream.timeBase
+  )
+  outputPacket.timeBase = outputStream.timeBase
+
   outputFormat.writeFrame(outputPacket)
   outputPacket.unref()
 }
