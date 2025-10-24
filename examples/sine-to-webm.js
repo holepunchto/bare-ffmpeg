@@ -115,11 +115,8 @@ while (inputFormat.readFrame(packet)) {
         codecTimeBase,
         outputStream.timeBase
       )
-      outputPacket.dts = ffmpeg.Rational.rescaleQ(
-        outputPacket.dts,
-        codecTimeBase,
-        outputStream.timeBase
-      )
+      // For audio `pts === dts`
+      outputPacket.dts = outputPacket.pts
 
       outputFormat.writeFrame(outputPacket)
       outputPacket.unref()
@@ -137,11 +134,8 @@ while (encoder.receivePacket(outputPacket)) {
     codecTimeBase,
     outputStream.timeBase
   )
-  outputPacket.dts = ffmpeg.Rational.rescaleQ(
-    outputPacket.dts,
-    codecTimeBase,
-    outputStream.timeBase
-  )
+  // For audio `pts === dts`
+  outputPacket.dts = outputPacket.pts
 
   outputFormat.writeFrame(outputPacket)
   outputPacket.unref()
