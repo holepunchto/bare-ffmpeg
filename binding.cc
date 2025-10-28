@@ -119,6 +119,10 @@ typedef struct {
 } bare_ffmpeg_side_data_t;
 
 typedef struct {
+  AVFrameSideData *handle;
+} bare_ffmpeg_frame_side_data_t;
+
+typedef struct {
   const AVFilter *handle;
 } bare_ffmpeg_filter_t;
 
@@ -1300,6 +1304,158 @@ bare_ffmpeg_frame_copy_properties(
 
     throw js_pending_exception;
   }
+}
+
+static std::vector<std::tuple<const char *, const char *>>
+bare_ffmpeg_frame_get_metadata_entries(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  std::vector<std::tuple<const char *, const char *>> entries{};
+
+  AVDictionary *dict = frame->handle->metadata;
+  if (!dict) return entries;
+
+  const AVDictionaryEntry *entry = nullptr;
+
+  while ((entry = av_dict_iterate(dict, entry))) {
+    entries.emplace_back(entry->key, entry->value);
+  }
+
+  return entries;
+}
+
+static std::optional<std::string>
+bare_ffmpeg_frame_get_metadata_entry(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  std::string key
+) {
+  AVDictionary *dict = frame->handle->metadata;
+  if (!dict) return std::nullopt;
+
+  AVDictionaryEntry *entry = av_dict_get(dict, key.c_str(), NULL, 0);
+  if (entry == NULL) return std::nullopt;
+
+  return std::string(entry->value);
+}
+
+static std::vector<js_arraybuffer_t>
+bare_ffmpeg_frame_get_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  std::vector<js_arraybuffer_t> res{};
+
+  int count = frame->handle->nb_side_data;
+  if (count <= 0 || frame->handle->side_data == nullptr) return res;
+
+  for (int i = 0; i < count; i++) {
+    js_arraybuffer_t handle;
+    bare_ffmpeg_frame_side_data_t *sd;
+    int err = js_create_arraybuffer(env, sd, handle);
+    assert(err == 0);
+
+    sd->handle = frame->handle->side_data[i];
+
+    res.push_back(handle);
+  }
+
+  return res;
+}
+
+static int
+bare_ffmpeg_frame_side_data_get_type(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_side_data_t, 1> side_data
+) {
+  return side_data->handle->type;
+}
+
+static std::string
+bare_ffmpeg_frame_side_data_get_name(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_side_data_t, 1> side_data
+) {
+  return av_frame_side_data_name(side_data->handle->type);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_frame_side_data_get_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_side_data_t, 1> side_data
+) {
+  js_arraybuffer_t handle;
+  uint8_t *buf;
+  int err = js_create_arraybuffer(env, side_data->handle->size, buf, handle);
+  assert(err == 0);
+
+  memcpy(buf, side_data->handle->data, side_data->handle->size);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_frame_set_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  std::vector<js_object_t> side_data_array
+) {
+  for (js_object_t side_data : side_data_array) {
+    int err;
+
+    int32_t type;
+    err = js_get_property(env, side_data, "type", type);
+    assert(err == 0);
+
+    js_arraybuffer_span_t buf;
+    err = js_get_property(env, side_data, "buffer", buf);
+    assert(err == 0);
+
+    int32_t offset;
+    err = js_get_property(env, side_data, "offset", offset);
+    assert(err == 0);
+
+    int32_t len;
+    err = js_get_property(env, side_data, "length", len);
+    assert(err == 0);
+
+    AVFrameSideData *sd = av_frame_new_side_data(
+      frame->handle,
+      static_cast<AVFrameSideDataType>(type),
+      static_cast<size_t>(len)
+    );
+
+    if (!sd) {
+      err = js_throw_error(env, NULL, "unable to allocate frame side data");
+      assert(err == 0);
+      throw js_pending_exception;
+    }
+
+    if (len > 0) {
+      memcpy(sd->data, &buf[static_cast<size_t>(offset)], static_cast<size_t>(len));
+    }
+  }
+}
+
+static void
+bare_ffmpeg_frame_remove_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  int32_t type
+) {
+  av_frame_remove_side_data(
+    frame->handle,
+    static_cast<AVFrameSideDataType>(type)
+  );
 }
 
 static bool
@@ -4227,6 +4383,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameSampleRate", bare_ffmpeg_frame_get_sample_rate)
   V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
+  V("getFrameMetadataEntries", bare_ffmpeg_frame_get_metadata_entries)
+  V("getFrameMetadataEntry", bare_ffmpeg_frame_get_metadata_entry)
+  V("getFrameSideData", bare_ffmpeg_frame_get_side_data)
+  V("setFrameSideData", bare_ffmpeg_frame_set_side_data)
+  V("removeFrameSideData", bare_ffmpeg_frame_remove_side_data)
+  V("getFrameSideDataType", bare_ffmpeg_frame_side_data_get_type)
+  V("getFrameSideDataName", bare_ffmpeg_frame_side_data_get_name)
+  V("getFrameSideDataBuffer", bare_ffmpeg_frame_side_data_get_data)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
@@ -4609,6 +4773,38 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PKT_DATA_3D_REFERENCE_DISPLAYS)
   V(AV_PKT_DATA_RTCP_SR)
   V(AV_PKT_DATA_NB)
+
+  V(AV_FRAME_DATA_PANSCAN)
+  V(AV_FRAME_DATA_A53_CC)
+  V(AV_FRAME_DATA_STEREO3D)
+  V(AV_FRAME_DATA_MATRIXENCODING)
+  V(AV_FRAME_DATA_DOWNMIX_INFO)
+  V(AV_FRAME_DATA_REPLAYGAIN)
+  V(AV_FRAME_DATA_DISPLAYMATRIX)
+  V(AV_FRAME_DATA_AFD)
+  V(AV_FRAME_DATA_MOTION_VECTORS)
+  V(AV_FRAME_DATA_SKIP_SAMPLES)
+  V(AV_FRAME_DATA_AUDIO_SERVICE_TYPE)
+  V(AV_FRAME_DATA_MASTERING_DISPLAY_METADATA)
+  V(AV_FRAME_DATA_GOP_TIMECODE)
+  V(AV_FRAME_DATA_SPHERICAL)
+  V(AV_FRAME_DATA_CONTENT_LIGHT_LEVEL)
+  V(AV_FRAME_DATA_ICC_PROFILE)
+  V(AV_FRAME_DATA_S12M_TIMECODE)
+  V(AV_FRAME_DATA_DYNAMIC_HDR_PLUS)
+  V(AV_FRAME_DATA_REGIONS_OF_INTEREST)
+  V(AV_FRAME_DATA_VIDEO_ENC_PARAMS)
+  V(AV_FRAME_DATA_SEI_UNREGISTERED)
+  V(AV_FRAME_DATA_FILM_GRAIN_PARAMS)
+  V(AV_FRAME_DATA_DETECTION_BBOXES)
+  V(AV_FRAME_DATA_DOVI_RPU_BUFFER)
+  V(AV_FRAME_DATA_DOVI_METADATA)
+  V(AV_FRAME_DATA_DYNAMIC_HDR_VIVID)
+  V(AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT)
+  V(AV_FRAME_DATA_VIDEO_HINT)
+  V(AV_FRAME_DATA_LCEVC)
+  V(AV_FRAME_DATA_VIEW_ID)
+  V(AV_FRAME_DATA_3D_REFERENCE_DISPLAYS)
 
   V(AV_CODEC_CONFIG_PIX_FORMAT)
   V(AV_CODEC_CONFIG_FRAME_RATE)
