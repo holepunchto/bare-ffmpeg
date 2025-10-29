@@ -67,11 +67,69 @@ test('FilterGraph should expose a parse method', (t) => {
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = initOutputs(bufferContext)
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = initOutputs(bufferContext)
 
   t.execution(() => {
     graph.parse('negate', inputs, outputs)
+  })
+})
+
+test('FilterGraph.parse should handle multiple inputs', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  const sinkContext0 = new ffmpeg.FilterContext()
+  const sinkContext1 = new ffmpeg.FilterContext()
+  using graph = new ffmpeg.FilterGraph()
+  const buffer = new ffmpeg.Filter('buffer')
+  const sink0 = new ffmpeg.Filter('buffersink')
+  const sink1 = new ffmpeg.Filter('buffersink')
+  const args = `video_size=1x1:pix_fmt=${ffmpeg.constants.pixelFormats.RGB24}:time_base=1/30:pixel_aspect=1/1`
+
+  graph.createFilter(bufferContext, buffer, 'in', args)
+  graph.createFilter(sinkContext0, sink0, 'out0')
+  graph.createFilter(sinkContext1, sink1, 'out1')
+
+  using inputs = createFilterInOutChain([
+    [sinkContext0, 'out0'],
+    [sinkContext1, 'out1']
+  ])
+  using outputs = initOutputs(bufferContext)
+
+  t.execution(() => {
+    graph.parse('split=2[out0][out1]', inputs, outputs)
+  })
+
+  t.execution(() => {
+    graph.configure()
+  })
+})
+
+test('FilterGraph.parse should handle multiple outputs', (t) => {
+  const bufferContext0 = new ffmpeg.FilterContext()
+  const bufferContext1 = new ffmpeg.FilterContext()
+  const sinkContext = new ffmpeg.FilterContext()
+  using graph = new ffmpeg.FilterGraph()
+  const buffer0 = new ffmpeg.Filter('buffer')
+  const buffer1 = new ffmpeg.Filter('buffer')
+  const sink = new ffmpeg.Filter('buffersink')
+  const args = `video_size=1x1:pix_fmt=${ffmpeg.constants.pixelFormats.RGB24}:time_base=1/30:pixel_aspect=1/1`
+
+  graph.createFilter(bufferContext0, buffer0, 'in0', args)
+  graph.createFilter(bufferContext1, buffer1, 'in1', args)
+  graph.createFilter(sinkContext, sink, 'out')
+
+  using inputs = initInputs(sinkContext)
+  using outputs = createFilterInOutChain([
+    [bufferContext0, 'in0'],
+    [bufferContext1, 'in1']
+  ])
+
+  t.execution(() => {
+    graph.parse('[in0][in1]hstack=inputs=2[out]', inputs, outputs)
+  })
+
+  t.execution(() => {
+    graph.configure()
   })
 })
 
@@ -80,8 +138,8 @@ test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = initOutputs(bufferContext)
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = initOutputs(bufferContext)
 
   t.exception(() => {
     graph.parse('foo', inputs, outputs)
@@ -93,8 +151,8 @@ test('FilterGraph should expose a configure method', (t) => {
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = initOutputs(bufferContext)
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = initOutputs(bufferContext)
 
   graph.parse('negate', inputs, outputs)
 
@@ -108,8 +166,8 @@ test('FilterGraph.configure should throw when parameters are not valid', (t) => 
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
 
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = new ffmpeg.FilterInOut()
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = new ffmpeg.FilterInOut()
 
   graph.parse('negate', inputs, outputs)
 
@@ -123,8 +181,8 @@ test('FilterGraph should expose a pushFrame method', (t) => {
   const bufferContext = new ffmpeg.FilterContext()
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = initOutputs(bufferContext)
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = initOutputs(bufferContext)
 
   graph.parse('negate', inputs, outputs)
   graph.configure()
@@ -137,8 +195,8 @@ test('FilterGraph should expose a pullFrame method', (t) => {
   const bufferContext = new ffmpeg.FilterContext()
   const bufferSinkContext = new ffmpeg.FilterContext()
   using graph = initGraph(bufferContext, bufferSinkContext)
-  const inputs = initInputs(bufferSinkContext)
-  const outputs = initOutputs(bufferContext)
+  using inputs = initInputs(bufferSinkContext)
+  using outputs = initOutputs(bufferContext)
 
   graph.parse('negate', inputs, outputs)
   graph.configure()
@@ -182,6 +240,26 @@ function initOutputs(ctx) {
   outputs.filterContext = ctx
   outputs.padIdx = 0
   return outputs
+}
+
+function createFilterInOutChain(entries) {
+  const [[firstCtx, firstName], ...rest] = entries
+  const head = new ffmpeg.FilterInOut()
+  head.name = firstName
+  head.filterContext = firstCtx
+  head.padIdx = 0
+
+  let current = head
+  for (const [ctx, name] of rest) {
+    const next = new ffmpeg.FilterInOut()
+    next.name = name
+    next.filterContext = ctx
+    next.padIdx = 0
+    current.next = next
+    current = next
+  }
+
+  return head
 }
 
 function createFrame(width = 1, height = 1) {
