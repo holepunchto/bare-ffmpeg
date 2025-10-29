@@ -108,18 +108,7 @@ while (inputFormat.readFrame(packet)) {
 
     // Write encoded packets
     while (encoder.receivePacket(outputPacket)) {
-      outputPacket.streamIndex = outputStream.index
-
-      outputPacket.pts = ffmpeg.Rational.rescaleQ(
-        outputPacket.pts,
-        codecTimeBase,
-        outputStream.timeBase
-      )
-      // For audio `pts === dts`
-      outputPacket.dts = outputPacket.pts
-
-      outputFormat.writeFrame(outputPacket)
-      outputPacket.unref()
+      writeFrame(outputPacket, outputStream, outputFormat)
     }
   }
 }
@@ -127,18 +116,7 @@ while (inputFormat.readFrame(packet)) {
 // Flush encoder
 encoder.sendFrame(null)
 while (encoder.receivePacket(outputPacket)) {
-  outputPacket.streamIndex = outputStream.index
-
-  outputPacket.pts = ffmpeg.Rational.rescaleQ(
-    outputPacket.pts,
-    codecTimeBase,
-    outputStream.timeBase
-  )
-  // For audio `pts === dts`
-  outputPacket.dts = outputPacket.pts
-
-  outputFormat.writeFrame(outputPacket)
-  outputPacket.unref()
+  writeFrame(outputPacket, outputStream, outputFormat)
 }
 
 outputFormat.writeTrailer()
@@ -193,6 +171,21 @@ console.log(
 console.log(`Example: vlc ${filename} or ffplay ${filename}`)
 
 // Helpers
+
+function writeFrame(outputPacket, outputStream, outputFormat) {
+  outputPacket.streamIndex = outputStream.index
+
+  outputPacket.pts = ffmpeg.Rational.rescaleQ(
+    outputPacket.pts,
+    codecTimeBase,
+    outputStream.timeBase
+  )
+  // For audio `pts === dts`
+  outputPacket.dts = outputPacket.pts
+
+  outputFormat.writeFrame(outputPacket)
+  outputPacket.unref()
+}
 
 function createSineWaveInput(duration = 3, opts = {}) {
   const sampleRate = opts.sampleRate || 48000
