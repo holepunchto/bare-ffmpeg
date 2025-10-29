@@ -1539,8 +1539,8 @@ Parses a filter description string and applies it to the filter graph.
 Parameters:
 
 - `filterDescription` (`string`): The filter description (e.g., `'negate'`, `'scale=640:480'`)
-- `inputs` (`FilterInOut`): Input filter endpoints
-- `outputs` (`FilterInOut`): Output filter endpoints
+- `inputs` (`FilterInOut` | `undefined`): Input filter endpoints (optional)
+- `outputs` (`FilterInOut` | `undefined`): Output filter endpoints (optional)
 
 **Returns**: `void`
 

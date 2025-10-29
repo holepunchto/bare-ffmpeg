@@ -3721,11 +3721,20 @@ bare_ffmpeg_filter_graph_parse(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_graph_t, 1> graph,
-  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> inputs,
-  js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> outputs,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1>> inputs,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1>> outputs,
   std::string filter_description
 ) {
-  int err = avfilter_graph_parse(graph->handle, filter_description.c_str(), inputs->handle, outputs->handle, nullptr);
+  AVFilterInOut **inputs_ptr = inputs ? &inputs.value()->handle : nullptr;
+  AVFilterInOut **outputs_ptr = outputs ? &outputs.value()->handle : nullptr;
+
+  int err = avfilter_graph_parse_ptr(
+    graph->handle,
+    filter_description.c_str(),
+    inputs_ptr,
+    outputs_ptr,
+    nullptr
+  );
   if (err < 0) {
     err = js_throw_error(env, nullptr, av_err2str(err));
     assert(err == 0);
