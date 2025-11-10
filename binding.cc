@@ -1336,7 +1336,7 @@ bare_ffmpeg_frame_get_metadata_entry(
   AVDictionary *dict = frame->handle->metadata;
   if (!dict) return std::nullopt;
 
-  AVDictionaryEntry *entry = av_dict_get(dict, key.c_str(), NULL, 0);
+  AVDictionaryEntry *entry = av_dict_get(dict, key.c_str(), nullptr, 0);
   if (entry == NULL) return std::nullopt;
 
   return entry->value;
