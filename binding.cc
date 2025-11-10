@@ -1339,7 +1339,7 @@ bare_ffmpeg_frame_get_metadata_entry(
   AVDictionaryEntry *entry = av_dict_get(dict, key.c_str(), NULL, 0);
   if (entry == NULL) return std::nullopt;
 
-  return std::string(entry->value);
+  return entry->value;
 }
 
 static std::vector<js_arraybuffer_t>
