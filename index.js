@@ -6,10 +6,7 @@ const CodecParameters = require('./lib/codec-parameters')
 const Decoder = require('./lib/decoder')
 const Dictionary = require('./lib/dictionary')
 const Encoder = require('./lib/encoder')
-const {
-  InputFormatContext,
-  OutputFormatContext
-} = require('./lib/format-context')
+const { InputFormatContext, OutputFormatContext } = require('./lib/format-context')
 const Filter = require('./lib/filter')
 const FilterContext = require('./lib/filter-context')
 const FilterGraph = require('./lib/filter-graph')

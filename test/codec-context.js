@@ -193,9 +193,7 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
   t.plan(1)
   decoder.getFormat = function getFormat(context, pixelFormats) {
     t.ok(context instanceof ffmpeg.CodecContext)
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -206,9 +204,7 @@ test('pixelFormat should have been changed after negociation', (t) => {
   const { decodeOnce, decoder } = setupDecoder()
 
   decoder.getFormat = function getFormat(_context, pixelFormats) {
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -222,9 +218,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
   t.plan(1)
   decoder.getFormat = function getFormat(_context, pixelFormats) {
     t.ok(Array.isArray(pixelFormats))
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -243,8 +237,7 @@ test('CodecContext.getOption returns null if option is unset', (t) => {
 
   const params = codecCtx.getOption(
     'svtav1-params',
-    ffmpeg.constants.optionFlags.SEARCH_CHILDREN |
-      ffmpeg.constants.optionFlags.ALLOW_NULL
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN | ffmpeg.constants.optionFlags.ALLOW_NULL
   )
 
   t.absent(params)
@@ -264,15 +257,8 @@ test('CodecContext can get and set options', (t) => {
   codecCtx.setOption('crf', '23')
   t.is(codecCtx.getOption('crf'), '23')
 
-  codecCtx.setOption(
-    'threads',
-    '4',
-    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
-  )
-  t.is(
-    codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN),
-    '4'
-  )
+  codecCtx.setOption('threads', '4', ffmpeg.constants.optionFlags.SEARCH_CHILDREN)
+  t.is(codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN), '4')
 })
 
 test('CodecContext.setOption throws if option is not found', (t) => {

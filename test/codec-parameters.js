@@ -14,9 +14,7 @@ test.hook('setup', () => {
     options,
     'testsrc=size=640x480:rate=30'
   )
-  const stream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
+  const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
   codecParam = stream.codecParameters
 })

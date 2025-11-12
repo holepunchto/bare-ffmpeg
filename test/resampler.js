@@ -181,8 +181,7 @@ test('resampler converts between different sample formats', (t) => {
       using outputFrame = new ffmpeg.Frame()
       outputFrame.format = ffmpeg.constants.sampleFormats.FLTP
       outputFrame.nbSamples = inputFrame.nbSamples
-      outputFrame.channelLayout =
-        inputFrame.channelLayout || ffmpeg.constants.channelLayouts.MONO
+      outputFrame.channelLayout = inputFrame.channelLayout || ffmpeg.constants.channelLayouts.MONO
       outputFrame.alloc()
 
       const converted = resampler.convert(inputFrame, outputFrame)

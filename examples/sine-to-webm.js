@@ -26,8 +26,7 @@ const outputStream = outputFormat.createStream()
 outputStream.codecParameters.type = ffmpeg.constants.mediaTypes.AUDIO
 outputStream.codecParameters.id = ffmpeg.constants.codecs.OPUS // Use Opus codec
 outputStream.codecParameters.sampleRate = inputStream.codecParameters.sampleRate
-outputStream.codecParameters.channelLayout =
-  inputStream.codecParameters.channelLayout
+outputStream.codecParameters.channelLayout = inputStream.codecParameters.channelLayout
 outputStream.codecParameters.format = ffmpeg.constants.sampleFormats.FLTP // Opus requires FLTP
 outputStream.timeBase = inputStream.timeBase
 
@@ -90,14 +89,8 @@ while (inputFormat.readFrame(packet)) {
     resampledFrame.timeBase = codecTimeBase
 
     const expectedPts = 960 * (frameCount - 1)
-    assert.strictEqual(
-      outputPts,
-      expectedPts,
-      `First frame should have PTS = ${expectedPts}`
-    )
-    console.log(
-      `Frame ${frameCount}: pts=${outputPts}, samplesConverted=${samplesConverted}`
-    )
+    assert.strictEqual(outputPts, expectedPts, `First frame should have PTS = ${expectedPts}`)
+    console.log(`Frame ${frameCount}: pts=${outputPts}, samplesConverted=${samplesConverted}`)
 
     // Encode frame to output
     const hasCapacity = encoder.sendFrame(resampledFrame)
@@ -134,26 +127,10 @@ resampledFrame.destroy()
 const audioData = Buffer.concat(audioChunks)
 
 // Check WebM magic bytes (EBML header)
-assert.strictEqual(
-  audioData[0],
-  0x1a,
-  'WebM file should start with EBML magic byte 0x1A'
-)
-assert.strictEqual(
-  audioData[1],
-  0x45,
-  'WebM file should have correct EBML header'
-)
-assert.strictEqual(
-  audioData[2],
-  0xdf,
-  'WebM file should have correct EBML header'
-)
-assert.strictEqual(
-  audioData[3],
-  0xa3,
-  'WebM file should have correct EBML header'
-)
+assert.strictEqual(audioData[0], 0x1a, 'WebM file should start with EBML magic byte 0x1A')
+assert.strictEqual(audioData[1], 0x45, 'WebM file should have correct EBML header')
+assert.strictEqual(audioData[2], 0xdf, 'WebM file should have correct EBML header')
+assert.strictEqual(audioData[3], 0xa3, 'WebM file should have correct EBML header')
 console.log('✓ All assertions passed!')
 
 // Success logs
@@ -165,9 +142,7 @@ console.log(`Generated WebM file size: ${audioData.length} bytes`)
 const filename = 'sine_wave_440hz.webm'
 fs.writeFileSync(filename, audioData)
 console.log(`✓ Audio file saved as ${filename}`)
-console.log(
-  'You can now play this file with any media player that supports WebM/Opus!'
-)
+console.log('You can now play this file with any media player that supports WebM/Opus!')
 console.log(`Example: vlc ${filename} or ffplay ${filename}`)
 
 // Helpers
@@ -204,10 +179,7 @@ function createSineWaveInput(duration = 3, opts = {}) {
 
   options.set('graph', graph)
 
-  const format = new ffmpeg.InputFormatContext(
-    new ffmpeg.InputFormat('lavfi'),
-    options
-  )
+  const format = new ffmpeg.InputFormatContext(new ffmpeg.InputFormat('lavfi'), options)
 
   return format
 }

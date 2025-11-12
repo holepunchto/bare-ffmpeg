@@ -44,9 +44,7 @@ test('InputFormatContext.getBestStream should return a stream', (t) => {
     fallbackURL
   )
 
-  const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
+  const bestStream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
   t.ok(bestStream instanceof ffmpeg.Stream)
 })
@@ -58,9 +56,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
     fallbackURL
   )
 
-  const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.SUBTITLE
-  )
+  const bestStream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.SUBTITLE)
 
   t.is(bestStream, null)
 })
@@ -81,10 +77,7 @@ test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) =>
 
 test('OutputFormatContext should expose an outputFormat getter', (t) => {
   const io = new ffmpeg.IOContext(4096)
-  const outContext = new ffmpeg.OutputFormatContext(
-    new ffmpeg.OutputFormat('webm'),
-    io
-  )
+  const outContext = new ffmpeg.OutputFormatContext(new ffmpeg.OutputFormat('webm'), io)
 
   const outputFormat = outContext.outputFormat
 
