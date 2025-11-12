@@ -536,25 +536,19 @@ Examples:
 ```js
 const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
-const pixelFormats = codecCtx.getSupportedConfig(
-  ffmpeg.constants.codecConfig.PIX_FORMAT
-)
+const pixelFormats = codecCtx.getSupportedConfig(ffmpeg.constants.codecConfig.PIX_FORMAT)
 if (pixelFormats) {
   console.log('Supported pixel formats:', pixelFormats)
 }
 
-const frameRates = codecCtx.getSupportedConfig(
-  ffmpeg.constants.codecConfig.FRAME_RATE
-)
+const frameRates = codecCtx.getSupportedConfig(ffmpeg.constants.codecConfig.FRAME_RATE)
 if (frameRates) {
   frameRates.forEach((rate) => {
     console.log(`${rate.toNumber()} fps`)
   })
 }
 
-const layouts = codecCtx.getSupportedConfig(
-  ffmpeg.constants.codecConfig.CHANNEL_LAYOUT
-)
+const layouts = codecCtx.getSupportedConfig(ffmpeg.constants.codecConfig.CHANNEL_LAYOUT)
 if (layouts) {
   console.log('Supported channel layouts:', layouts)
 }
@@ -1794,9 +1788,7 @@ Parameters:
 **Returns**: `string` - The sample format name
 
 ```js
-const name = ffmpeg.constants.getSampleFormatName(
-  ffmpeg.constants.sampleFormats.S16
-)
+const name = ffmpeg.constants.getSampleFormatName(ffmpeg.constants.sampleFormats.S16)
 console.log(name) // 's16'
 ```
 
@@ -1811,9 +1803,7 @@ Parameters:
 **Returns**: `string` - The pixel format name
 
 ```js
-const name = ffmpeg.constants.getPixelFormatName(
-  ffmpeg.constants.pixelFormats.RGB24
-)
+const name = ffmpeg.constants.getPixelFormatName(ffmpeg.constants.pixelFormats.RGB24)
 console.log(name) // 'rgb24'
 ```
 

@@ -2,24 +2,15 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('constants should expose a getSampleFormatName function', (t) => {
-  t.is(
-    ffmpeg.constants.getSampleFormatName(ffmpeg.constants.sampleFormats.S16),
-    's16'
-  )
+  t.is(ffmpeg.constants.getSampleFormatName(ffmpeg.constants.sampleFormats.S16), 's16')
 })
 
 test('constants should expose a getPixelFormatName function', (t) => {
-  t.is(
-    ffmpeg.constants.getPixelFormatName(ffmpeg.constants.pixelFormats.RGB24),
-    'rgb24'
-  )
+  t.is(ffmpeg.constants.getPixelFormatName(ffmpeg.constants.pixelFormats.RGB24), 'rgb24')
 })
 
 test('toPixelFormat should convert string to pixel format constant', (t) => {
-  t.is(
-    ffmpeg.constants.toPixelFormat('RGB24'),
-    ffmpeg.constants.pixelFormats.RGB24
-  )
+  t.is(ffmpeg.constants.toPixelFormat('RGB24'), ffmpeg.constants.pixelFormats.RGB24)
 })
 
 test('toPixelFormat should pass through number values', (t) => {
@@ -40,10 +31,7 @@ test('toPixelFormat should throw for invalid type', (t) => {
 })
 
 test('toSampleFormat should convert string to sample format constant', (t) => {
-  t.is(
-    ffmpeg.constants.toSampleFormat('S16'),
-    ffmpeg.constants.sampleFormats.S16
-  )
+  t.is(ffmpeg.constants.toSampleFormat('S16'), ffmpeg.constants.sampleFormats.S16)
 })
 
 test('toSampleFormat should pass through number values', (t) => {
@@ -64,17 +52,11 @@ test('toSampleFormat should throw for invalid type', (t) => {
 })
 
 test('toChannelLayout should convert string to channel layout constant', (t) => {
-  t.is(
-    ffmpeg.constants.toChannelLayout('STEREO'),
-    ffmpeg.constants.channelLayouts.STEREO
-  )
+  t.is(ffmpeg.constants.toChannelLayout('STEREO'), ffmpeg.constants.channelLayouts.STEREO)
 })
 
 test('toChannelLayout should handle numeric string keys', (t) => {
-  t.is(
-    ffmpeg.constants.toChannelLayout('5.1'),
-    ffmpeg.constants.channelLayouts['5.1']
-  )
+  t.is(ffmpeg.constants.toChannelLayout('5.1'), ffmpeg.constants.channelLayouts['5.1'])
 })
 
 test('toChannelLayout should pass through number values', (t) => {

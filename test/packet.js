@@ -223,10 +223,7 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   t.is(destPacket.isKeyframe, sourcePacket.isKeyframe)
 
   t.is(destPacket.sideData.length, sourcePacket.sideData.length)
-  t.is(
-    destPacket.sideData[0].type,
-    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  )
+  t.is(destPacket.sideData[0].type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
 })
 
 function fillPacket(packet) {
