@@ -2,7 +2,7 @@ const os = require('bare-os')
 const test = require('brittle')
 const ffmpeg = require('..')
 
-if (os.hostname() == 'darwin') {
+if (os.platform() === 'darwin') {
   test('HWDeviceContext should instantiate with device type', (t) => {
     const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
     t.ok(hwDevice)
