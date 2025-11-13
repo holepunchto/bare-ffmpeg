@@ -947,6 +947,44 @@ Gets or sets the number of audio samples.
 
 **Returns**: `number`
 
+##### `Frame.metadata`
+
+Provides read-only access to per-frame metadata populated by filters.
+
+**Returns**: An object supporting `get(key)` and `entries()` (also iterable).
+
+Example:
+
+```js
+for (const [key, value] of frame.metadata) {
+  if (key.startsWith('lavfi.astats.')) console.log(key, value)
+}
+
+const loudness = frame.metadata.get('lavfi.r128.I')
+```
+
+##### `Frame.sideData`
+
+Gets or sets the side-data entries associated with the frame. Each entry is a
+`Frame.SideData` instance exposing `type`, `name`, and `data` (a `Buffer`).
+
+**Returns**: `Array<Frame.SideData>`
+
+Example:
+
+```js
+frame.sideData = [
+  ffmpeg.Frame.SideData.fromData(
+    Buffer.from('example payload'),
+    ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
+  )
+]
+
+for (const sideData of frame.sideData) {
+  console.log(sideData.name, sideData.data.length)
+}
+```
+
 #### Methods
 
 ##### `Frame.alloc()`
@@ -958,6 +996,12 @@ Allocates memory for the frame data.
 ##### `Frame.destroy()`
 
 Destroys the `Frame` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
+
+**Returns**: `void`
+
+##### `Frame.removeSideData(type)`
+
+Removes all side-data entries of a specific type from the frame.
 
 **Returns**: `void`
 
@@ -979,6 +1023,55 @@ dst.copyProperties(src) // transfer all meta-data
 ```
 
 **Returns**: `void`
+
+### `Frame.SideData`
+
+`Frame.SideData` mirrors the packet side-data helper and represents individual
+side-data entries attached to frames.
+
+```js
+const sideData = ffmpeg.Frame.SideData.fromData(
+  Buffer.from('metadata'),
+  ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
+)
+```
+
+**Returns**: A new `Frame.SideData` instance
+
+#### Static Methods
+
+##### `Frame.SideData.fromData(data, type)`
+
+Creates a new `Frame.SideData` instance from a buffer and side-data type. Useful
+when assigning to `frame.sideData`.
+
+Parameters:
+
+- `data` (`Buffer`): The side-data payload
+- `type` (`number`): A value from `ffmpeg.constants.frameSideDataType`
+
+**Returns**: `Frame.SideData`
+
+#### Properties
+
+##### `Frame.SideData.type`
+
+Gets the side-data type.
+
+**Returns**: `number`
+
+##### `Frame.SideData.name`
+
+Gets the human-readable name for the side-data type. Returns `null` for custom
+instances created via `fromData`.
+
+**Returns**: `string | null`
+
+##### `Frame.SideData.data`
+
+Gets the side-data payload.
+
+**Returns**: `Buffer`
 
 ### `Packet`
 
@@ -1549,6 +1642,97 @@ Configures the filter graph and validates all connections.
 Destroys the `FilterGraph` and frees all associated resources including any created filters. Automatically called when the object is managed by a `using` declaration.
 
 **Returns**: `void`
+
+### `FilterContext`
+
+The `FilterContext` API exposes low-level access to individual filters created inside a `FilterGraph`.
+
+```js
+const context = new ffmpeg.FilterContext()
+```
+
+**Returns**: A new `FilterContext` instance
+
+#### Methods
+
+##### `FilterContext.getOption(name[, flags])`
+
+Retrieves a filter option value.
+
+Parameters:
+
+- `name` (`string`): The option name (for example, `'sample_rate'`)
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `string` value or `null` when unset
+
+##### `FilterContext.setOption(name, value[, flags])`
+
+Sets a filter option using FFmpeg's `av_opt_set` helpers.
+
+Parameters:
+
+- `name` (`string`): The option name
+- `value` (`string`): The option value
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `FilterContext.setOptionDictionary(dictionary[, flags])`
+
+Sets multiple options from a `Dictionary` instance.
+
+Parameters:
+
+- `dictionary` (`Dictionary`): Dictionary of option key/value pairs
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+##### `FilterContext.setOptionDefaults()`
+
+Resets filter options to their default values.
+
+**Returns**: `void`
+
+##### `FilterContext.listOptionNames([flags])`
+
+Lists available option names on the filter context.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `Array<string>` of option names
+
+##### `FilterContext.getOptions([flags])`
+
+Collects option values into a plain object.
+
+Parameters:
+
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `object` mapping option names to string values
+
+Example:
+
+```js
+using graph = new ffmpeg.FilterGraph()
+const volume = new ffmpeg.Filter('volume')
+const context = new ffmpeg.FilterContext()
+
+graph.createFilter(context, volume, 'vol')
+
+console.log(context.getOption('volume')) // '1'
+
+context.setOption('volume', '0.5')
+context.setOptionDictionary(ffmpeg.Dictionary.from({ volume: '0.25' }))
+
+console.log(context.getOptions().volume)
+```
+
+> **Note**: Many filter options are only configurable at creation time. Runtime helpers like `setOption` are limited to options flagged with `AV_OPT_FLAG_RUNTIME_PARAM` (for example, the `volume` filter’s gain value).
 
 ### `AudioFIFO`
 
