@@ -21,12 +21,4 @@ if (os.platform() === 'darwin') {
       using _hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
     })
   })
-
-  test('HWDeviceContext should work without device parameter (real-world VideoToolbox usage)', (t) => {
-    t.execution(() => {
-      // VideoToolbox on macOS doesn't require a device string (uses available hardware automatically)
-      const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX, null)
-      hwDevice.destroy()
-    })
-  })
 }
