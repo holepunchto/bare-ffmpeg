@@ -2505,13 +2505,11 @@ bare_ffmpeg_hw_device_context_init(
   int err;
 
   js_arraybuffer_t handle;
-
   bare_ffmpeg_hw_device_context_t *hw_device_ctx;
   err = js_create_arraybuffer(env, hw_device_ctx, handle);
   assert(err == 0);
 
   const char *device_str = device.has_value() ? device.value().c_str() : nullptr;
-
   err = av_hwdevice_ctx_create(
     &hw_device_ctx->handle,
     static_cast<AVHWDeviceType>(type),
