@@ -282,6 +282,17 @@ if("opus" IN_LIST features)
   target_link_libraries(avcodec INTERFACE opus)
 endif()
 
+if(LINUX)
+  find_port(libva)
+
+  list(APPEND depends ${libva})
+  list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
+  list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE va va-drm)
+  target_link_libraries(avutil INTERFACE va va-drm)
+endif()
+
 if(CMAKE_HOST_WIN32)
   find_path(
     msys2
@@ -460,20 +471,6 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
-elseif(LINUX)
-  target_link_libraries(
-    avcodec
-    INTERFACE
-      va
-      va-drm
-  )
-
-  target_link_libraries(
-    avutil
-    INTERFACE
-      va
-      va-drm
-  )
 elseif(ANDROID)
   target_link_libraries(
     avcodec
