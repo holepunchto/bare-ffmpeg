@@ -88,6 +88,7 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
+    --enable-vaapi
   )
 elseif(ANDROID)
   list(APPEND args
@@ -459,6 +460,20 @@ if(APPLE)
         "-framework AudioToolbox"
     )
   endif()
+elseif(LINUX)
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      va
+      va-drm
+  )
+
+  target_link_libraries(
+    avutil
+    INTERFACE
+      va
+      va-drm
+  )
 elseif(ANDROID)
   target_link_libraries(
     avcodec
