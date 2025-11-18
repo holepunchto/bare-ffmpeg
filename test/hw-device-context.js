@@ -22,3 +22,10 @@ if (os.platform() === 'darwin') {
     })
   })
 }
+
+if (os.platform() === 'linux') {
+  test('HWDeviceContext should instantiate with device type', (t) => {
+    const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VAAPI)
+    t.ok(hwDevice)
+  })
+}

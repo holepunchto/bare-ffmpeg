@@ -10,7 +10,7 @@ fetch_package("github:holepunchto/libjstl#098664c")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
-add_bare_module(bare_ffmpeg)
+add_bare_module(bare_ffmpeg INSTALL TARGET va)
 
 harden(${bare_ffmpeg})
 
@@ -27,6 +27,7 @@ target_link_libraries(
     avdevice
     avformat
     avutil
+    va
     swresample
     swscale
     jstl
