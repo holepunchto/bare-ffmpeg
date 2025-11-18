@@ -2,7 +2,11 @@ include_guard(GLOBAL)
 
 find_port(libdrm)
 
+message(STATUS "libdrm target name: ${libdrm}")
+message(STATUS "libdrm will be added as DEPENDS")
+
 set(pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
+message(STATUS "${pkg_config_path}")
 
 declare_port(
   "github:intel/libva#2.22.0"
@@ -19,8 +23,8 @@ declare_port(
     "PKG_CONFIG_PATH=${pkg_config_path}"
 )
 
-add_library(va STATIC IMPORTED GLOBAL)
-add_library(va-drm STATIC IMPORTED GLOBAL)
+add_library(va SHARED IMPORTED GLOBAL)
+add_library(va-drm SHARED IMPORTED GLOBAL)
 
 add_dependencies(va ${libva})
 add_dependencies(va-drm ${libva})

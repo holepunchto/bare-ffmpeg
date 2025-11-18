@@ -6,6 +6,7 @@ declare_port(
   MESON
   BYPRODUCTS
     lib/libdrm.a
+    lib/pkgconfig/libdrm.pc
   ARGS
     -Dcairo-tests=disabled
     -Dman-pages=disabled
