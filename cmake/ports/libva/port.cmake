@@ -45,5 +45,5 @@ target_include_directories(
   INTERFACE "${libva_PREFIX}/include"
 )
 
-# target_link_libraries(va INTERFACE drm)
-# target_link_libraries(va-drm INTERFACE drm va)
+target_link_libraries(va INTERFACE drm)
+target_link_libraries(va-drm INTERFACE drm va)
