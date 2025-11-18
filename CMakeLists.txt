@@ -8,17 +8,9 @@ project(bare_ffmpeg C CXX)
 
 fetch_package("github:holepunchto/libjstl#098664c")
 
-find_program(
-  pkg-config
-  NAMES pkg-config
-  REQUIRED
-)
-
-set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config" FORCE)
-
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
-add_bare_module(bare_ffmpeg)
+add_bare_module(bare_ffmpeg) #INSTALL TARGET libva)
 
 harden(${bare_ffmpeg})
 
@@ -35,6 +27,7 @@ target_link_libraries(
     avdevice
     avformat
     avutil
+    # libva
     swresample
     swscale
     jstl

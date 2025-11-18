@@ -288,9 +288,6 @@ if(LINUX)
   list(APPEND depends ${libva})
   list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
   list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
-
-  target_link_libraries(avcodec INTERFACE va va-drm)
-  target_link_libraries(avutil INTERFACE va va-drm)
 endif()
 
 if(CMAKE_HOST_WIN32)
@@ -314,6 +311,7 @@ else()
     NAMES pkg-config
     REQUIRED
   )
+  set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config" FORCE)
 endif()
 
 foreach(part "$ENV{PATH}")
