@@ -67,7 +67,7 @@ jobs:
           node-version: lts/*
       - run: |
           sudo apt update
-          sudo apt install -y meson nasm
+          sudo apt install -y meson nasm pkg-config
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: brew install meson nasm llvm@20
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
