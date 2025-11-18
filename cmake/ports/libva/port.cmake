@@ -8,8 +8,8 @@ declare_port(
   MESON
   DEPENDS ${libdrm}
   BYPRODUCTS
-    lib/libva.so
-    lib/libva-drm.so
+    lib/libva.so.2.2200.0
+    lib/libva-drm.so.2.2200.0
   ARGS
     -Denable_docs=false
     -Ddisable_drm=false
@@ -24,13 +24,13 @@ add_dependencies(va-drm ${libva})
 set_target_properties(
   va
   PROPERTIES
-  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva.so"
+  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva.so.2.2200.0"
 )
 
 set_target_properties(
   va-drm
   PROPERTIES
-  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva-drm.so"
+  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva-drm.so.2.2200.0"
 )
 
 file(MAKE_DIRECTORY "${libva_PREFIX}/include")
