@@ -9,7 +9,7 @@ declare_port(
   "github:intel/libva#2.22.0"
   libva
   MESON
-  DEPENDS ${libdrm}
+  DEPENDS drm
   BYPRODUCTS
     lib/libva.so.2.2200.0
     lib/libva-drm.so.2.2200.0
