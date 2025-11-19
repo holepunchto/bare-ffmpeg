@@ -32,22 +32,14 @@ target_sources(
     binding.cc
 )
 
-set(link_libraries
-  avcodec
-  avdevice
-  avformat
-  avutil
-  swresample
-  swscale
-  jstl
-)
-
-if(LINUX)
-  list(APPEND link_libraries va va-drm)
-endif()
-
 target_link_libraries(
   ${bare_ffmpeg}
   PRIVATE
-    ${link_libraries}
+    avcodec
+    avdevice
+    avformat
+    avutil
+    swresample
+    swscale
+    jstl
 )

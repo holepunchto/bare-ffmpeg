@@ -88,7 +88,6 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
-    --enable-vaapi
   )
 elseif(ANDROID)
   list(APPEND args
@@ -286,6 +285,7 @@ if(LINUX)
   find_port(libva)
 
   list(APPEND depends va va-drm)
+  list(APPEND args --enable-vaapi)
   list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
   list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
 endif()
