@@ -18,7 +18,7 @@ set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config for Meson"
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
 if(LINUX)
-  add_bare_module(bare_ffmpeg INSTALL TARGET va)
+  add_bare_module(bare_ffmpeg INSTALL TARGET va va-drm)
 else()
   add_bare_module(bare_ffmpeg)
 endif()
@@ -42,7 +42,7 @@ set(link_libraries
 )
 
 if(LINUX)
-  list(APPEND link_libraries va)
+  list(APPEND link_libraries va-drm)
 endif()
 
 target_link_libraries(
