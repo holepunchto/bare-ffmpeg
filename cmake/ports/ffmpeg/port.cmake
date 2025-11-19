@@ -311,7 +311,6 @@ else()
     NAMES pkg-config
     REQUIRED
   )
-  set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config" FORCE)
 endif()
 
 foreach(part "$ENV{PATH}")
