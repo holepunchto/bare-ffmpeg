@@ -14,6 +14,7 @@ find_program(
   REQUIRED
 )
 set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config for Meson" FORCE)
+message(STATUS "CMAKE_PKG_CONFIG set to: ${CMAKE_PKG_CONFIG}")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
