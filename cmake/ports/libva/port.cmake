@@ -2,9 +2,6 @@ include_guard(GLOBAL)
 
 find_port(libdrm)
 
-message(STATUS "libdrm target name: ${libdrm}")
-message(STATUS "libdrm will be added as DEPENDS")
-
 set(pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
 message(STATUS "${pkg_config_path}")
 
@@ -12,7 +9,7 @@ declare_port(
   "github:intel/libva#2.22.0"
   libva
   MESON
-  DEPENDS ${libdrm}
+  DEPENDS drm
   BYPRODUCTS
     lib/libva.so.2.2200.0
     lib/libva-drm.so.2.2200.0
