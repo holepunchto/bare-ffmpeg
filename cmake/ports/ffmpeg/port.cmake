@@ -284,7 +284,6 @@ endif()
 if(LINUX)
   find_port(libva)
 
-  list(APPEND depends va va-drm)
   list(APPEND args --enable-vaapi)
   list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
   list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
