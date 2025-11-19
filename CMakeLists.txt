@@ -42,7 +42,7 @@ set(link_libraries
 )
 
 if(LINUX)
-  list(APPEND link_libraries va-drm)
+  list(APPEND link_libraries va va-drm)
 endif()
 
 target_link_libraries(
