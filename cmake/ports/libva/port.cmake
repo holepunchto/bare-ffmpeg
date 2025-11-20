@@ -27,12 +27,14 @@ set_target_properties(
   va
   PROPERTIES
   IMPORTED_LOCATION "${libva_PREFIX}/lib/libva.so.2.2200.0"
+  IMPORTED_SONAME libva.so.2
 )
 
 set_target_properties(
   va-drm
   PROPERTIES
   IMPORTED_LOCATION "${libva_PREFIX}/lib/libva-drm.so.2.2200.0"
+  IMPORTED_SONAME libva-drm.so.2
 )
 
 file(MAKE_DIRECTORY "${libva_PREFIX}/include")
