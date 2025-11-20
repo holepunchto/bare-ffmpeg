@@ -8,13 +8,6 @@ project(bare_ffmpeg C CXX)
 
 fetch_package("github:holepunchto/libjstl#098664c")
 
-find_program(
-  pkg-config
-  NAMES pkg-config
-  REQUIRED
-)
-set(CMAKE_PKG_CONFIG "${pkg-config}" CACHE STRING "Path to pkg-config for Meson" FORCE)
-
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
 if(LINUX)

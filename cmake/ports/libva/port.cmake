@@ -2,9 +2,6 @@ include_guard(GLOBAL)
 
 find_port(libdrm)
 
-set(pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
-message(STATUS "${pkg_config_path}")
-
 declare_port(
   "github:intel/libva#2.22.0"
   libva
@@ -17,7 +14,7 @@ declare_port(
     -Denable_docs=false
     -Ddisable_drm=false
   ENV
-    "PKG_CONFIG_PATH=${pkg_config_path}"
+    "PKG_CONFIG_PATH=${libdrm_PREFIX}/lib/pkgconfig"
 )
 
 add_library(va SHARED IMPORTED GLOBAL)
