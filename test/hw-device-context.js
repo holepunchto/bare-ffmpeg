@@ -20,7 +20,6 @@ if (os.platform() === 'darwin') {
 
 if (os.platform() === 'linux') {
   if (process.env.CI) {
-    test.skip('HWDeviceContext skipped on CI')
     return
   }
 
