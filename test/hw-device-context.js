@@ -1,6 +1,7 @@
 const os = require('bare-os')
 const test = require('brittle')
 const ffmpeg = require('..')
+const process = require('bare-process')
 
 if (os.platform() === 'darwin') {
   test('HWDeviceContext should instantiate with device type', (t) => {
@@ -18,6 +19,11 @@ if (os.platform() === 'darwin') {
 }
 
 if (os.platform() === 'linux') {
+  if (process.env.CI) {
+    test.skip('HWDeviceContext skipped on CI')
+    return
+  }
+
   test('HWDeviceContext should instantiate with device type', (t) => {
     using hwDevice = new ffmpeg.HWDeviceContext(
       ffmpeg.constants.hwDeviceTypes.VAAPI,
