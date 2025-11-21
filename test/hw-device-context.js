@@ -25,7 +25,7 @@ if (os.platform() === 'darwin') {
 
 if (os.platform() === 'linux') {
   test('HWDeviceContext should instantiate with device type', (t) => {
-    const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VAAPI)
+    using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VAAPI, '/dev/dri/renderD128')
     t.ok(hwDevice)
   })
 }

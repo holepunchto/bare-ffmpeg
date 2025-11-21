@@ -13,6 +13,7 @@ declare_port(
   ARGS
     -Denable_docs=false
     -Ddisable_drm=false
+    -Ddriverdir=/usr/lib/x86_64-linux-gnu/dri/
   ENV
     "PKG_CONFIG_PATH=${libdrm_PREFIX}/lib/pkgconfig"
 )
