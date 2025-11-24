@@ -29,6 +29,7 @@ extern "C" {
 #include <libavutil/dict.h>
 #include <libavutil/error.h>
 #include <libavutil/frame.h>
+#include <libavutil/hwcontext.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/log.h>
 #include <libavutil/mathematics.h>
@@ -133,6 +134,10 @@ typedef struct {
 typedef struct {
   AVFilterInOut *handle;
 } bare_ffmpeg_filter_inout_t;
+
+typedef struct {
+  AVBufferRef *handle;
+} bare_ffmpeg_hw_device_context_t;
 
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
@@ -2491,6 +2496,48 @@ bare_ffmpeg_frame_alloc(
 }
 
 static js_arraybuffer_t
+bare_ffmpeg_hw_device_context_init(
+  js_env_t *env,
+  js_receiver_t,
+  int type,
+  std::optional<std::string> device
+) {
+  int err;
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_hw_device_context_t *hw_device_ctx;
+  err = js_create_arraybuffer(env, hw_device_ctx, handle);
+  assert(err == 0);
+
+  const char *device_str = device.has_value() ? device.value().c_str() : nullptr;
+  err = av_hwdevice_ctx_create(
+    &hw_device_ctx->handle,
+    static_cast<AVHWDeviceType>(type),
+    device_str,
+    nullptr,
+    0
+  );
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_hw_device_context_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_device_context_t, 1> hw_device_ctx
+) {
+  av_buffer_unref(&hw_device_ctx->handle);
+}
+
+static js_arraybuffer_t
 bare_ffmpeg_image_init(
   js_env_t *env,
   js_receiver_t,
@@ -4229,6 +4276,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
+  V("initHWDeviceContext", bare_ffmpeg_hw_device_context_init)
+  V("destroyHWDeviceContext", bare_ffmpeg_hw_device_context_destroy)
+
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
   V("readImage", bare_ffmpeg_image_read)
@@ -4383,6 +4433,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_NV21)
   V(AV_PIX_FMT_NV24)
   V(AV_PIX_FMT_VIDEOTOOLBOX)
+
+  V(AV_HWDEVICE_TYPE_VIDEOTOOLBOX)
+  V(AV_HWDEVICE_TYPE_CUDA)
+  V(AV_HWDEVICE_TYPE_VAAPI)
+  V(AV_HWDEVICE_TYPE_DXVA2)
+  V(AV_HWDEVICE_TYPE_QSV)
+  V(AV_HWDEVICE_TYPE_D3D11VA)
 
   V(AVMEDIA_TYPE_UNKNOWN)
   V(AVMEDIA_TYPE_VIDEO)

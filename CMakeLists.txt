@@ -10,7 +10,13 @@ fetch_package("github:holepunchto/libjstl#098664c")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
-add_bare_module(bare_ffmpeg)
+set(install_targets)
+
+if(LINUX)
+  list(APPEND install_targets TARGET va TARGET va-drm)
+endif()
+
+add_bare_module(bare_ffmpeg INSTALL ${install_targets})
 
 harden(${bare_ffmpeg})
 
@@ -20,14 +26,22 @@ target_sources(
     binding.cc
 )
 
+set(link_libraries
+  avcodec
+  avdevice
+  avformat
+  avutil
+  swresample
+  swscale
+  jstl
+)
+
+if(LINUX)
+  list(APPEND link_libraries va va-drm)
+endif()
+
 target_link_libraries(
   ${bare_ffmpeg}
   PRIVATE
-    avcodec
-    avdevice
-    avformat
-    avutil
-    swresample
-    swscale
-    jstl
+    ${link_libraries}
 )
