@@ -10,11 +10,13 @@ fetch_package("github:holepunchto/libjstl#098664c")
 
 find_port(ffmpeg FEATURES dav1d svt-av1 opus)
 
+set(install_targets)
+
 if(LINUX)
-  add_bare_module(bare_ffmpeg INSTALL TARGET va TARGET va-drm)
-else()
-  add_bare_module(bare_ffmpeg)
+  list(APPEND install_targets TARGET va TARGET va-drm)
 endif()
+
+add_bare_module(bare_ffmpeg INSTALL ${install_targets})
 
 harden(${bare_ffmpeg})
 
