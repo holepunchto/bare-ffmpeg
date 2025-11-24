@@ -42,3 +42,8 @@ test('HWDeviceContext should expose a destroy method (linux)', linuxFilter, (t) 
     hwDevice.destroy()
   })
 })
+
+test('HWDeviceContext.from should return null for null handle', (t) => {
+  const result = ffmpeg.HWDeviceContext.from(null)
+  t.is(result, null)
+})

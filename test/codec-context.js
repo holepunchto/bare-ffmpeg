@@ -1,5 +1,8 @@
+const os = require('bare-os')
 const test = require('brittle')
 const ffmpeg = require('..')
+
+const darwinFilter = { skip: os.platform() !== 'darwin' }
 
 test('codec context could be open without options', (t) => {
   const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
@@ -330,6 +333,33 @@ test('CodecContext can copy options from another context', (t) => {
   targetCtx.copyOptionsFrom(sourceCtx)
   t.is(targetCtx.getOption('b'), sourceCtx.getOption('b'))
   t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
+})
+
+test('CodecContext.hwDeviceCtx should be settable (darwin)', darwinFilter, (t) => {
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  t.execution(() => {
+    codecContext.hwDeviceCtx = hwDevice
+  })
+})
+
+test('CodecContext.hwDeviceCtx should be gettable after setting (darwin)', darwinFilter, (t) => {
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  codecContext.hwDeviceCtx = hwDevice
+
+  const retrieved = codecContext.hwDeviceCtx
+  t.ok(retrieved)
+  t.ok(retrieved instanceof ffmpeg.HWDeviceContext)
+})
+
+test('CodecContext.hwDeviceCtx should return null when not set (darwin)', darwinFilter, (t) => {
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  const hwDeviceCtx = codecContext.hwDeviceCtx
+  t.is(hwDeviceCtx, null)
 })
 
 // Helpers

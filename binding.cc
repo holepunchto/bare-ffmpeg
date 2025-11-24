@@ -1595,6 +1595,42 @@ bare_ffmpeg_codec_context_set_request_sample_format(
   context->handle->request_sample_fmt = static_cast<AVSampleFormat>(sample_format);
 }
 
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_codec_context_get_hw_device_ctx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  int err;
+
+  if (context->handle->hw_device_ctx == nullptr) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_hw_device_context_t *hw_device_ctx;
+  err = js_create_arraybuffer(env, hw_device_ctx, handle);
+  assert(err == 0);
+
+  hw_device_ctx->handle = av_buffer_ref(context->handle->hw_device_ctx);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_codec_context_set_hw_device_ctx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_device_context_t, 1> hw_device_ctx
+) {
+  if (context->handle->hw_device_ctx != nullptr) {
+    av_buffer_unref(&context->handle->hw_device_ctx);
+  }
+
+  context->handle->hw_device_ctx = av_buffer_ref(hw_device_ctx->handle);
+}
+
 static enum AVPixelFormat
 bare_ffmpeg__on_codec_context_get_format(struct AVCodecContext *input_context, const enum AVPixelFormat *fmt) {
   int err;
@@ -4194,6 +4230,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_get_request_sample_format)
   V("setCodecContextRequestSampleFormat", bare_ffmpeg_codec_context_set_request_sample_format)
   V("setCodecContextGetFormat", bare_ffmpeg_codec_context_set_get_format)
+  V("getCodecContextHWDeviceCtx", bare_ffmpeg_codec_context_get_hw_device_ctx)
+  V("setCodecContextHWDeviceCtx", bare_ffmpeg_codec_context_set_hw_device_ctx)
 
   V("sendCodecContextPacket", bare_ffmpeg_codec_context_send_packet)
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
