@@ -125,7 +125,6 @@ test('copy frame properties', (t) => {
 
 test('frame expose a transferTo method', (t) => {
   const src = new ffmpeg.Frame()
-  const dst = new ffmpeg.Frame()
 
   t.ok(typeof src.transferTo === 'function')
 })
