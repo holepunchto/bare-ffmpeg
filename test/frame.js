@@ -122,3 +122,10 @@ test('copy frame properties', (t) => {
 
   t.is(b.pts, 12)
 })
+
+test('frame expose a transferTo method', (t) => {
+  const src = new ffmpeg.Frame()
+  const dst = new ffmpeg.Frame()
+
+  t.ok(typeof src.transferTo === 'function')
+})
