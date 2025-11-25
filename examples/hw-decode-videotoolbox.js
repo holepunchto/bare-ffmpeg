@@ -85,7 +85,7 @@ using swFrame = new ffmpeg.Frame()
 swFrame.format = ffmpeg.constants.pixelFormats.NV12 // Common format for VideoToolbox
 
 try {
-  hwFrame.transferTo(swFrame)
+  hwFrame.transferData(swFrame)
   console.log('Transfer successful!')
   console.log('Software frame format:', swFrame.format)
   console.log('Software frame dimensions:', swFrame.width, 'x', swFrame.height)

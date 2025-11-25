@@ -980,7 +980,7 @@ dst.copyProperties(src) // transfer all meta-data
 
 **Returns**: `void`
 
-##### `Frame.transferTo(destinationFrame)`
+##### `Frame.transferData(destinationFrame)`
 
 Transfers frame data between hardware and software memory. This is used when working with hardware-accelerated decoding/encoding to copy frame data from hardware memory (GPU) to software memory (CPU) or vice versa.
 
@@ -994,7 +994,7 @@ decoder.receiveFrame(hwFrame)
 
 const swFrame = new ffmpeg.Frame()
 swFrame.format = ffmpeg.constants.pixelFormats.NV12
-hwFrame.transferTo(swFrame)
+hwFrame.transferData(swFrame)
 ```
 
 **Note**: This method only works with frames that have hardware contexts. Calling it on regular software frames will throw an error.

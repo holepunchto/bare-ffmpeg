@@ -123,7 +123,7 @@ test('copy frame properties', (t) => {
   t.is(b.pts, 12)
 })
 
-test('frame transferTo should throw on software frames', (t) => {
+test('frame transferData should throw on software frames', (t) => {
   const src = new ffmpeg.Frame()
   src.width = 100
   src.height = 100
@@ -139,6 +139,6 @@ test('frame transferTo should throw on software frames', (t) => {
   // av_hwframe_transfer_data only works with hardware frames
   // (frames with hw_frames_ctx set), so this throws
   t.exception(() => {
-    src.transferTo(dst)
+    src.transferData(dst)
   }, /Function not implemented/)
 })
