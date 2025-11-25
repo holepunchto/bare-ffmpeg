@@ -123,8 +123,22 @@ test('copy frame properties', (t) => {
   t.is(b.pts, 12)
 })
 
-test('frame expose a transferTo method', (t) => {
+test('frame transferTo should throw on software frames', (t) => {
   const src = new ffmpeg.Frame()
+  src.width = 100
+  src.height = 100
+  src.format = ffmpeg.constants.pixelFormats.YUV420P
+  src.alloc()
 
-  t.ok(typeof src.transferTo === 'function')
+  const dst = new ffmpeg.Frame()
+  dst.width = 100
+  dst.height = 100
+  dst.format = ffmpeg.constants.pixelFormats.YUV420P
+  dst.alloc()
+
+  // av_hwframe_transfer_data only works with hardware frames
+  // (frames with hw_frames_ctx set), so this throws
+  t.exception(() => {
+    src.transferTo(dst)
+  }, /Function not implemented/)
 })
