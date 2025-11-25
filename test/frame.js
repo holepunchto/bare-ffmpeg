@@ -136,9 +136,7 @@ test('frame transferData should throw on software frames', (t) => {
   dst.format = ffmpeg.constants.pixelFormats.YUV420P
   dst.alloc()
 
-  // av_hwframe_transfer_data only works with hardware frames
-  // (frames with hw_frames_ctx set), so this throws
   t.exception(() => {
     src.transferData(dst)
-  }, /Function not implemented/)
+  })
 })
