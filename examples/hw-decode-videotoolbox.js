@@ -1,5 +1,12 @@
-const assert = require('bare-assert')
 const ffmpeg = require('..')
+
+const assert = require('bare-assert')
+const os = require('bare-os')
+const process = require('bare-process')
+
+if (os.platform() !== 'darwin' && os.platform() !== 'ios') {
+  process.exit(1)
+}
 
 // This example demonstrates hardware-accelerated decoding on macOS using VideoToolbox
 // It decodes a video frame using hardware acceleration, then transfers it to software
@@ -10,7 +17,7 @@ const video = require('../test/fixtures/video/sample.webm', {
 })
 
 // Create input context
-using io = new ffmpeg.IOContext(video)
+const io = new ffmpeg.IOContext(video)
 using format = new ffmpeg.InputFormatContext(io)
 
 // Find video stream
@@ -23,7 +30,7 @@ console.log('Video stream found:', {
 })
 
 // Create hardware device context for VideoToolbox
-console.log('\nCreating VideoToolbox hardware device context...')
+console.log('Creating VideoToolbox hardware device context...')
 using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
 
 // Create decoder and set hardware device
@@ -34,7 +41,7 @@ console.log('Hardware device context set on decoder')
 // Set getFormat callback to select hardware pixel format
 let formatSelected = false
 decoder.getFormat = (ctx, formats) => {
-  console.log('\ngetFormat callback invoked with formats:', formats)
+  console.log('getFormat callback invoked with formats:', formats)
 
   // Look for VideoToolbox hardware format
   const hwFormat = formats.find((f) => f === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
@@ -53,7 +60,7 @@ decoder.getFormat = (ctx, formats) => {
 using packet = new ffmpeg.Packet()
 using hwFrame = new ffmpeg.Frame()
 
-console.log('\nDecoding first frame...')
+console.log('Decoding first frame...')
 let decoded = false
 while (format.readFrame(packet)) {
   if (packet.streamIndex !== stream.index) continue
@@ -64,22 +71,16 @@ while (format.readFrame(packet)) {
   if (decoder.receiveFrame(hwFrame)) {
     decoded = true
     console.log('Frame decoded successfully')
-    console.log('Hardware frame format:', hwFrame.format)
-    console.log('Expected VIDEOTOOLBOX format:', ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+    assert.equal(hwFrame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
     break
   }
 }
 
-assert(decoded, 'Should have decoded at least one frame')
 assert(formatSelected, 'Hardware format should have been selected')
-
-// Verify we got a hardware frame
-const isHardwareFrame = hwFrame.format === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX
-console.log('\nIs hardware frame:', isHardwareFrame)
-assert(isHardwareFrame, 'Decoded frame should be in hardware format')
+assert(decoded, 'Should have decoded at least one frame')
 
 // Transfer to software frame
-console.log('\nTransferring hardware frame to software...')
+console.log('Transferring hardware frame to software...')
 using swFrame = new ffmpeg.Frame()
 swFrame.format = ffmpeg.constants.pixelFormats.NV12 // Common format for VideoToolbox
 
