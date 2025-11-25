@@ -100,3 +100,7 @@ try {
 decoder.destroy()
 
 console.log('\n✓ Hardware decoding and transfer successful!')
+
+// TODO: Demonstrate software → hardware transfer (upload direction)
+// This requires implementing HWFramesContext API to allocate hardware frames
+// with hw_frames_ctx set, which will be added in a future update.
