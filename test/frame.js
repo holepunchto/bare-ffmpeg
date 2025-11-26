@@ -153,7 +153,7 @@ test('frame hwFramesCtx getter returns null for software frames', (t) => {
 
 test(
   'frame hwFramesCtx getter returns context for hardware frames (darwin)',
-  { skip: require('bare-os').platform() !== 'darwin' },
+  { skip: require('bare-os').platform() !== 'darwin' && !require('bare-process').env.CI },
   (t) => {
     const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
 
