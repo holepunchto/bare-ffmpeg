@@ -2651,7 +2651,6 @@ bare_ffmpeg_hw_frames_context_init(
 ) {
   int err;
 
-  // Allocate the context
   js_arraybuffer_t handle;
   bare_ffmpeg_hw_frames_context_t *hw_frames_ctx;
   err = js_create_arraybuffer(env, hw_frames_ctx, handle);
@@ -2666,14 +2665,12 @@ bare_ffmpeg_hw_frames_context_init(
     throw js_pending_exception;
   }
 
-  // Set properties
   AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   ctx->format = static_cast<enum AVPixelFormat>(format);
   ctx->sw_format = static_cast<enum AVPixelFormat>(sw_format);
   ctx->width = width;
   ctx->height = height;
 
-  // Initialize
   err = av_hwframe_ctx_init(hw_frames_ctx->handle);
 
   if (err < 0) {
