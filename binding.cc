@@ -2667,9 +2667,9 @@ bare_ffmpeg_hw_frames_context_init(
   }
 
   // Set properties
-  AVHWFramesContext *ctx = (AVHWFramesContext *)hw_frames_ctx->handle->data;
-  ctx->format = (enum AVPixelFormat)format;
-  ctx->sw_format = (enum AVPixelFormat)sw_format;
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  ctx->format = (enum AVPixelFormat) format;
+  ctx->sw_format = (enum AVPixelFormat) sw_format;
   ctx->width = width;
   ctx->height = height;
 
