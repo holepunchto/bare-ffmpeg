@@ -122,3 +122,21 @@ test('copy frame properties', (t) => {
 
   t.is(b.pts, 12)
 })
+
+test('frame transferData should throw on software frames', (t) => {
+  const src = new ffmpeg.Frame()
+  src.width = 100
+  src.height = 100
+  src.format = ffmpeg.constants.pixelFormats.YUV420P
+  src.alloc()
+
+  const dst = new ffmpeg.Frame()
+  dst.width = 100
+  dst.height = 100
+  dst.format = ffmpeg.constants.pixelFormats.YUV420P
+  dst.alloc()
+
+  t.exception(() => {
+    src.transferData(dst)
+  })
+})
