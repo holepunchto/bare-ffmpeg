@@ -2588,6 +2588,22 @@ bare_ffmpeg_frame_alloc(
   }
 }
 
+static void
+bare_ffmpeg_frame_alloc_hardware(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  int err = av_hwframe_get_buffer(hw_frames_ctx->handle, frame->handle, 0);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_hw_device_context_init(
   js_env_t *env,
@@ -4511,6 +4527,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameHWFramesCtx", bare_ffmpeg_frame_get_hw_frames_ctx)
   V("setFrameHWFramesCtx", bare_ffmpeg_frame_set_hw_frames_ctx)
   V("allocFrame", bare_ffmpeg_frame_alloc)
+  V("allocFrameHardware", bare_ffmpeg_frame_alloc_hardware)
 
   V("initHWDeviceContext", bare_ffmpeg_hw_device_context_init)
   V("destroyHWDeviceContext", bare_ffmpeg_hw_device_context_destroy)
