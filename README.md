@@ -1001,6 +1001,28 @@ hwFrame.transferData(swFrame)
 
 **Returns**: `void`
 
+##### `Frame.hwFramesCtx`
+
+Gets or sets the hardware frames context (`HWFramesContext`) for this frame. This property is automatically set by FFmpeg when decoding with hardware acceleration. It can also be set manually when preparing frames for hardware encoding.
+
+```js
+// Example for macOS and iOS
+const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+const decoder = stream.decoder()
+decoder.hwDeviceCtx = hwDevice
+
+const hwFrame = new ffmpeg.Frame()
+decoder.receiveFrame(hwFrame)
+
+if (hwFrame.hwFramesCtx) {
+  console.log('Frame has hardware context')
+  console.log('Format:', hwFrame.hwFramesCtx.format)
+  console.log('Dimensions:', hwFrame.hwFramesCtx.width, 'x', hwFrame.hwFramesCtx.height)
+}
+```
+
+**Returns**: `HWFramesContext | null`
+
 ### `Packet`
 
 This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.

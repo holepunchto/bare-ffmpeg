@@ -140,3 +140,72 @@ test('frame transferData should throw on software frames', (t) => {
     src.transferData(dst)
   })
 })
+
+test('frame hwFramesCtx getter returns null for software frames', (t) => {
+  const fr = new ffmpeg.Frame()
+  fr.width = 100
+  fr.height = 100
+  fr.format = ffmpeg.constants.pixelFormats.YUV420P
+  fr.alloc()
+
+  t.is(fr.hwFramesCtx, null)
+})
+
+test(
+  'frame hwFramesCtx getter returns context for hardware frames (darwin)',
+  { skip: require('bare-os').platform() !== 'darwin' || require('bare-process').env.CI },
+  (t) => {
+    const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
+
+    using packet = new ffmpeg.Packet()
+    using hwFrame = new ffmpeg.Frame()
+
+    t.plan(1)
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex !== streamIndex) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+
+      if (decoder.receiveFrame(hwFrame)) {
+        t.ok(hwFrame.hwFramesCtx instanceof ffmpeg.HWFramesContext)
+        break
+      }
+    }
+
+    t.teardown(clean)
+  }
+)
+
+// Helpers
+
+function initDecoderAndFormat() {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+
+  const io = new ffmpeg.IOContext(video)
+  const format = new ffmpeg.InputFormatContext(io)
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+
+  const decoder = stream.decoder()
+  decoder.hwDeviceCtx = hwDevice
+
+  decoder.getFormat = (_ctx, formats) => {
+    const hwFormat = formats.find((f) => f === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+    return hwFormat ?? formats[0]
+  }
+
+  return {
+    decoder,
+    format,
+    streamIndex: stream.index,
+    clean: () => {
+      // Note: io is cleaned with format
+      decoder.destroy()
+      format.destroy()
+    }
+  }
+}
