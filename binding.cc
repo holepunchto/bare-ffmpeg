@@ -139,6 +139,10 @@ typedef struct {
   AVBufferRef *handle;
 } bare_ffmpeg_hw_device_context_t;
 
+typedef struct {
+  AVBufferRef *handle;
+} bare_ffmpeg_hw_frames_context_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static void
@@ -1322,6 +1326,42 @@ bare_ffmpeg_frame_transfer_data(
 
     throw js_pending_exception;
   }
+}
+
+static std::optional<js_arraybuffer_t>
+bare_ffmpeg_frame_get_hw_frames_ctx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err;
+
+  if (frame->handle->hw_frames_ctx == nullptr) {
+    return std::nullopt;
+  }
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_hw_frames_context_t *hw_frames_ctx;
+  err = js_create_arraybuffer(env, hw_frames_ctx, handle);
+  assert(err == 0);
+
+  hw_frames_ctx->handle = av_buffer_ref(frame->handle->hw_frames_ctx);
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_frame_set_hw_frames_ctx(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  if (frame->handle->hw_frames_ctx != nullptr) {
+    av_buffer_unref(&frame->handle->hw_frames_ctx);
+  }
+
+  frame->handle->hw_frames_ctx = av_buffer_ref(hw_frames_ctx->handle);
 }
 
 static bool
@@ -2588,6 +2628,147 @@ bare_ffmpeg_hw_device_context_destroy(
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_device_context_t, 1> hw_device_ctx
 ) {
   av_buffer_unref(&hw_device_ctx->handle);
+}
+
+static void
+bare_ffmpeg_hw_frames_context_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  av_buffer_unref(&hw_frames_ctx->handle);
+}
+
+static js_arraybuffer_t
+bare_ffmpeg_hw_frames_context_init(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_device_context_t, 1> hw_device_ctx,
+  int32_t format,
+  int32_t sw_format,
+  int32_t width,
+  int32_t height
+) {
+  int err;
+
+  // Allocate the context
+  js_arraybuffer_t handle;
+  bare_ffmpeg_hw_frames_context_t *hw_frames_ctx;
+  err = js_create_arraybuffer(env, hw_frames_ctx, handle);
+  assert(err == 0);
+
+  hw_frames_ctx->handle = av_hwframe_ctx_alloc(hw_device_ctx->handle);
+
+  if (hw_frames_ctx->handle == nullptr) {
+    err = js_throw_error(env, NULL, "Failed to allocate hardware frames context");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  // Set properties
+  AVHWFramesContext *ctx = (AVHWFramesContext *)hw_frames_ctx->handle->data;
+  ctx->format = (enum AVPixelFormat)format;
+  ctx->sw_format = (enum AVPixelFormat)sw_format;
+  ctx->width = width;
+  ctx->height = height;
+
+  // Initialize
+  err = av_hwframe_ctx_init(hw_frames_ctx->handle);
+
+  if (err < 0) {
+    av_buffer_unref(&hw_frames_ctx->handle);
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return handle;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_context_get_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  return ctx->format;
+}
+
+static void
+bare_ffmpeg_hw_frames_context_set_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  int32_t format
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  ctx->format = (enum AVPixelFormat) format;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_context_get_sw_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  return ctx->sw_format;
+}
+
+static void
+bare_ffmpeg_hw_frames_context_set_sw_format(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  int32_t sw_format
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  ctx->sw_format = (enum AVPixelFormat) sw_format;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_context_get_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  return ctx->width;
+}
+
+static void
+bare_ffmpeg_hw_frames_context_set_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  int32_t width
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  ctx->width = width;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_context_get_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  return ctx->height;
+}
+
+static void
+bare_ffmpeg_hw_frames_context_set_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  int32_t height
+) {
+  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  ctx->height = height;
 }
 
 static js_arraybuffer_t
@@ -4330,10 +4511,22 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
   V("transferFrameData", bare_ffmpeg_frame_transfer_data)
+  V("getFrameHWFramesCtx", bare_ffmpeg_frame_get_hw_frames_ctx)
+  V("setFrameHWFramesCtx", bare_ffmpeg_frame_set_hw_frames_ctx)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initHWDeviceContext", bare_ffmpeg_hw_device_context_init)
   V("destroyHWDeviceContext", bare_ffmpeg_hw_device_context_destroy)
+  V("initHWFramesContext", bare_ffmpeg_hw_frames_context_init)
+  V("destroyHWFramesContext", bare_ffmpeg_hw_frames_context_destroy)
+  V("getHWFramesContextFormat", bare_ffmpeg_hw_frames_context_get_format)
+  V("setHWFramesContextFormat", bare_ffmpeg_hw_frames_context_set_format)
+  V("getHWFramesContextSWFormat", bare_ffmpeg_hw_frames_context_get_sw_format)
+  V("setHWFramesContextSWFormat", bare_ffmpeg_hw_frames_context_set_sw_format)
+  V("getHWFramesContextWidth", bare_ffmpeg_hw_frames_context_get_width)
+  V("setHWFramesContextWidth", bare_ffmpeg_hw_frames_context_set_width)
+  V("getHWFramesContextHeight", bare_ffmpeg_hw_frames_context_get_height)
+  V("setHWFramesContextHeight", bare_ffmpeg_hw_frames_context_set_height)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
