@@ -2667,9 +2667,9 @@ bare_ffmpeg_hw_frames_context_init(
   }
 
   // Set properties
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
-  ctx->format = (enum AVPixelFormat) format;
-  ctx->sw_format = (enum AVPixelFormat) sw_format;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+  ctx->format = static_cast<enum AVPixelFormat>(format);
+  ctx->sw_format = static_cast<enum AVPixelFormat>(sw_format);
   ctx->width = width;
   ctx->height = height;
 
@@ -2693,7 +2693,7 @@ bare_ffmpeg_hw_frames_context_get_format(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   return ctx->format;
 }
 
@@ -2704,8 +2704,8 @@ bare_ffmpeg_hw_frames_context_set_format(
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
   int32_t format
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
-  ctx->format = (enum AVPixelFormat) format;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+  ctx->format = static_cast<enum AVPixelFormat>(format);
 }
 
 static int32_t
@@ -2714,7 +2714,7 @@ bare_ffmpeg_hw_frames_context_get_sw_format(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   return ctx->sw_format;
 }
 
@@ -2725,8 +2725,8 @@ bare_ffmpeg_hw_frames_context_set_sw_format(
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
   int32_t sw_format
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
-  ctx->sw_format = (enum AVPixelFormat) sw_format;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+  ctx->sw_format = static_cast<enum AVPixelFormat>(sw_format);
 }
 
 static int32_t
@@ -2735,7 +2735,7 @@ bare_ffmpeg_hw_frames_context_get_width(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   return ctx->width;
 }
 
@@ -2746,7 +2746,7 @@ bare_ffmpeg_hw_frames_context_set_width(
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
   int32_t width
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   ctx->width = width;
 }
 
@@ -2756,7 +2756,7 @@ bare_ffmpeg_hw_frames_context_get_height(
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   return ctx->height;
 }
 
@@ -2767,7 +2767,7 @@ bare_ffmpeg_hw_frames_context_set_height(
   js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
   int32_t height
 ) {
-  AVHWFramesContext *ctx = (AVHWFramesContext *) hw_frames_ctx->handle->data;
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   ctx->height = height;
 }
 
