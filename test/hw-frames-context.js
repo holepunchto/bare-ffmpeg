@@ -76,3 +76,26 @@ test('HWFramesContext should expose height getter (darwin)', { skip: darwinFilte
 
   t.is(hwFrames.height, 480)
 })
+
+test(
+  'HWFramesContext.getBuffer should allocate hardware frame (darwin)',
+  { skip: darwinFilter || require('bare-process').env.CI },
+  (t) => {
+    using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+    using hwFrames = new ffmpeg.HWFramesContext(
+      hwDevice,
+      ffmpeg.constants.pixelFormats.VIDEOTOOLBOX,
+      ffmpeg.constants.pixelFormats.NV12,
+      640,
+      480
+    )
+
+    using frame = new ffmpeg.Frame()
+    hwFrames.getBuffer(frame)
+
+    t.is(frame.width, 640)
+    t.is(frame.height, 480)
+    t.is(frame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+    t.ok(frame.hwFramesCtx instanceof ffmpeg.HWFramesContext)
+  }
+)

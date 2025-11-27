@@ -2684,6 +2684,22 @@ bare_ffmpeg_hw_frames_context_init(
   return handle;
 }
 
+static void
+bare_ffmpeg_hw_frames_context_get_buffer(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame
+) {
+  int err = av_hwframe_get_buffer(hw_frames_ctx->handle, frame->handle, 0);
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static int32_t
 bare_ffmpeg_hw_frames_context_get_format(
   js_env_t *env,
@@ -4524,6 +4540,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setHWFramesContextWidth", bare_ffmpeg_hw_frames_context_set_width)
   V("getHWFramesContextHeight", bare_ffmpeg_hw_frames_context_get_height)
   V("setHWFramesContextHeight", bare_ffmpeg_hw_frames_context_set_height)
+  V("getHWFramesContextBuffer", bare_ffmpeg_hw_frames_context_get_buffer)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)
