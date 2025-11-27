@@ -1023,7 +1023,7 @@ if (hwFrame.hwFramesCtx) {
 
 **Returns**: `HWFramesContext | null`
 
-##### `Frame.map(destination, flags)`
+##### `Frame.hwMap(destination, flags)`
 
 Maps a hardware frame to a software frame without performing a full data copy. This is more efficient than `transferData()` when you only need read-only access to the hardware frame data.
 
@@ -1032,7 +1032,7 @@ Maps a hardware frame to a software frame without performing a full data copy. T
 const hwFrame = new ffmpeg.Frame() // from hardware decoder
 const swFrame = new ffmpeg.Frame()
 
-hwFrame.map(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
 // swFrame now has read-only access to hwFrame data
 console.log('Dimensions:', swFrame.width, 'x', swFrame.height)
 ```
@@ -1798,6 +1798,7 @@ The `constants` module provides utility functions for working with FFmpeg format
 
 The `hwFrameMapFlags` constants define how hardware frames are mapped to software memory:
 
+- `NONE` (0): No flags (default)
 - `READ` (1): Map for read-only access (most common use case)
 - `WRITE` (2): Map for write access
 - `OVERWRITE` (4): Overwrite any existing mapping
@@ -1805,16 +1806,16 @@ The `hwFrameMapFlags` constants define how hardware frames are mapped to softwar
 
 ```js
 // Map hardware frame for reading
-hwFrame.map(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
 
 // Combined flags (bitwise OR)
-hwFrame.map(
+hwFrame.hwMap(
   swFrame,
   ffmpeg.constants.hwFrameMapFlags.READ | ffmpeg.constants.hwFrameMapFlags.DIRECT
 )
 ```
 
-**Note**: These flags are used with `Frame.map()` to control how hardware frames are mapped to software frames without performing full data copies.
+**Note**: These flags are used with `Frame.hwMap()` to control how hardware frames are mapped to software frames without performing full data copies.
 
 #### Methods
 

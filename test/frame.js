@@ -178,7 +178,7 @@ test(
 )
 
 test(
-  'frame map should map hardware frame to software frame (darwin)',
+  'frame hwMap should map hardware frame to software frame (darwin)',
   { skip: require('bare-os').platform() !== 'darwin' || require('bare-process').env.CI },
   (t) => {
     const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
@@ -197,7 +197,7 @@ test(
       if (decoder.receiveFrame(hwFrame)) {
         t.is(hwFrame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
 
-        hwFrame.map(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+        hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
 
         t.is(swFrame.width, hwFrame.width)
         t.is(swFrame.height, hwFrame.height)
