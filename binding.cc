@@ -143,6 +143,10 @@ typedef struct {
   AVBufferRef *handle;
 } bare_ffmpeg_hw_frames_context_t;
 
+typedef struct {
+  AVHWFramesConstraints *handle;
+} bare_ffmpeg_hw_frames_constraints_t;
+
 static uv_once_t bare_ffmpeg__init_guard = UV_ONCE_INIT;
 
 static void
@@ -2718,6 +2722,113 @@ bare_ffmpeg_hw_frames_context_get_buffer(
   }
 }
 
+static js_arraybuffer_t
+bare_ffmpeg_hw_frames_context_get_constraints(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  int err;
+
+  AVHWFramesContext *frames_ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+
+  AVHWFramesConstraints *constraints = av_hwdevice_get_hwframe_constraints(frames_ctx->device_ref, NULL);
+  if (!constraints) {
+    err = js_throw_error(env, NULL, "Failed to get hardware frame constraints");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  js_arraybuffer_t handle;
+  bare_ffmpeg_hw_frames_constraints_t *hw_frames_constraints;
+
+  err = js_create_arraybuffer(env, hw_frames_constraints, handle);
+  assert(err == 0);
+
+  hw_frames_constraints->handle = constraints;
+
+  return handle;
+}
+
+static void
+bare_ffmpeg_hw_frames_constraints_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  av_hwframe_constraints_free(&hw_frames_constraints->handle);
+}
+
+static std::vector<int32_t>
+bare_ffmpeg_hw_frames_constraints_get_valid_sw_formats(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  std::vector<int32_t> formats;
+
+  if (hw_frames_constraints->handle->valid_sw_formats) {
+    for (int i = 0; hw_frames_constraints->handle->valid_sw_formats[i] != AV_PIX_FMT_NONE; i++) {
+      formats.push_back(hw_frames_constraints->handle->valid_sw_formats[i]);
+    }
+  }
+
+  return formats;
+}
+
+static std::vector<int32_t>
+bare_ffmpeg_hw_frames_constraints_get_valid_hw_formats(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  std::vector<int32_t> formats;
+
+  if (hw_frames_constraints->handle->valid_hw_formats) {
+    for (int i = 0; hw_frames_constraints->handle->valid_hw_formats[i] != AV_PIX_FMT_NONE; i++) {
+      formats.push_back(hw_frames_constraints->handle->valid_hw_formats[i]);
+    }
+  }
+
+  return formats;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_constraints_get_min_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  return hw_frames_constraints->handle->min_width;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_constraints_get_max_width(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  return hw_frames_constraints->handle->max_width;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_constraints_get_min_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  return hw_frames_constraints->handle->min_height;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_constraints_get_max_height(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_constraints_t, 1> hw_frames_constraints
+) {
+  return hw_frames_constraints->handle->max_height;
+}
+
 static int32_t
 bare_ffmpeg_hw_frames_context_get_format(
   js_env_t *env,
@@ -2800,6 +2911,27 @@ bare_ffmpeg_hw_frames_context_set_height(
 ) {
   AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
   ctx->height = height;
+}
+
+static int32_t
+bare_ffmpeg_hw_frames_context_get_initial_pool_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx
+) {
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+  return ctx->initial_pool_size;
+}
+
+static void
+bare_ffmpeg_hw_frames_context_set_initial_pool_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_hw_frames_context_t, 1> hw_frames_ctx,
+  int32_t initial_pool_size
+) {
+  AVHWFramesContext *ctx = reinterpret_cast<AVHWFramesContext *>(hw_frames_ctx->handle->data);
+  ctx->initial_pool_size = initial_pool_size;
 }
 
 static js_arraybuffer_t
@@ -4559,7 +4691,18 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setHWFramesContextWidth", bare_ffmpeg_hw_frames_context_set_width)
   V("getHWFramesContextHeight", bare_ffmpeg_hw_frames_context_get_height)
   V("setHWFramesContextHeight", bare_ffmpeg_hw_frames_context_set_height)
+  V("getHWFramesContextInitialPoolSize", bare_ffmpeg_hw_frames_context_get_initial_pool_size)
+  V("setHWFramesContextInitialPoolSize", bare_ffmpeg_hw_frames_context_set_initial_pool_size)
   V("getHWFramesContextBuffer", bare_ffmpeg_hw_frames_context_get_buffer)
+  V("getHWFramesContextConstraints", bare_ffmpeg_hw_frames_context_get_constraints)
+
+  V("destroyHWFramesConstraints", bare_ffmpeg_hw_frames_constraints_destroy)
+  V("getHWFramesConstraintsValidSwFormats", bare_ffmpeg_hw_frames_constraints_get_valid_sw_formats)
+  V("getHWFramesConstraintsValidHwFormats", bare_ffmpeg_hw_frames_constraints_get_valid_hw_formats)
+  V("getHWFramesConstraintsMinWidth", bare_ffmpeg_hw_frames_constraints_get_min_width)
+  V("getHWFramesConstraintsMaxWidth", bare_ffmpeg_hw_frames_constraints_get_max_width)
+  V("getHWFramesConstraintsMinHeight", bare_ffmpeg_hw_frames_constraints_get_min_height)
+  V("getHWFramesConstraintsMaxHeight", bare_ffmpeg_hw_frames_constraints_get_max_height)
 
   V("initImage", bare_ffmpeg_image_init)
   V("fillImage", bare_ffmpeg_image_fill)

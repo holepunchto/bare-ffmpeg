@@ -99,3 +99,57 @@ test(
     t.ok(frame.hwFramesCtx instanceof ffmpeg.HWFramesContext)
   }
 )
+
+test(
+  'HWFramesContext should expose initialPoolSize getter (darwin)',
+  { skip: darwinFilter },
+  (t) => {
+    using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+    using hwFrames = new ffmpeg.HWFramesContext(
+      hwDevice,
+      ffmpeg.constants.pixelFormats.VIDEOTOOLBOX,
+      ffmpeg.constants.pixelFormats.NV12,
+      640,
+      480
+    )
+
+    t.is(typeof hwFrames.initialPoolSize, 'number')
+  }
+)
+
+test(
+  'HWFramesContext should expose initialPoolSize setter (darwin)',
+  { skip: darwinFilter },
+  (t) => {
+    using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+    using hwFrames = new ffmpeg.HWFramesContext(
+      hwDevice,
+      ffmpeg.constants.pixelFormats.VIDEOTOOLBOX,
+      ffmpeg.constants.pixelFormats.NV12,
+      640,
+      480
+    )
+
+    hwFrames.initialPoolSize = 10
+    t.is(hwFrames.initialPoolSize, 10)
+  }
+)
+
+test(
+  'HWFramesContext.getConstraints should return HWFramesConstraints instance (darwin)',
+  { skip: darwinFilter },
+  (t) => {
+    using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+    using hwFrames = new ffmpeg.HWFramesContext(
+      hwDevice,
+      ffmpeg.constants.pixelFormats.VIDEOTOOLBOX,
+      ffmpeg.constants.pixelFormats.NV12,
+      640,
+      480
+    )
+
+    using constraints = hwFrames.getConstraints()
+
+    t.ok(constraints instanceof ffmpeg.HWFramesConstraints)
+  }
+)
