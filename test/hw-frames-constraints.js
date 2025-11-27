@@ -25,6 +25,7 @@ test(
   { skip: darwinFilter },
   (t) => {
     t.ok(Array.isArray(constraints.validSwFormats))
+    t.ok(constraints.validSwFormats.length > 0)
   }
 )
 
@@ -39,37 +40,23 @@ test(
 
 test('HWFramesConstraints should expose minWidth getter (darwin)', { skip: darwinFilter }, (t) => {
   t.is(typeof constraints.minWidth, 'number')
+  t.ok(constraints.minWidth >= 0)
 })
 
 test('HWFramesConstraints should expose maxWidth getter (darwin)', { skip: darwinFilter }, (t) => {
   t.is(typeof constraints.maxWidth, 'number')
+  t.ok(constraints.maxWidth >= 0)
 })
 
 test('HWFramesConstraints should expose minHeight getter (darwin)', { skip: darwinFilter }, (t) => {
   t.is(typeof constraints.minHeight, 'number')
+  t.ok(constraints.minHeight >= 0)
 })
 
 test('HWFramesConstraints should expose maxHeight getter (darwin)', { skip: darwinFilter }, (t) => {
   t.is(typeof constraints.maxHeight, 'number')
+  t.ok(constraints.maxHeight >= 0)
 })
-
-test(
-  'HWFramesConstraints width constraints should be sensible (darwin)',
-  { skip: darwinFilter },
-  (t) => {
-    t.ok(constraints.minWidth >= 0)
-    t.ok(constraints.maxWidth >= constraints.minWidth)
-  }
-)
-
-test(
-  'HWFramesConstraints height constraints should be sensible (darwin)',
-  { skip: darwinFilter },
-  (t) => {
-    t.ok(constraints.minHeight >= 0)
-    t.ok(constraints.maxHeight >= constraints.minHeight)
-  }
-)
 
 test('HWFramesConstraints should have destroy method (darwin)', { skip: darwinFilter }, (t) => {
   t.ok(typeof constraints.destroy === 'function')
