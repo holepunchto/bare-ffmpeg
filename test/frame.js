@@ -177,6 +177,38 @@ test(
   }
 )
 
+test(
+  'frame hwMap should map hardware frame to software frame (darwin)',
+  { skip: require('bare-os').platform() !== 'darwin' || require('bare-process').env.CI },
+  (t) => {
+    const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
+
+    using packet = new ffmpeg.Packet()
+    using hwFrame = new ffmpeg.Frame()
+    using swFrame = new ffmpeg.Frame()
+
+    t.plan(3)
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex !== streamIndex) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+
+      if (decoder.receiveFrame(hwFrame)) {
+        t.is(hwFrame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+
+        hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+
+        t.is(swFrame.width, hwFrame.width)
+        t.is(swFrame.height, hwFrame.height)
+        break
+      }
+    }
+
+    t.teardown(clean)
+  }
+)
+
 // Helpers
 
 function initDecoderAndFormat() {

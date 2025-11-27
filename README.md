@@ -1023,6 +1023,33 @@ if (hwFrame.hwFramesCtx) {
 
 **Returns**: `HWFramesContext | null`
 
+##### `Frame.hwMap(destination, flags)`
+
+Maps a hardware frame to a software frame without performing a full data copy. This is more efficient than `transferData()` when you only need read-only access to the hardware frame data.
+
+```js
+// Map hardware frame for reading
+const hwFrame = new ffmpeg.Frame() // from hardware decoder
+const swFrame = new ffmpeg.Frame()
+
+hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+// swFrame now has read-only access to hwFrame data
+console.log('Dimensions:', swFrame.width, 'x', swFrame.height)
+```
+
+Parameters:
+
+- `destination` (`Frame`): The software frame to map into
+- `flags` (`number`, optional): Mapping flags (defaults to `0`). Use `ffmpeg.constants.hwFrameMapFlags`:
+  - `READ`: Map for reading (most common)
+  - `WRITE`: Map for writing
+  - `OVERWRITE`: Overwrite existing mapping
+  - `DIRECT`: Direct mapping without intermediate buffers
+
+**Note**: This method only works with hardware frames. The destination frame should not be allocated beforehand - the mapping will set up its buffers.
+
+**Returns**: `void`
+
 ### `Packet`
 
 This structure stores compressed data. It is typically exported by demuxers and then passed as input to decoders, or received as output from encoders and then passed to muxers.
@@ -1766,6 +1793,29 @@ head.destroy()
 ### Constants and Utilities
 
 The `constants` module provides utility functions for working with FFmpeg format constants and conversions.
+
+#### Hardware Frame Map Flags
+
+The `hwFrameMapFlags` constants define how hardware frames are mapped to software memory:
+
+- `NONE` (0): No flags (default)
+- `READ` (1): Map for read-only access (most common use case)
+- `WRITE` (2): Map for write access
+- `OVERWRITE` (4): Overwrite any existing mapping
+- `DIRECT` (8): Direct mapping without intermediate buffers
+
+```js
+// Map hardware frame for reading
+hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+
+// Combined flags (bitwise OR)
+hwFrame.hwMap(
+  swFrame,
+  ffmpeg.constants.hwFrameMapFlags.READ | ffmpeg.constants.hwFrameMapFlags.DIRECT
+)
+```
+
+**Note**: These flags are used with `Frame.hwMap()` to control how hardware frames are mapped to software frames without performing full data copies.
 
 #### Methods
 
