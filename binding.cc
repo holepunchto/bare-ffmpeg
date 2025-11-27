@@ -1328,6 +1328,24 @@ bare_ffmpeg_frame_transfer_data(
   }
 }
 
+static void
+bare_ffmpeg_frame_map(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> src,
+  int32_t flags
+) {
+  int err = av_hwframe_map(dst->handle, src->handle, flags);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static std::optional<js_arraybuffer_t>
 bare_ffmpeg_frame_get_hw_frames_ctx(
   js_env_t *env,
@@ -4524,6 +4542,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
   V("transferFrameData", bare_ffmpeg_frame_transfer_data)
+  V("mapFrame", bare_ffmpeg_frame_map)
   V("getFrameHWFramesCtx", bare_ffmpeg_frame_get_hw_frames_ctx)
   V("setFrameHWFramesCtx", bare_ffmpeg_frame_set_hw_frames_ctx)
   V("allocFrame", bare_ffmpeg_frame_alloc)
@@ -4703,6 +4722,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_HWDEVICE_TYPE_DXVA2)
   V(AV_HWDEVICE_TYPE_QSV)
   V(AV_HWDEVICE_TYPE_D3D11VA)
+
+  V(AV_HWFRAME_MAP_READ)
+  V(AV_HWFRAME_MAP_WRITE)
+  V(AV_HWFRAME_MAP_OVERWRITE)
+  V(AV_HWFRAME_MAP_DIRECT)
 
   V(AVMEDIA_TYPE_UNKNOWN)
   V(AVMEDIA_TYPE_VIDEO)
