@@ -8,12 +8,6 @@ project(bare_ffmpeg C CXX)
 
 option(BARE_FFMPEG_ENABLE_GPL "Enable GPL-licensed features (e.g., x264)" OFF)
 
-if(BARE_FFMPEG_ENABLE_GPL)
-  message(STATUS "BARE_FFMPEG_ENABLE_GPL: ON - GPL features (x264) will be included")
-else()
-  message(STATUS "BARE_FFMPEG_ENABLE_GPL: OFF - GPL features disabled")
-endif()
-
 fetch_package("github:holepunchto/libjstl#098664c")
 
 set(ffmpeg_features dav1d svt-av1 opus)
