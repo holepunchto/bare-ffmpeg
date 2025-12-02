@@ -226,15 +226,6 @@ set(pkg_config_path)
 
 if("gpl" IN_LIST features)
   list(APPEND args --enable-gpl)
-
-  add_library(postproc STATIC IMPORTED GLOBAL)
-
-  list(APPEND libraries postproc)
-  list(APPEND byproducts lib/libpostproc.a)
-
-  target_link_libraries(postproc INTERFACE avutil)
-  target_link_libraries(avdevice INTERFACE postproc)
-  target_link_libraries(avfilter INTERFACE postproc)
 endif()
 
 if("zlib" IN_LIST features)

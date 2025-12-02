@@ -6,9 +6,23 @@ find_package(cmake-ports REQUIRED PATHS node_modules/cmake-ports)
 
 project(bare_ffmpeg C CXX)
 
+option(BARE_FFMPEG_ENABLE_GPL "Enable GPL-licensed features (e.g., x264)" OFF)
+
+if(BARE_FFMPEG_ENABLE_GPL)
+  message(STATUS "BARE_FFMPEG_ENABLE_GPL: ON - GPL features (x264) will be included")
+else()
+  message(STATUS "BARE_FFMPEG_ENABLE_GPL: OFF - GPL features disabled")
+endif()
+
 fetch_package("github:holepunchto/libjstl#098664c")
 
-find_port(ffmpeg FEATURES dav1d svt-av1 opus)
+set(ffmpeg_features dav1d svt-av1 opus)
+
+if(BARE_FFMPEG_ENABLE_GPL)
+  list(APPEND ffmpeg_features gpl x264)
+endif()
+
+find_port(ffmpeg FEATURES ${ffmpeg_features})
 
 set(install_targets)
 
