@@ -60,6 +60,33 @@ Complete API documentation for all components is available in the `/docs` direct
 
 - [Constants](docs/constants.md) - FFmpeg constants and utility functions
 
+## Build from sources
+
+To build this Bare addon from source:
+
+```console
+npm i
+bare-make generate --debug
+bare-make build
+bare-make install
+```
+
+After the build completes, the addon will appear in the prebuilds directory under <platform>-<arch>. For example, on Apple Silicon macOS:
+
+```console
+ls prebuilds/
+darwin-arm64
+```
+
+### GPL feature
+
+The prebuilt addon included with this package does not include FFmpeg’s GPL-licensed features (such as the x264 codec).
+If you want to build with GPL support, enable it using the BARE_FFMPEG_ENABLE_GPL flag:
+
+```console
+bare-make generate --debug -D BARE_FFMPEG_ENABLE_GPL=ON
+```
+
 ## License
 
 Apache-2.0
