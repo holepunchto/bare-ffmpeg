@@ -14,51 +14,51 @@ Complete API documentation for all components is available in the `/docs` direct
 
 ### Core Components
 
-- [IOContext](docs/IOContext.md) - Input/output context for media files with streaming support
-- [Dictionary](docs/Dictionary.md) - Key-value pairs for FFmpeg options
+- [IOContext](docs/io-context.md) - Input/output context for media files with streaming support
+- [Dictionary](docs/dictionary.md) - Key-value pairs for FFmpeg options
 
 ### Codecs & Streams
 
-- [Codec](docs/Codec.md) - Access to FFmpeg codecs
-- [CodecContext](docs/CodecContext.md) - Encoding/decoding functionality
-- [CodecParameters](docs/CodecParameters.md) - Codec parameter configuration
-- [Stream](docs/Stream.md) - Media stream information and operations
+- [Codec](docs/codec.md) - Access to FFmpeg codecs
+- [CodecContext](docs/codec-context.md) - Encoding/decoding functionality
+- [CodecParameters](docs/codec-parameters.md) - Codec parameter configuration
+- [Stream](docs/stream.md) - Media stream information and operations
 
 ### Formats
 
-- [InputFormat](docs/InputFormat.md) - Input format specification
-- [OutputFormat](docs/OutputFormat.md) - Output format specification
-- [FormatContext](docs/FormatContext.md) - Base class for media file handling
-- [InputFormatContext](docs/InputFormatContext.md) - Reading media files
-- [OutputFormatContext](docs/OutputFormatContext.md) - Writing media files
+- [InputFormat](docs/input-format.md) - Input format specification
+- [OutputFormat](docs/output-format.md) - Output format specification
+- [FormatContext](docs/format-context.md) - Base class for media file handling
+- [InputFormatContext](docs/input-format-context.md) - Reading media files
+- [OutputFormatContext](docs/output-format-context.md) - Writing media files
 
 ### Data Structures
 
-- [Frame](docs/Frame.md) - Decoded audio/video data
-- [Packet](docs/Packet.md) - Encoded audio/video data
-- [SideData](docs/SideData.md) - Packet side data and metadata
-- [Image](docs/Image.md) - Raw pixel data management
-- [Rational](docs/Rational.md) - Rational number (fraction) representation
+- [Frame](docs/frame.md) - Decoded audio/video data
+- [Packet](docs/packet.md) - Encoded audio/video data
+- [SideData](docs/side-data.md) - Packet side data and metadata
+- [Image](docs/image.md) - Raw pixel data management
+- [Rational](docs/rational.md) - Rational number (fraction) representation
 
 ### Processing
 
-- [Scaler](docs/Scaler.md) - Video scaling and pixel format conversion
-- [Resampler](docs/Resampler.md) - Audio resampling and format conversion
-- [Filter](docs/Filter.md) - FFmpeg filter access
-- [FilterGraph](docs/FilterGraph.md) - Filter chain management
-- [FilterContext](docs/FilterContext.md) - Filter instance representation
-- [FilterInOut](docs/FilterInOut.md) - Filter input/output pads
-- [AudioFIFO](docs/AudioFIFO.md) - Audio sample buffering
+- [Scaler](docs/scaler.md) - Video scaling and pixel format conversion
+- [Resampler](docs/resampler.md) - Audio resampling and format conversion
+- [Filter](docs/filter.md) - FFmpeg filter access
+- [FilterGraph](docs/filter-graph.md) - Filter chain management
+- [FilterContext](docs/filter-context.md) - Filter instance representation
+- [FilterInOut](docs/filter-in-out.md) - Filter input/output pads
+- [AudioFIFO](docs/audio-fifo.md) - Audio sample buffering
 
 ### Hardware Acceleration
 
-- [HWDeviceContext](docs/HWDeviceContext.md) - Hardware device context for acceleration
-- [HWFramesContext](docs/HWFramesContext.md) - Hardware frame pool management
-- [HWFramesConstraints](docs/HWFramesConstraints.md) - Hardware capability information
+- [HWDeviceContext](docs/hw-device-context.md) - Hardware device context for acceleration
+- [HWFramesContext](docs/hw-frames-context.md) - Hardware frame pool management
+- [HWFramesConstraints](docs/hw-frames-constraints.md) - Hardware capability information
 
 ### Utilities
 
-- [Constants](docs/Constants.md) - FFmpeg constants and utility functions
+- [Constants](docs/constants.md) - FFmpeg constants and utility functions
 
 ## License
 
