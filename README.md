@@ -62,48 +62,43 @@ Complete API documentation for all components is available in the `/docs` direct
 
 ## Building
 
-<https://github.com/holepunchto/bare-make> is used for compiling Bare. Start by installing the tool globally:
+<https://github.com/holepunchto/bare-make> is used for compiling the native bindings in [`binding.c`](binding.c). Start by installing the tool globally:
 
 ```console
 npm i -g bare-make
 ```
 
-Next, install the required build and runtime dependencies:
+Next, generate the build system for compiling the bindings, optionally setting the `--debug` flag to enable debug symbols and assertions:
 
 ```console
-npm i
-```
-
-Then, generate the build system:
-
-```console
-bare-make generate
+bare-make generate [--debug]
 ```
 
 This only has to be run once per repository checkout. When updating `bare-make` or your compiler toolchain it might also be necessary to regenerate the build system. To do so, run the command again with the `--no-cache` flag set to disregard the existing build system cache:
 
 ```console
-bare-make generate --no-cache
+bare-make generate [--debug] --no-cache
 ```
 
-With a build system generated, Bare can be compiled:
+With a build system generated, the bindings can be compiled:
 
 ```console
 bare-make build
 ```
 
-When completed, the `bare-ffmpeg@1.bare` binary will be available in the `build` directory. We still need to populate this binary to the `prebuilds` directory. It can be done with:
+This will compile the bindings and output the resulting shared library module to the `build/` directory. To install it into the `prebuilds/` directory where the Bare addon resolution algorithm expects to find it, do:
 
 ```console
 bare-make install
 ```
 
-After the install step completes, the addon will appear in the `prebuilds` directory under `<platform>-<arch>`. For example, on Apple Silicon macOS:
+To make iteration faster during development, the shared library module can also be linked into the `prebuilds/` directory rather than copied. To do so, set the `--link` flag:
 
 ```console
-ls prebuilds/
-darwin-arm64
+bare-make install --link
 ```
+
+Prior to publishing the module, make sure that no links exist within the `prebuilds/` directory as these will not be included in the resulting package archive.
 
 ### Options
 
