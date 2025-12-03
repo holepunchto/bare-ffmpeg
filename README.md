@@ -60,32 +60,61 @@ Complete API documentation for all components is available in the `/docs` direct
 
 - [Constants](docs/constants.md) - FFmpeg constants and utility functions
 
-## Build from sources
+## Building
 
-To build this Bare addon from source:
+<https://github.com/holepunchto/bare-make> is used for compiling Bare. Start by installing the tool globally:
+
+```console
+npm i -g bare-make
+```
+
+Next, install the required build and runtime dependencies:
 
 ```console
 npm i
-bare-make generate --debug
+```
+
+Then, generate the build system:
+
+```console
+bare-make generate
+```
+
+This only has to be run once per repository checkout. When updating `bare-make` or your compiler toolchain it might also be necessary to regenerate the build system. To do so, run the command again with the `--no-cache` flag set to disregard the existing build system cache:
+
+```console
+bare-make generate --no-cache
+```
+
+With a build system generated, Bare can be compiled:
+
+```console
 bare-make build
+```
+
+When completed, the `bare-ffmpeg@1.bare` binary will be available in the `build` directory. We still need to populate this binary to the `prebuilds` directory. It can be done with:
+
+```console
 bare-make install
 ```
 
-After the build completes, the addon will appear in the prebuilds directory under <platform>-<arch>. For example, on Apple Silicon macOS:
+After the install step completes, the addon will appear in the `prebuilds` directory under `<platform>-<arch>`. For example, on Apple Silicon macOS:
 
 ```console
 ls prebuilds/
 darwin-arm64
 ```
 
-### GPL feature
+### Options
 
-The prebuilt addon included with this package does not include FFmpeg’s GPL-licensed features (such as the x264 codec).
-If you want to build with GPL support, enable it using the BARE_FFMPEG_ENABLE_GPL flag:
+A few compile options can be configured to customize the addon. Compile options may be set by passing the `--define option=value` flag to the `bare-make generate` command when generating the build system.
 
-```console
-bare-make generate --debug -D BARE_FFMPEG_ENABLE_GPL=ON
-```
+> [!WARNING]
+> The compile options are not covered by semantic versioning and are subject to change without warning.
+
+| Option                   | Default | Description                              |
+| :----------------------- | :------ | :--------------------------------------- |
+| `BARE_FFMPEG_ENABLE_GPL` | `OFF`   | Enable GPL-licensed features (e.g, x264) |
 
 ## License
 
