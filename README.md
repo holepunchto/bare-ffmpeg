@@ -62,7 +62,7 @@ Complete API documentation for all components is available in the `/docs` direct
 
 ## Building
 
-<https://github.com/holepunchto/bare-make> is used for compiling the native bindings in [`binding.c`](binding.c). Start by installing the tool globally:
+<https://github.com/holepunchto/bare-make> is used for compiling the native bindings in [`binding.cc`](binding.cc). Start by installing the tool globally:
 
 ```console
 npm i -g bare-make
