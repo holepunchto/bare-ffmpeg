@@ -5,14 +5,15 @@ const os = require('bare-os')
 const process = require('bare-process')
 
 if (os.platform() !== 'darwin' && os.platform() !== 'ios') {
+  console.log('This example only works on macOS/iOS with VideoToolbox')
   process.exit(1)
 }
 
-// This example demonstrates hardware-accelerated decoding on macOS using VideoToolbox
-// It decodes a video frame using hardware acceleration, then transfers it to software
+// This example demonstrates H264 hardware-accelerated decoding on macOS using VideoToolbox
+// It decodes an H264 video frame using hardware acceleration, then transfers it to software
 
-// Load a sample video
-const video = require('../test/fixtures/video/sample.webm', {
+// Load a sample MP4 video (typically contains H264)
+const video = require('../test/fixtures/video/sample.mp4', {
   with: { type: 'binary' }
 })
 
@@ -22,12 +23,20 @@ using format = new ffmpeg.InputFormatContext(io)
 
 // Find video stream
 const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+const codec = ffmpeg.Codec.for(stream.codecParameters.id)
 console.log('Video stream found:', {
   index: stream.index,
   codecId: stream.codecParameters.id,
+  codecName: codec.name,
   width: stream.codecParameters.width,
   height: stream.codecParameters.height
 })
+
+// Verify it's H264
+if (codec.name !== 'h264') {
+  console.log(`Warning: Expected H264 codec, but got: ${codec.name}`)
+  console.log('This example is designed for H264 video')
+}
 
 // Create hardware device context for VideoToolbox
 console.log('Creating VideoToolbox hardware device context...')
@@ -41,7 +50,16 @@ console.log('Hardware device context set on decoder')
 // Set getFormat callback to select hardware pixel format
 let formatSelected = false
 decoder.getFormat = (ctx, formats) => {
-  console.log('getFormat callback invoked with formats:', formats)
+  console.log(
+    'getFormat callback invoked with formats:',
+    formats.map((f) => {
+      try {
+        return ffmpeg.constants.getPixelFormatName(f)
+      } catch {
+        return f
+      }
+    })
+  )
 
   // Look for VideoToolbox hardware format
   const hwFormat = formats.find((f) => f === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
@@ -56,21 +74,27 @@ decoder.getFormat = (ctx, formats) => {
   return formats[0]
 }
 
+// Decoder open
+decoder.open()
+console.log('Decoder opened!')
+
 // Decode first frame
 using packet = new ffmpeg.Packet()
 using hwFrame = new ffmpeg.Frame()
 
-console.log('Decoding first frame...')
+console.log('Decoding first H264 frame with hardware acceleration...')
 let decoded = false
-while (format.readFrame(packet)) {
+let framesAttempted = 0
+
+while (format.readFrame(packet) && framesAttempted < 10) {
   if (packet.streamIndex !== stream.index) continue
 
-  decoder.open()
+  framesAttempted++
+
   decoder.sendPacket(packet)
 
   if (decoder.receiveFrame(hwFrame)) {
     decoded = true
-    console.log('Frame decoded successfully')
     assert.equal(hwFrame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
     break
   }
@@ -80,17 +104,15 @@ assert(formatSelected, 'Hardware format should have been selected')
 assert(decoded, 'Should have decoded at least one frame')
 
 // Transfer to software frame
-console.log('Transferring hardware frame to software...')
+console.log('\nTransferring hardware frame to software memory...')
 using swFrame = new ffmpeg.Frame()
-swFrame.format = ffmpeg.constants.pixelFormats.NV12 // Common format for VideoToolbox
+swFrame.format = ffmpeg.constants.pixelFormats.NV12 // Common format for VideoToolbox output
 
 try {
   hwFrame.transferData(swFrame)
-  console.log('Transfer successful!')
-  console.log('Software frame format:', swFrame.format)
-  console.log('Software frame dimensions:', swFrame.width, 'x', swFrame.height)
   assert(swFrame.width > 0, 'Software frame should have width')
   assert(swFrame.height > 0, 'Software frame should have height')
+  assert.equal(swFrame.format, ffmpeg.constants.pixelFormats.NV12)
 } catch (err) {
   console.error('Transfer failed:', err.message)
   throw err
@@ -99,8 +121,5 @@ try {
 // Clean up decoder before format context
 decoder.destroy()
 
-console.log('\n✓ Hardware decoding and transfer successful!')
-
-// TODO: Demonstrate software → hardware transfer (upload direction)
-// This requires implementing HWFramesContext API to allocate hardware frames
-// with hw_frames_ctx set, which will be added in a future update.
+console.log('\n✓ H264 hardware decoding with VideoToolbox successful!')
+console.log('✓ Hardware → Software transfer successful!')

@@ -128,6 +128,12 @@ if(CMAKE_AR)
   list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
 endif()
 
+set(patches)
+
+if(WIN32)
+  list(APPEND patches patches/01-windows-clang.patch)
+endif()
+
 declare_port(
   "git:code.videolan.org/videolan/x264#stable"
   x264
@@ -135,8 +141,7 @@ declare_port(
   BYPRODUCTS lib/${lib}
   ARGS ${args}
   ENV ${env}
-  PATCHES
-    patches/01-windows-clang.patch
+  PATCHES ${patches}
 )
 
 add_library(x264 STATIC IMPORTED GLOBAL)
