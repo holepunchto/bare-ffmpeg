@@ -16,9 +16,6 @@ Complete API documentation for all components is available in the `/docs` direct
 
 - [IOContext](docs/IOContext.md) - Input/output context for media files with streaming support
 - [Dictionary](docs/Dictionary.md) - Key-value pairs for FFmpeg options
-- [FormatContext](docs/FormatContext.md) - Base class for media file handling
-- [InputFormatContext](docs/InputFormatContext.md) - Reading media files
-- [OutputFormatContext](docs/OutputFormatContext.md) - Writing media files
 
 ### Codecs & Streams
 
@@ -31,6 +28,9 @@ Complete API documentation for all components is available in the `/docs` direct
 
 - [InputFormat](docs/InputFormat.md) - Input format specification
 - [OutputFormat](docs/OutputFormat.md) - Output format specification
+- [FormatContext](docs/FormatContext.md) - Base class for media file handling
+- [InputFormatContext](docs/InputFormatContext.md) - Reading media files
+- [OutputFormatContext](docs/OutputFormatContext.md) - Writing media files
 
 ### Data Structures
 
