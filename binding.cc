@@ -1302,6 +1302,24 @@ bare_ffmpeg_frame_copy_properties(
   }
 }
 
+static void
+bare_ffmpeg_frame_copy_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> dst,
+  js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> src
+) {
+
+  int err = av_frame_copy(dst->handle, src->handle);
+
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+}
+
 static bool
 bare_ffmpeg_codec_context_open_with_options(
   js_env_t *env,
@@ -4227,6 +4245,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getFrameSampleRate", bare_ffmpeg_frame_get_sample_rate)
   V("setFrameSampleRate", bare_ffmpeg_frame_set_sample_rate)
   V("copyFrameProperties", bare_ffmpeg_frame_copy_properties)
+  V("copyFrameData", bare_ffmpeg_frame_copy_data)
   V("allocFrame", bare_ffmpeg_frame_alloc)
 
   V("initImage", bare_ffmpeg_image_init)
