@@ -134,6 +134,21 @@ Video only. Number of delayed frames.
 
 **Returns**: `number`
 
+### `CodecParameters.colorSpace`
+Video only.
+
+**Returns**: `number`
+
+### `CodecParameters.colorPrimaries`
+Video only.
+
+**Returns**: `number`
+
+### `CodecParameters.colorTRC`
+Video only.
+
+**Returns**: `number`
+
 ## Methods
 
 ### `CodecParameters.fromContext(context)`
