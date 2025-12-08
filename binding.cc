@@ -2395,6 +2395,63 @@ bare_ffmpeg_codec_parameters_set_frame_size(
   parameters->handle->frame_size = frame_size;
 }
 
+static int
+bare_ffmpeg_codec_parameters_get_color_space(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->color_space;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_color_space(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int color_space
+) {
+  parameters->handle->color_space = static_cast<AVColorSpace>(color_space);
+}
+
+static int
+bare_ffmpeg_codec_parameters_get_color_primaries(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->color_primaries;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_color_primaries(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int color_primaries
+) {
+  parameters->handle->color_primaries = static_cast<AVColorPrimaries>(color_primaries);
+}
+
+static int
+bare_ffmpeg_codec_parameters_get_color_trc(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->color_trc;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_color_trc(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int color_trc
+) {
+  parameters->handle->color_trc = static_cast<AVColorTransferCharacteristic>(color_trc);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
@@ -4649,6 +4706,13 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersVideoDelay", bare_ffmpeg_codec_parameters_set_video_delay)
   V("getCodecParametersFrameSize", bare_ffmpeg_codec_parameters_get_frame_size)
   V("setCodecParametersFrameSize", bare_ffmpeg_codec_parameters_set_frame_size)
+  V("getCodecParametersColorSpace", bare_ffmpeg_codec_parameters_get_color_space)
+  V("setCodecParametersColorSpace", bare_ffmpeg_codec_parameters_set_color_space)
+  V("getCodecParametersColorPrimaries", bare_ffmpeg_codec_parameters_get_color_primaries)
+  V("setCodecParametersColorPrimaries", bare_ffmpeg_codec_parameters_set_color_primaries)
+  V("getCodecParametersColorTRC", bare_ffmpeg_codec_parameters_get_color_trc)
+  V("setCodecParametersColorTRC", bare_ffmpeg_codec_parameters_set_color_trc)
+
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
@@ -5048,6 +5112,66 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   // Levels
   V(AV_LEVEL_UNKNOWN)
+
+  // Color Space
+  V(AVCOL_SPC_RGB)
+  V(AVCOL_SPC_BT709)
+  V(AVCOL_SPC_UNSPECIFIED)
+  V(AVCOL_SPC_RESERVED)
+  V(AVCOL_SPC_FCC)
+  V(AVCOL_SPC_BT470BG)
+  V(AVCOL_SPC_SMPTE170M)
+  V(AVCOL_SPC_SMPTE240M)
+  V(AVCOL_SPC_YCGCO)
+  V(AVCOL_SPC_YCOCG)
+  V(AVCOL_SPC_BT2020_NCL)
+  V(AVCOL_SPC_BT2020_CL)
+  V(AVCOL_SPC_SMPTE2085)
+  V(AVCOL_SPC_CHROMA_DERIVED_NCL)
+  V(AVCOL_SPC_CHROMA_DERIVED_CL)
+  V(AVCOL_SPC_ICTCP)
+  V(AVCOL_SPC_IPT_C2)
+  V(AVCOL_SPC_YCGCO_RE)
+  V(AVCOL_SPC_YCGCO_RO)
+
+  // Color Primaries
+  V(AVCOL_PRI_BT709)
+  V(AVCOL_PRI_UNSPECIFIED)
+  V(AVCOL_PRI_RESERVED)
+  V(AVCOL_PRI_BT470M)
+  V(AVCOL_PRI_BT470BG)
+  V(AVCOL_PRI_SMPTE170M)
+  V(AVCOL_PRI_SMPTE240M)
+  V(AVCOL_PRI_FILM)
+  V(AVCOL_PRI_BT2020)
+  V(AVCOL_PRI_SMPTE428)
+  V(AVCOL_PRI_SMPTEST428_1)
+  V(AVCOL_PRI_SMPTE431)
+  V(AVCOL_PRI_SMPTE432)
+  V(AVCOL_PRI_EBU3213)
+  V(AVCOL_PRI_JEDEC_P22)
+
+  // Color Transfer Characteristics
+  V(AVCOL_TRC_BT709)
+  V(AVCOL_TRC_UNSPECIFIED)
+  V(AVCOL_TRC_RESERVED)
+  V(AVCOL_TRC_GAMMA22)
+  V(AVCOL_TRC_GAMMA28)
+  V(AVCOL_TRC_SMPTE170M)
+  V(AVCOL_TRC_SMPTE240M)
+  V(AVCOL_TRC_LINEAR)
+  V(AVCOL_TRC_LOG)
+  V(AVCOL_TRC_LOG_SQRT)
+  V(AVCOL_TRC_IEC61966_2_4)
+  V(AVCOL_TRC_BT1361_ECG)
+  V(AVCOL_TRC_IEC61966_2_1)
+  V(AVCOL_TRC_BT2020_10)
+  V(AVCOL_TRC_BT2020_12)
+  V(AVCOL_TRC_SMPTE2084)
+  V(AVCOL_TRC_SMPTEST2084)
+  V(AVCOL_TRC_SMPTE428)
+  V(AVCOL_TRC_SMPTEST428_1)
+  V(AVCOL_TRC_ARIB_STD_B67)
 
   // SEEK
   V(AVSEEK_SIZE)

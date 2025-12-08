@@ -242,6 +242,33 @@ test('CodecParameters class should expose a frameSize setter', (t) => {
   t.ok(codecParam.frameSize === 1024)
 })
 
+test('CodecParameters class should expose a ColorSpace getter', (t) => {
+  t.is(typeof codecParam.colorSpace, 'number')
+})
+
+test('CodecParameters class should expose a ColorSpace setter', (t) => {
+  codecParam.colorSpace = ffmpeg.constants.colorSpace.SMPTE170M
+  t.is(codecParam.colorSpace, ffmpeg.constants.colorSpace.SMPTE170M)
+})
+
+test('CodecParameters class should expose a ColorPrimaries getter', (t) => {
+  t.is(typeof codecParam.colorPrimaries, 'number')
+})
+
+test('CodecParameters class should expose a ColorPrimaries setter', (t) => {
+  codecParam.colorPrimaries = ffmpeg.constants.colorPrimaries.SMPTE170M
+  t.is(codecParam.colorPrimaries, ffmpeg.constants.colorPrimaries.SMPTE170M)
+})
+
+test('CodecParameters class should expose a ColorPrimaries getter', (t) => {
+  t.is(typeof codecParam.colorTRC, 'number')
+})
+
+test('CodecParameters class should expose a ColorPrimaries setter', (t) => {
+  codecParam.colorTRC = ffmpeg.constants.colorTRC.SMPTE170M
+  t.is(codecParam.colorTRC, ffmpeg.constants.colorTRC.SMPTE170M)
+})
+
 test('create independent CodecParameters', (t) => {
   const codecParam = ffmpeg.CodecParameters.alloc()
 
