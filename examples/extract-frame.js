@@ -55,32 +55,39 @@ while (inputFormat.readFrame(packet)) {
 
           const encoder = outStream.encoder()
           encoder.timeBase = outStream.timeBase
-
           encoder.open()
-
-          outStream.codecParameters.fromContext(encoder)
 
           outputFormat.writeHeader()
 
-          using scaler = new ffmpeg.Scaler(
-            frame.format,
-            frame.width,
-            frame.height,
-            ffmpeg.constants.pixelFormats.YUVJ420P,
-            frame.width,
-            frame.height
-          )
+                              using scaler = new ffmpeg.Scaler(
 
-          using convFrame = new ffmpeg.Frame()
-          convFrame.width = frame.width
-          convFrame.height = frame.height
-          convFrame.format = ffmpeg.constants.pixelFormats.YUVJ420P
-          convFrame.alloc()
+                                frame.format, frame.width, frame.height,
 
-          scaler.scale(frame, convFrame)
-          convFrame.pts = 0
+                                ffmpeg.constants.pixelFormats.YUVJ420P, frame.width, frame.height
 
-          encoder.sendFrame(convFrame)
+                              )
+
+                    
+
+                              using convFrame = new ffmpeg.Frame()
+
+                              convFrame.width = frame.width
+
+                              convFrame.height = frame.height
+
+                              convFrame.format = ffmpeg.constants.pixelFormats.YUVJ420P
+
+                              convFrame.alloc()
+
+                    
+
+                              scaler.scale(frame, convFrame)
+
+                              convFrame.pts = 0
+
+                    
+
+                              encoder.sendFrame(convFrame)
 
           using outPacket = new ffmpeg.Packet()
           while (encoder.receivePacket(outPacket)) {
