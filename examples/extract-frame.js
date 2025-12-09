@@ -31,8 +31,12 @@ function extractRGBA(filename, frameNum) {
 
             // Convert to RGBA
             using scaler = new ffmpeg.Scaler(
-              frame.format, frame.width, frame.height,
-              ffmpeg.constants.pixelFormats.RGBA, frame.width, frame.height
+              frame.format,
+              frame.width,
+              frame.height,
+              ffmpeg.constants.pixelFormats.RGBA,
+              frame.width,
+              frame.height
             )
 
             using rgbaFrame = new ffmpeg.Frame()
@@ -43,18 +47,17 @@ function extractRGBA(filename, frameNum) {
 
             scaler.scale(frame, rgbaFrame)
 
-            // Create a copy of the buffer because the frame will be destroyed
-            const size = rgbaFrame.width * rgbaFrame.height * 4
-            const buffer = Buffer.alloc(size)
-
-            const image = new ffmpeg.Image(ffmpeg.constants.pixelFormats.RGBA, rgbaFrame.width, rgbaFrame.height)
+            const image = new ffmpeg.Image(
+              ffmpeg.constants.pixelFormats.RGBA,
+              rgbaFrame.width,
+              rgbaFrame.height
+            )
             image.read(rgbaFrame)
-            image.data.copy(buffer)
 
             result = {
               width: rgbaFrame.width,
               height: rgbaFrame.height,
-              data: buffer
+              data: image.data
             }
             break
           }
@@ -99,8 +102,12 @@ function exportPreviewImage(rgbaData, outFilename) {
 
   // Convert RGBA -> YUVJ420P for JPEG
   using scaler = new ffmpeg.Scaler(
-    ffmpeg.constants.pixelFormats.RGBA, rgbaData.width, rgbaData.height,
-    ffmpeg.constants.pixelFormats.YUVJ420P, rgbaData.width, rgbaData.height
+    ffmpeg.constants.pixelFormats.RGBA,
+    rgbaData.width,
+    rgbaData.height,
+    ffmpeg.constants.pixelFormats.YUVJ420P,
+    rgbaData.width,
+    rgbaData.height
   )
 
   using inputFrame = new ffmpeg.Frame()
@@ -110,7 +117,11 @@ function exportPreviewImage(rgbaData, outFilename) {
   inputFrame.alloc()
 
   // Fill input frame with our RGBA data
-  const image = new ffmpeg.Image(ffmpeg.constants.pixelFormats.RGBA, rgbaData.width, rgbaData.height)
+  const image = new ffmpeg.Image(
+    ffmpeg.constants.pixelFormats.RGBA,
+    rgbaData.width,
+    rgbaData.height
+  )
   rgbaData.data.copy(image.data)
   image.fill(inputFrame)
 
@@ -149,7 +160,6 @@ try {
 
   const rgbaData = extractRGBA(filename, frameNum)
   exportPreviewImage(rgbaData, `frame-${frameNum}.jpg`)
-
 } catch (err) {
   console.error(err.message)
   process.exit(1)
