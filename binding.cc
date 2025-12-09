@@ -35,6 +35,7 @@ extern "C" {
 #include <libavutil/mathematics.h>
 #include <libavutil/mem.h>
 #include <libavutil/opt.h>
+#include <libavutil/pixdesc.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/rational.h>
 #include <libavutil/samplefmt.h>
@@ -641,7 +642,6 @@ bare_ffmpeg_format_context_create_stream(
   assert(err == 0);
 
   stream->handle = avformat_new_stream(context->handle, NULL);
-
   return handle;
 }
 
@@ -2450,6 +2450,87 @@ bare_ffmpeg_codec_parameters_set_color_trc(
   int color_trc
 ) {
   parameters->handle->color_trc = static_cast<AVColorTransferCharacteristic>(color_trc);
+}
+
+static std::string
+bare_ffmpeg_color_space_name(
+  js_env_t *env,
+  js_receiver_t,
+  int color_space
+) {
+  return av_color_space_name(static_cast<AVColorSpace>(color_space));
+}
+
+static int
+bare_ffmpeg_color_space_from_name(
+  js_env_t *env,
+  js_receiver_t,
+  std::string color_space_name
+) {
+  int id = av_color_space_from_name(color_space_name.c_str());
+
+  if (id < 0) {
+    int err = js_throw_error(env, NULL, av_err2str(id));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return id;
+}
+
+static std::string
+bare_ffmpeg_color_primaries_name(
+  js_env_t *env,
+  js_receiver_t,
+  int color_primaries
+) {
+  return av_color_primaries_name(static_cast<AVColorPrimaries>(color_primaries));
+}
+
+static int
+bare_ffmpeg_color_primaries_from_name(
+  js_env_t *env,
+  js_receiver_t,
+  std::string color_primaries_name
+) {
+  int id = av_color_primaries_from_name(color_primaries_name.c_str());
+
+  if (id < 0) {
+    int err = js_throw_error(env, NULL, av_err2str(id));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return id;
+}
+
+static std::string
+bare_ffmpeg_color_transfer_name(
+  js_env_t *env,
+  js_receiver_t,
+  int color_trc
+) {
+  return av_color_transfer_name(static_cast<AVColorTransferCharacteristic>(color_trc));
+}
+
+static int
+bare_ffmpeg_color_transfer_from_name(
+  js_env_t *env,
+  js_receiver_t,
+  std::string color_trc_name
+) {
+  int id = av_color_transfer_from_name(color_trc_name.c_str());
+
+  if (id < 0) {
+    int err = js_throw_error(env, NULL, av_err2str(id));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return id;
 }
 
 static int
@@ -4734,6 +4815,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getCodecParametersColorRange", bare_ffmpeg_codec_parameters_get_color_range)
   V("setCodecParametersColorRange", bare_ffmpeg_codec_parameters_set_color_range)
 
+  V("getColorSpaceNameByID", bare_ffmpeg_color_space_name)
+  V("getColorSpaceFromName", bare_ffmpeg_color_space_from_name)
+  V("getColorPrimariesNameByID", bare_ffmpeg_color_primaries_name)
+  V("getColorPrimariesFromName", bare_ffmpeg_color_primaries_from_name)
+  V("getColorTransferNameByID", bare_ffmpeg_color_transfer_name)
+  V("getColorTransferFromName", bare_ffmpeg_color_transfer_from_name)
 
   V("initFrame", bare_ffmpeg_frame_init)
   V("destroyFrame", bare_ffmpeg_frame_destroy)
