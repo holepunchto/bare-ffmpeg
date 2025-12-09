@@ -59,35 +59,31 @@ while (inputFormat.readFrame(packet)) {
 
           outputFormat.writeHeader()
 
-                              using scaler = new ffmpeg.Scaler(
+          using scaler = new ffmpeg.Scaler(
+            frame.format,
+            frame.width,
+            frame.height,
 
-                                frame.format, frame.width, frame.height,
+            ffmpeg.constants.pixelFormats.YUVJ420P,
+            frame.width,
+            frame.height
+          )
 
-                                ffmpeg.constants.pixelFormats.YUVJ420P, frame.width, frame.height
+          using convFrame = new ffmpeg.Frame()
 
-                              )
+          convFrame.width = frame.width
 
-                    
+          convFrame.height = frame.height
 
-                              using convFrame = new ffmpeg.Frame()
+          convFrame.format = ffmpeg.constants.pixelFormats.YUVJ420P
 
-                              convFrame.width = frame.width
+          convFrame.alloc()
 
-                              convFrame.height = frame.height
+          scaler.scale(frame, convFrame)
 
-                              convFrame.format = ffmpeg.constants.pixelFormats.YUVJ420P
+          convFrame.pts = 0
 
-                              convFrame.alloc()
-
-                    
-
-                              scaler.scale(frame, convFrame)
-
-                              convFrame.pts = 0
-
-                    
-
-                              encoder.sendFrame(convFrame)
+          encoder.sendFrame(convFrame)
 
           using outPacket = new ffmpeg.Packet()
           while (encoder.receivePacket(outPacket)) {
