@@ -63,20 +63,15 @@ while (inputFormat.readFrame(packet)) {
             frame.format,
             frame.width,
             frame.height,
-
             ffmpeg.constants.pixelFormats.YUVJ420P,
             frame.width,
             frame.height
           )
 
           using convFrame = new ffmpeg.Frame()
-
           convFrame.width = frame.width
-
           convFrame.height = frame.height
-
           convFrame.format = ffmpeg.constants.pixelFormats.YUVJ420P
-
           convFrame.alloc()
 
           scaler.scale(frame, convFrame)
