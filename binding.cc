@@ -2452,6 +2452,25 @@ bare_ffmpeg_codec_parameters_set_color_trc(
   parameters->handle->color_trc = static_cast<AVColorTransferCharacteristic>(color_trc);
 }
 
+static int
+bare_ffmpeg_codec_parameters_get_color_range(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters
+) {
+  return parameters->handle->color_range;
+}
+
+static void
+bare_ffmpeg_codec_parameters_set_color_range(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_parameters_t, 1> parameters,
+  int color_range
+) {
+  parameters->handle->color_range = static_cast<AVColorRange>(color_range);
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_frame_init(js_env_t *env, js_receiver_t) {
   int err;
@@ -4712,6 +4731,8 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setCodecParametersColorPrimaries", bare_ffmpeg_codec_parameters_set_color_primaries)
   V("getCodecParametersColorTRC", bare_ffmpeg_codec_parameters_get_color_trc)
   V("setCodecParametersColorTRC", bare_ffmpeg_codec_parameters_set_color_trc)
+  V("getCodecParametersColorRange", bare_ffmpeg_codec_parameters_get_color_range)
+  V("setCodecParametersColorRange", bare_ffmpeg_codec_parameters_set_color_range)
 
 
   V("initFrame", bare_ffmpeg_frame_init)
@@ -4896,6 +4917,15 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_CODEC_ID_AV1)
   V(AV_CODEC_ID_FLAC)
   V(AV_CODEC_ID_MP3)
+  V(AV_CODEC_ID_HEVC)
+  V(AV_CODEC_ID_VP8)
+  V(AV_CODEC_ID_VP9)
+  V(AV_CODEC_ID_VORBIS)
+  V(AV_CODEC_ID_PCM_S16LE)
+  V(AV_CODEC_ID_PCM_S16BE)
+  V(AV_CODEC_ID_PCM_U8)
+  V(AV_CODEC_ID_PCM_ALAW)
+  V(AV_CODEC_ID_PCM_MULAW)
 
   V(AV_CODEC_FLAG_COPY_OPAQUE)
   V(AV_CODEC_FLAG_FRAME_DURATION)
@@ -5133,6 +5163,11 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AVCOL_SPC_IPT_C2)
   V(AVCOL_SPC_YCGCO_RE)
   V(AVCOL_SPC_YCGCO_RO)
+
+  // Color Range
+  V(AVCOL_RANGE_UNSPECIFIED)
+  V(AVCOL_RANGE_MPEG)
+  V(AVCOL_RANGE_JPEG)
 
   // Color Primaries
   V(AVCOL_PRI_BT709)

@@ -269,6 +269,15 @@ test('CodecParameters class should expose a ColorPrimaries setter', (t) => {
   t.is(codecParam.colorTRC, ffmpeg.constants.colorTRC.SMPTE170M)
 })
 
+test('CodecParameters class should expose a ColorRange getter', (t) => {
+  t.is(typeof codecParam.colorRange, 'number')
+})
+
+test('CodecParameters class should expose a ColorRange setter', (t) => {
+  codecParam.colorRange = ffmpeg.constants.colorRange.MPEG
+  t.is(codecParam.colorRange, ffmpeg.constants.colorRange.MPEG)
+})
+
 test('create independent CodecParameters', (t) => {
   const codecParam = ffmpeg.CodecParameters.alloc()
 
