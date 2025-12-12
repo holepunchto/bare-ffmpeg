@@ -1,5 +1,8 @@
 # HWDeviceContext
 
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
 The `HWDeviceContext` API provides functionality to create and manage hardware device contexts for hardware-accelerated encoding and decoding.
 
 ## Constructor

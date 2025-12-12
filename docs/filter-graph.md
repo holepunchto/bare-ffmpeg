@@ -1,6 +1,9 @@
 # FilterGraph
 
-The `FilterGraph` API provides functionality to create and manage complex filter chains for audio and video processing.
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
+The `FilterGraph` API allows you to create and manage audio/video filter graphs.
 
 ## Constructor
 
