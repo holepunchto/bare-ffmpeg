@@ -1,5 +1,8 @@
 # Filter
 
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
 The `Filter` API provides access to FFmpeg filters by name.
 
 ## Constructor

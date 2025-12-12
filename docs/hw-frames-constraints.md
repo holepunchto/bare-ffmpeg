@@ -1,5 +1,8 @@
 # HWFramesConstraints
 
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
 The `HWFramesConstraints` API provides information about hardware device capabilities and limitations. This is useful for determining what formats and resolutions are supported before allocating hardware frames.
 
 ## Constructor

@@ -1,6 +1,9 @@
 # FilterInOut
 
-The `FilterInOut` API provides functionality to represent input and output pads for FFmpeg filter graphs.
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
+The `FilterInOut` API represents an input or output pad of a filter graph.
 
 ## Constructor
 

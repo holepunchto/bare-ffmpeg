@@ -1,6 +1,9 @@
 # HWFramesContext
 
-The `HWFramesContext` API provides functionality to manage hardware frame pools for hardware-accelerated encoding and decoding. It handles the allocation and configuration of hardware frame buffers.
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
+The `HWFramesContext` API manages a pool of hardware frames.
 
 ## Constructor
 

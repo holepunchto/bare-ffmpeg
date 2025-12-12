@@ -1,6 +1,9 @@
 # FilterContext
 
-The `FilterContext` API represents a filter instance within a filter graph. Filter contexts are created and managed by the `FilterGraph` class.
+> [!IMPORTANT]
+> This feature is experimental. The API is subject to change, and everything may break.
+
+The `FilterContext` API represents an instance of a filter in a filter graph.
 
 ## Constructor
 
