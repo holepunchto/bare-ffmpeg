@@ -28,6 +28,18 @@ AV1 video codec.
 
 **Returns**: `Codec` instance
 
+### `Codec.VP8`
+
+VP8 video codec.
+
+**Returns**: `Codec` instance
+
+### `Codec.VP9`
+
+VP9 video codec.
+
+**Returns**: `Codec` instance
+
 ## Properties
 
 ### `Codec.id`
