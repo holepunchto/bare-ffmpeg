@@ -25,6 +25,16 @@ test('codec class should expose a static AV1 builder', (t) => {
   t.ok(codec.decoder)
 })
 
+test('codec class should expose a static VP8 builder', (t) => {
+  const codec = ffmpeg.Codec.VP8
+  t.ok(codec.decoder)
+})
+
+test('codec class should expose a static VP9 builder', (t) => {
+  const codec = ffmpeg.Codec.VP9
+  t.ok(codec.decoder)
+})
+
 test('codec inspect does not throw if id is unset', (t) => {
   const codec = new ffmpeg.Codec()
   t.execution(() => {
