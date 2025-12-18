@@ -983,7 +983,6 @@ bare_ffmpeg_find_decoder_by_name(js_env_t *env, js_receiver_t, std::string name)
   }
 
   js_arraybuffer_t handle;
-
   bare_ffmpeg_codec_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
@@ -1007,7 +1006,6 @@ bare_ffmpeg_find_encoder_by_name(js_env_t *env, js_receiver_t, std::string name)
   }
 
   js_arraybuffer_t handle;
-
   bare_ffmpeg_codec_t *context;
   err = js_create_arraybuffer(env, context, handle);
   assert(err == 0);
