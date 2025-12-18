@@ -11,8 +11,8 @@ const vp8Width = 320
 const vp8Height = 240
 const frameRate = 30
 
-const vp8Encoder = ffmpeg.Encoder.byName('libvpx')
-console.log(`Found encoder: ${vp8Encoder._codec.name}`)
+const vp8Encoder = new ffmpeg.Encoder('libvpx')
+console.log('Found encoder: libvpx')
 
 using vp8Context = new ffmpeg.CodecContext(vp8Encoder)
 vp8Context.width = vp8Width
@@ -49,8 +49,8 @@ const vp9Width = 160
 const vp9Height = 120
 const numFrames = 5
 
-const vp9Encoder = ffmpeg.Encoder.byName('libvpx-vp9')
-console.log(`Found encoder: ${vp9Encoder._codec.name}`)
+const vp9Encoder = new ffmpeg.Encoder('libvpx-vp9')
+console.log('Found encoder: libvpx-vp9')
 
 using vp9Context = new ffmpeg.CodecContext(vp9Encoder)
 vp9Context.width = vp9Width
@@ -106,7 +106,7 @@ console.log('--------------------------------')
 const rtWidth = 320
 const rtHeight = 240
 
-const rtEncoder = ffmpeg.Encoder.byName('libvpx')
+const rtEncoder = new ffmpeg.Encoder('libvpx')
 using rtEncoderContext = new ffmpeg.CodecContext(rtEncoder)
 
 rtEncoderContext.width = rtWidth
@@ -132,7 +132,7 @@ rtEncoderContext.receivePacket(rtPacket)
 console.log(`Encoded frame: ${rtPacket.data.length} bytes`)
 
 // Decode with VP8
-const rtDecoder = ffmpeg.Decoder.byName('vp8')
+const rtDecoder = new ffmpeg.Decoder('vp8')
 using rtDecoderContext = new ffmpeg.CodecContext(rtDecoder)
 rtDecoderContext.width = rtWidth
 rtDecoderContext.height = rtHeight
