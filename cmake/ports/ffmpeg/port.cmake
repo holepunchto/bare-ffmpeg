@@ -272,6 +272,16 @@ if("opus" IN_LIST features)
   target_link_libraries(avcodec INTERFACE opus)
 endif()
 
+if("vpx" IN_LIST features)
+  find_port(libvpx)
+
+  list(APPEND depends vpx)
+  list(APPEND args --enable-libvpx)
+  list(APPEND pkg_config_path "${libvpx_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE vpx)
+endif()
+
 if(LINUX)
   find_port(libva)
 

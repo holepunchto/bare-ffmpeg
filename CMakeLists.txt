@@ -10,7 +10,7 @@ option(BARE_FFMPEG_ENABLE_GPL "Enable GPL-licensed features (e.g., x264)" OFF)
 
 fetch_package("github:holepunchto/libjstl#098664c")
 
-set(ffmpeg_features dav1d svt-av1 opus)
+set(ffmpeg_features dav1d svt-av1 opus vpx)
 
 if(BARE_FFMPEG_ENABLE_GPL)
   list(APPEND ffmpeg_features gpl x264)
