@@ -127,15 +127,25 @@ elseif(ANDROID)
   list(APPEND args --disable-runtime-cpu-detect)
   list(APPEND extra_cflags "--sysroot=${CMAKE_SYSROOT}")
   list(APPEND extra_cxxflags "--sysroot=${CMAKE_SYSROOT}")
-  list(APPEND extra_asflags "--sysroot=${CMAKE_SYSROOT}")
   list(APPEND extra_ldflags "--sysroot=${CMAKE_SYSROOT}")
+
+  # For ARM: Set ASFLAGS for clang assembler
+  # For x86: Don't set ASFLAGS (YASM/NASM doesn't understand these flags)
+  if(arch MATCHES "arm")
+    list(APPEND extra_asflags "--sysroot=${CMAKE_SYSROOT}")
+  endif()
 
   # For Android, add target to ensure proper architecture-specific headers
   if(CMAKE_C_COMPILER_TARGET)
     list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
     list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_asflags "--target=${CMAKE_C_COMPILER_TARGET}")
     list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+
+    # For ARM: Add target to ASFLAGS
+    # For x86: Don't add to ASFLAGS (YASM/NASM doesn't understand --target)
+    if(arch MATCHES "arm")
+      list(APPEND extra_asflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    endif()
   endif()
 elseif(WIN32)
   list(APPEND args --disable-runtime-cpu-detect)
@@ -147,8 +157,11 @@ if(CMAKE_C_COMPILER)
   if(ANDROID)
     # For Android, use the full path to the compiler which includes target info
     list(APPEND env "CC=${CMAKE_C_COMPILER}")
-    # Use clang as assembler instead of GNU as to support --target and --sysroot flags
-    list(APPEND env "AS=${CMAKE_C_COMPILER}")
+    # For ARM: Use clang as assembler instead of GNU as to support --target and --sysroot flags
+    # For x86: Don't set AS, let libvpx use YASM/NASM which doesn't need these flags
+    if(arch MATCHES "arm")
+      list(APPEND env "AS=${CMAKE_C_COMPILER}")
+    endif()
   else()
     cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
     list(APPEND env "CC=${CC_filename}")
