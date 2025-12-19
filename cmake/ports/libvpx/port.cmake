@@ -110,6 +110,8 @@ endif()
 list(APPEND args --target=${target_triplet})
 
 set(extra_cflags)
+set(extra_cxxflags)
+set(extra_asflags)
 set(extra_ldflags)
 
 if(APPLE)
@@ -124,7 +126,17 @@ if(APPLE)
 elseif(ANDROID)
   list(APPEND args --disable-runtime-cpu-detect)
   list(APPEND extra_cflags "--sysroot=${CMAKE_SYSROOT}")
+  list(APPEND extra_cxxflags "--sysroot=${CMAKE_SYSROOT}")
+  list(APPEND extra_asflags "--sysroot=${CMAKE_SYSROOT}")
   list(APPEND extra_ldflags "--sysroot=${CMAKE_SYSROOT}")
+
+  # For Android, add target to ensure proper architecture-specific headers
+  if(CMAKE_C_COMPILER_TARGET)
+    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_asflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  endif()
 elseif(WIN32)
   list(APPEND args --disable-runtime-cpu-detect)
 endif()
@@ -135,6 +147,8 @@ if(CMAKE_C_COMPILER)
   if(ANDROID)
     # For Android, use the full path to the compiler which includes target info
     list(APPEND env "CC=${CMAKE_C_COMPILER}")
+    # Use clang as assembler instead of GNU as to support --target and --sysroot flags
+    list(APPEND env "AS=${CMAKE_C_COMPILER}")
   else()
     cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
     list(APPEND env "CC=${CC_filename}")
@@ -142,10 +156,20 @@ if(CMAKE_C_COMPILER)
   endif()
 endif()
 
-# Add extra CFLAGS and LDFLAGS if any
+# Add extra CFLAGS, CXXFLAGS, ASFLAGS and LDFLAGS if any
 if(extra_cflags)
   list(JOIN extra_cflags " " extra_cflags_str)
   list(APPEND env "CFLAGS=${extra_cflags_str}")
+endif()
+
+if(extra_cxxflags)
+  list(JOIN extra_cxxflags " " extra_cxxflags_str)
+  list(APPEND env "CXXFLAGS=${extra_cxxflags_str}")
+endif()
+
+if(extra_asflags)
+  list(JOIN extra_asflags " " extra_asflags_str)
+  list(APPEND env "ASFLAGS=${extra_asflags_str}")
 endif()
 
 if(extra_ldflags)
