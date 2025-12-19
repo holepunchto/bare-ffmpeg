@@ -36,7 +36,9 @@ string(TOLOWER "${platform}" platform)
 
 if(platform MATCHES "darwin|ios")
   set(platform "darwin")
-elseif(platform MATCHES "linux|android")
+elseif(platform MATCHES "android")
+  set(platform "android")
+elseif(platform MATCHES "linux")
   set(platform "linux")
 elseif(platform MATCHES "windows")
   set(platform "win")
@@ -105,15 +107,15 @@ endif()
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
-  cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
 
-  list(APPEND env "CC=${CC_filename}")
-
-  if(CMAKE_C_COMPILER_TARGET)
-    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  if(ANDROID)
+    # For Android, use the full path to the compiler which includes target info
+    list(APPEND env "CC=${CMAKE_C_COMPILER}")
+  else()
+    cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
+    list(APPEND env "CC=${CC_filename}")
+    list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
   endif()
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
 endif()
 
 # Add extra CFLAGS and LDFLAGS if any
@@ -128,21 +130,27 @@ if(extra_ldflags)
 endif()
 
 if(CMAKE_CXX_COMPILER)
-  cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
-  cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
-
-  list(APPEND env "CXX=${CXX_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
+  if(ANDROID)
+    # For Android, use the full path to the compiler which includes target info
+    list(APPEND env "CXX=${CMAKE_CXX_COMPILER}")
+  else()
+    cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
+    cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+    list(APPEND env "CXX=${CXX_filename}")
+    list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
+  endif()
 endif()
 
 if(CMAKE_AR)
-  cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
-  cmake_path(GET CMAKE_AR FILENAME AR_filename)
-
-  list(APPEND env "AR=${AR_filename}")
-
-  list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+  if(ANDROID)
+    # For Android, use the full path to the archiver
+    list(APPEND env "AR=${CMAKE_AR}")
+  else()
+    cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
+    cmake_path(GET CMAKE_AR FILENAME AR_filename)
+    list(APPEND env "AR=${AR_filename}")
+    list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+  endif()
 endif()
 
 declare_port(
