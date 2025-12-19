@@ -34,7 +34,10 @@ endif()
 
 string(TOLOWER "${platform}" platform)
 
-if(platform MATCHES "ios")
+# Detect iOS simulator
+if(platform MATCHES "ios" AND CMAKE_OSX_SYSROOT MATCHES "Simulator")
+  set(platform "ios-simulator")
+elseif(platform MATCHES "ios")
   set(platform "ios")
 elseif(platform MATCHES "darwin")
   set(platform "darwin")
@@ -64,8 +67,9 @@ string(TOLOWER "${arch}" arch)
 
 if(arch MATCHES "arm64|aarch64")
   set(arch "arm64")
-  if(platform MATCHES "ios")
-    # For iOS, use generic darwin target
+  if(platform MATCHES "ios-simulator|ios")
+    # For iOS device and arm64 simulator, use generic darwin target
+    # The SDK/sysroot differentiates them
     set(target_triplet "${arch}-darwin-gcc")
   elseif(platform MATCHES "darwin")
     # For macOS, use darwin20+ to avoid being detected as iOS
@@ -111,6 +115,12 @@ set(extra_ldflags)
 if(APPLE)
   list(APPEND extra_cflags "-isysroot${CMAKE_OSX_SYSROOT}")
   list(APPEND extra_ldflags "-isysroot${CMAKE_OSX_SYSROOT}")
+
+  # For iOS simulator, add target to tag binaries correctly
+  if(CMAKE_C_COMPILER_TARGET AND platform MATCHES "ios-simulator")
+    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  endif()
 elseif(ANDROID)
   list(APPEND args --disable-runtime-cpu-detect)
   list(APPEND extra_cflags "--sysroot=${CMAKE_SYSROOT}")
