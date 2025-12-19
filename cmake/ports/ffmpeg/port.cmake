@@ -125,14 +125,27 @@ if(CMAKE_C_COMPILER)
   endif()
 
   list(APPEND path "${CC_path}")
-  list(APPEND args
-    "--cc=${CC_filename}"
-    "--host-cc=${CC_filename}"
-    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-    "--ld=${CC_filename}"
-    "--host-ld=${CC_filename}"
-    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
-  )
+
+  # For Android cross-compilation, use native compiler as host-cc
+  if(ANDROID)
+    list(APPEND args
+      "--cc=${CC_filename}"
+      "--host-cc=cc"
+      "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+      "--ld=${CC_filename}"
+      "--host-ld=cc"
+      "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
+    )
+  else()
+    list(APPEND args
+      "--cc=${CC_filename}"
+      "--host-cc=${CC_filename}"
+      "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+      "--ld=${CC_filename}"
+      "--host-ld=${CC_filename}"
+      "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
+    )
+  endif()
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND args --extra-ldflags=-fuse-ld=lld)
@@ -270,6 +283,20 @@ if("opus" IN_LIST features)
   list(APPEND pkg_config_path "${opus_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE opus)
+endif()
+
+if("vpx" IN_LIST features)
+  find_port(libvpx)
+
+  list(APPEND depends vpx)
+  list(APPEND args
+    --enable-libvpx
+    "--extra-cflags=-I${libvpx_PREFIX}/include"
+    "--extra-ldflags=-L${libvpx_PREFIX}/lib"
+  )
+  list(APPEND pkg_config_path "${libvpx_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE vpx)
 endif()
 
 if(LINUX)
