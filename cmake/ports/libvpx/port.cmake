@@ -155,6 +155,9 @@ elseif(ANDROID)
   endif()
 elseif(WIN32)
   list(APPEND args --disable-runtime-cpu-detect)
+  # Disable NEON optimizations for Windows (ARM64)
+  # Cross-compilation toolchains typically lack ARM NEON headers
+  list(APPEND args --disable-neon --disable-neon-dotprod --disable-neon-i8mm)
 endif()
 
 if(CMAKE_C_COMPILER)
