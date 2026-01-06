@@ -158,6 +158,8 @@ elseif(WIN32)
   # Disable NEON optimizations for Windows (ARM64)
   # Cross-compilation toolchains typically lack ARM NEON headers
   list(APPEND args --disable-neon --disable-neon-dotprod --disable-neon-i8mm)
+  # Disable dependency tracking to avoid make parsing issues with Windows paths
+  list(APPEND args --disable-dependency-tracking)
 endif()
 
 if(CMAKE_C_COMPILER)
