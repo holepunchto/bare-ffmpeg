@@ -165,6 +165,7 @@ elseif(WIN32)
   if(CMAKE_C_COMPILER_TARGET)
     list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
     list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
   endif()
 endif()
 
