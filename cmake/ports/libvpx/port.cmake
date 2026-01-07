@@ -160,6 +160,12 @@ elseif(WIN32)
   list(APPEND args --disable-neon --disable-neon-dotprod --disable-neon-i8mm)
   # Disable dependency tracking to avoid make parsing issues with Windows paths
   list(APPEND args --disable-dependency-tracking)
+
+  # For cross-compilation, ensure clang-cl targets the correct architecture
+  if(CMAKE_C_COMPILER_TARGET)
+    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
+    list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  endif()
 endif()
 
 if(CMAKE_C_COMPILER)
