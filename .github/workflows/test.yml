@@ -52,9 +52,9 @@ jobs:
             arch: x64
             tags: -simulator
             flags: --simulator
-          # - os: windows-2022
-          #   platform: win32
-          #   arch: x64
+          - os: windows-2022
+            platform: win32
+            arch: x64
           - os: windows-2022
             platform: win32
             arch: arm64
