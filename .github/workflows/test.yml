@@ -84,8 +84,8 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
-      - run: bare-make build
+      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }} --verbose
+      - run: bare-make build --verbose
       - run: bare-make install
       - run: npm test
         if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
