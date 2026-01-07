@@ -169,6 +169,17 @@ elseif(WIN32)
   endif()
 endif()
 
+# Find and configure nasm for Windows x86/x64 builds
+if(WIN32 AND NOT arch MATCHES "arm")
+  find_program(nasm NAMES nasm.exe)
+  if(nasm)
+    cmake_path(GET nasm PARENT_PATH nasm_path)
+    # For VS targets, we must pass AS via configure args, not environment
+    list(APPEND args "--as=nasm")
+    list(APPEND env --modify "PATH=path_list_prepend:${nasm_path}")
+  endif()
+endif()
+
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
 
