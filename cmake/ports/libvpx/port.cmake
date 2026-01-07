@@ -155,13 +155,16 @@ elseif(ANDROID)
   endif()
 elseif(WIN32)
   list(APPEND args --disable-runtime-cpu-detect)
-  # Disable assembly for Windows to avoid assembler compatibility issues
-  list(APPEND args --disable-asm)
   # Disable NEON optimizations for Windows (ARM64)
   # Cross-compilation toolchains typically lack ARM NEON headers
   list(APPEND args --disable-neon --disable-neon-dotprod --disable-neon-i8mm)
   # Disable dependency tracking to avoid make parsing issues with Windows paths
   list(APPEND args --disable-dependency-tracking)
+
+  # For x86/x64: explicitly use nasm assembler
+  if(NOT arch MATCHES "arm")
+    list(APPEND args --as=nasm)
+  endif()
 
   # For cross-compilation, ensure clang-cl targets the correct architecture
   if(CMAKE_C_COMPILER_TARGET)
