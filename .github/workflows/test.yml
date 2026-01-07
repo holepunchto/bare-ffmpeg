@@ -75,8 +75,6 @@ jobs:
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
-      - run: clang-cl --version
-        if: ${{ matrix.platform == 'win32' }}
       - run: choco install --ignore-package-exit-codes meson msys2
         if: ${{ matrix.platform == 'win32' }}
       - run: pacman --noconfirm -S git make ninja pkgconf nasm
@@ -88,10 +86,6 @@ jobs:
       - run: npm install
       - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
       - run: bare-make build
-      - name: Show FFmpeg config.log on failure
-        if: failure() && matrix.platform == 'win32'
-        run: |
-          Get-Content build/_ports/github+FFmpeg+FFmpeg/src/github+FFmpeg+FFmpeg-build/ffbuild/config.log -Tail 100
       - run: bare-make install
       - run: npm test
         if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
