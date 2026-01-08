@@ -90,8 +90,9 @@ elseif(arch MATCHES "x64|x86_64|amd64")
   elseif(platform MATCHES "darwin")
     set(target_triplet "${arch}-darwin20-gcc")
   elseif(platform MATCHES "win")
-    # Use gcc target instead of vs17 to allow custom assembler (nasm)
-    set(target_triplet "${arch}-win64-gcc")
+    # Use vs17 target for MSVC compatibility with FFmpeg
+    # Note: debug flag removed to avoid cv8 assembler issues
+    set(target_triplet "${arch}-win64-vs17")
   else()
     set(target_triplet "${arch}-${platform}-gcc")
   endif()
@@ -102,8 +103,9 @@ elseif(arch MATCHES "x86|i386|i486|i586|i686")
   elseif(platform MATCHES "darwin")
     set(target_triplet "${arch}-darwin20-gcc")
   elseif(platform MATCHES "win")
-    # Use gcc target instead of vs17 to allow custom assembler (nasm)
-    set(target_triplet "${arch}-win32-gcc")
+    # Use vs17 target for MSVC compatibility with FFmpeg
+    # Note: debug flag removed to avoid cv8 assembler issues
+    set(target_triplet "${arch}-win32-vs17")
   else()
     set(target_triplet "${arch}-${platform}-gcc")
   endif()
@@ -162,29 +164,6 @@ elseif(WIN32)
   # Disable dependency tracking to avoid make parsing issues with Windows paths
   list(APPEND args --disable-dependency-tracking)
 
-  # For x86/x64: explicitly use nasm assembler
-  message(STATUS "DEBUG: Before --as=nasm check: arch='${arch}'")
-  if(NOT arch MATCHES "arm")
-    message(STATUS "DEBUG: Adding --as=nasm to args and AS env")
-
-    # Verify nasm exists in msys2
-    find_program(
-      nasm_exe
-      NAMES nasm.exe nasm
-      PATHS "C:/tools/msys64/usr/bin"
-      REQUIRED
-      NO_DEFAULT_PATH
-    )
-    message(STATUS "Found nasm at: ${nasm_exe}")
-
-    # Use just "nasm" - it will be found via PATH
-    list(APPEND args "--as=nasm")
-    # Also set AS environment variable to force nasm usage
-    list(APPEND env "AS=nasm")
-  else()
-    message(STATUS "DEBUG: NOT adding --as=nasm (arch matches 'arm')")
-  endif()
-
   # For cross-compilation, ensure clang-cl targets the correct architecture
   if(CMAKE_C_COMPILER_TARGET)
     list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
@@ -200,18 +179,6 @@ message(STATUS "libvpx WIN32 variable: ${WIN32}")
 # Build up PATH with all necessary directories
 set(path)
 
-if(CMAKE_HOST_WIN32)
-  find_path(
-    msys2
-    NAMES msys2.exe
-    PATHS "C:/tools/msys64"
-    REQUIRED
-  )
-
-  # Add msys2/usr/bin to path (for nasm, make, bash, etc.)
-  list(APPEND path "${msys2}/usr/bin")
-endif()
-
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
 
@@ -225,12 +192,6 @@ if(CMAKE_C_COMPILER)
     endif()
   else()
     cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
-
-    # For Windows gcc target, use clang.exe instead of clang-cl.exe
-    if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
-      set(CC_filename "clang.exe")
-    endif()
-
     list(APPEND env "CC=${CC_filename}")
     list(APPEND path "${CC_path}")
   endif()
@@ -264,12 +225,6 @@ if(CMAKE_CXX_COMPILER)
   else()
     cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
     cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
-
-    # For Windows gcc target, use clang++.exe instead of clang-cl.exe
-    if(WIN32 AND CXX_filename MATCHES "clang-cl.exe")
-      set(CXX_filename "clang++.exe")
-    endif()
-
     list(APPEND env "CXX=${CXX_filename}")
     list(APPEND path "${CXX_path}")
   endif()
