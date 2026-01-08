@@ -22,10 +22,6 @@ set(args
   --enable-vp9
 )
 
-if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
-  list(APPEND args --enable-debug)
-endif()
-
 if(CMAKE_SYSTEM_NAME)
   set(platform ${CMAKE_SYSTEM_NAME})
 else()
@@ -169,8 +165,22 @@ elseif(WIN32)
   # For x86/x64: explicitly use nasm assembler
   message(STATUS "DEBUG: Before --as=nasm check: arch='${arch}'")
   if(NOT arch MATCHES "arm")
-    message(STATUS "DEBUG: Adding --as=nasm to args")
-    list(APPEND args --as=nasm)
+    message(STATUS "DEBUG: Adding --as=nasm to args and AS env")
+
+    # Verify nasm exists in msys2
+    find_program(
+      nasm_exe
+      NAMES nasm.exe nasm
+      PATHS "C:/tools/msys64/usr/bin"
+      REQUIRED
+      NO_DEFAULT_PATH
+    )
+    message(STATUS "Found nasm at: ${nasm_exe}")
+
+    # Use just "nasm" - it will be found via PATH
+    list(APPEND args "--as=nasm")
+    # Also set AS environment variable to force nasm usage
+    list(APPEND env "AS=nasm")
   else()
     message(STATUS "DEBUG: NOT adding --as=nasm (arch matches 'arm')")
   endif()
@@ -187,6 +197,21 @@ message(STATUS "libvpx args after platform-specific config: ${args}")
 message(STATUS "libvpx arch variable: ${arch}")
 message(STATUS "libvpx WIN32 variable: ${WIN32}")
 
+# Build up PATH with all necessary directories
+set(path)
+
+if(CMAKE_HOST_WIN32)
+  find_path(
+    msys2
+    NAMES msys2.exe
+    PATHS "C:/tools/msys64"
+    REQUIRED
+  )
+
+  # Add msys2/usr/bin to path (for nasm, make, bash, etc.)
+  list(APPEND path "${msys2}/usr/bin")
+endif()
+
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
 
@@ -200,8 +225,14 @@ if(CMAKE_C_COMPILER)
     endif()
   else()
     cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
+
+    # For Windows gcc target, use clang.exe instead of clang-cl.exe
+    if(WIN32 AND CC_filename MATCHES "clang-cl.exe")
+      set(CC_filename "clang.exe")
+    endif()
+
     list(APPEND env "CC=${CC_filename}")
-    list(APPEND env --modify "PATH=path_list_prepend:${CC_path}")
+    list(APPEND path "${CC_path}")
   endif()
 endif()
 
@@ -233,8 +264,14 @@ if(CMAKE_CXX_COMPILER)
   else()
     cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
     cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+
+    # For Windows gcc target, use clang++.exe instead of clang-cl.exe
+    if(WIN32 AND CXX_filename MATCHES "clang-cl.exe")
+      set(CXX_filename "clang++.exe")
+    endif()
+
     list(APPEND env "CXX=${CXX_filename}")
-    list(APPEND env --modify "PATH=path_list_prepend:${CXX_path}")
+    list(APPEND path "${CXX_path}")
   endif()
 endif()
 
@@ -247,16 +284,34 @@ if(CMAKE_AR)
     cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
     # Replace llvm-lib with llvm-ar
     list(APPEND env "AR=llvm-ar.exe")
-    list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+    list(APPEND path "${AR_path}")
   else()
     cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
     cmake_path(GET CMAKE_AR FILENAME AR_filename)
     list(APPEND env "AR=${AR_filename}")
-    list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
+    list(APPEND path "${AR_path}")
   endif()
 endif()
 
+# Add system PATH
+foreach(part "$ENV{PATH}")
+  cmake_path(NORMAL_PATH part)
+  list(APPEND path "${part}")
+endforeach()
+
+# Remove duplicates and transform Windows paths for bash
+list(REMOVE_DUPLICATES path)
+
+if(CMAKE_HOST_WIN32)
+  list(TRANSFORM path REPLACE "([A-Z]):" "/\\1")
+endif()
+
+# Join path and add to environment
+list(JOIN path ":" path)
+list(APPEND env "PATH=${path}")
+
 message(STATUS "libvpx env: ${env}")
+message(STATUS "libvpx PATH: ${path}")
 
 declare_port(
   "github:webmproject/libvpx@v1.15.0"
