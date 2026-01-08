@@ -165,8 +165,12 @@ elseif(WIN32)
   list(APPEND args --disable-dependency-tracking)
 
   # For x86/x64: explicitly use nasm assembler
+  message(STATUS "DEBUG: Before --as=nasm check: arch='${arch}'")
   if(NOT arch MATCHES "arm")
+    message(STATUS "DEBUG: Adding --as=nasm to args")
     list(APPEND args --as=nasm)
+  else()
+    message(STATUS "DEBUG: NOT adding --as=nasm (arch matches 'arm')")
   endif()
 
   # For cross-compilation, ensure clang-cl targets the correct architecture
@@ -176,6 +180,10 @@ elseif(WIN32)
     list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
   endif()
 endif()
+
+message(STATUS "libvpx args after platform-specific config: ${args}")
+message(STATUS "libvpx arch variable: ${arch}")
+message(STATUS "libvpx WIN32 variable: ${WIN32}")
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
