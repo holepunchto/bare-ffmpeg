@@ -115,6 +115,9 @@ endif()
 
 list(APPEND args --target=${target_triplet})
 
+message(STATUS "libvpx target: ${target_triplet}")
+message(STATUS "libvpx args: ${args}")
+
 set(extra_cflags)
 set(extra_cxxflags)
 set(extra_asflags)
@@ -242,6 +245,8 @@ if(CMAKE_AR)
     list(APPEND env --modify "PATH=path_list_prepend:${AR_path}")
   endif()
 endif()
+
+message(STATUS "libvpx env: ${env}")
 
 declare_port(
   "github:webmproject/libvpx@v1.15.0"
