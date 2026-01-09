@@ -70,9 +70,9 @@ jobs:
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco upgrade llvm
         if: ${{ matrix.platform == 'win32' }}
-      - run: choco install --ignore-package-exit-codes meson nasm msys2
+      - run: choco install --ignore-package-exit-codes meson msys2
         if: ${{ matrix.platform == 'win32' }}
-      - run: pacman --noconfirm -S git make ninja pkgconf
+      - run: pacman --noconfirm -S git make ninja pkgconf nasm
         shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
         env:
           PATH: C:\tools\msys64\usr\bin
