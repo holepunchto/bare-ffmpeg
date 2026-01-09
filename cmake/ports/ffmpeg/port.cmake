@@ -291,6 +291,10 @@ if("vpx" IN_LIST features)
   list(APPEND depends vpx)
   list(APPEND args
     --enable-libvpx
+    --enable-encoder=libvpx
+    --enable-encoder=libvpx_vp9
+    --enable-decoder=vp8
+    --enable-decoder=vp9
     "--extra-cflags=-I${libvpx_PREFIX}/include"
     "--extra-ldflags=-L${libvpx_PREFIX}/lib"
   )
