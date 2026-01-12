@@ -77,26 +77,15 @@ jobs:
         if: ${{ matrix.platform == 'win32' }}
       - run: choco install --ignore-package-exit-codes meson nasm msys2
         if: ${{ matrix.platform == 'win32' }}
-      - run: pacman --noconfirm -S git make ninja pkgconf nasm
+      - run: pacman --noconfirm -S git make ninja pkgconf
         shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
         env:
           PATH: C:\tools\msys64\usr\bin
         if: ${{ matrix.platform == 'win32' }}
       - run: npm install -g bare-runtime bare-make
       - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }} --verbose
-      - run: bare-make build --verbose
-      - name: Show FFmpeg configure log on failure
-        if: failure()
-        run: |
-          echo "=== FFmpeg configure log ==="
-          if [ -f build/_ports/github+FFmpeg+FFmpeg/src/github+FFmpeg+FFmpeg-build/ffbuild/config.log ]; then
-            cat build/_ports/github+FFmpeg+FFmpeg/src/github+FFmpeg+FFmpeg-build/ffbuild/config.log
-          else
-            echo "FFmpeg config.log not found"
-            find build/_ports/github+FFmpeg+FFmpeg -name "config.log" -o -name "*configure*.log" 2>/dev/null || true
-          fi
-        shell: bash
+      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
+      - run: bare-make build
       - run: bare-make install
       - run: npm test
         if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
