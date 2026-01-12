@@ -52,11 +52,8 @@ string(TOLOWER "${arch}" arch)
 if(arch MATCHES "arm64|aarch64")
   set(arch "arm64")
   if(platform MATCHES "ios-simulator|ios")
-    # For iOS device and arm64 simulator, use generic darwin target
-    # The SDK/sysroot differentiates them
     set(target_triplet "${arch}-darwin-gcc")
   elseif(platform MATCHES "darwin")
-    # For macOS, use darwin20+ to avoid being detected as iOS
     set(target_triplet "${arch}-darwin20-gcc")
   elseif(platform MATCHES "win")
     set(target_triplet "${arch}-win64-vs17")
@@ -73,13 +70,10 @@ elseif(arch MATCHES "armv7-a|armeabi-v7a")
 elseif(arch MATCHES "x64|x86_64|amd64")
   set(arch "x86_64")
   if(platform MATCHES "ios")
-    # iOS simulator uses x86_64
     set(target_triplet "${arch}-iphonesimulator-gcc")
   elseif(platform MATCHES "darwin")
     set(target_triplet "${arch}-darwin20-gcc")
   elseif(platform MATCHES "win")
-    # Use vs17 target for MSVC compatibility with FFmpeg
-    # Note: debug flag removed to avoid cv8 assembler issues
     set(target_triplet "${arch}-win64-vs17")
   else()
     set(target_triplet "${arch}-${platform}-gcc")
@@ -91,8 +85,6 @@ elseif(arch MATCHES "x86|i386|i486|i586|i686")
   elseif(platform MATCHES "darwin")
     set(target_triplet "${arch}-darwin20-gcc")
   elseif(platform MATCHES "win")
-    # Use vs17 target for MSVC compatibility with FFmpeg
-    # Note: debug flag removed to avoid cv8 assembler issues
     set(target_triplet "${arch}-win32-vs17")
   else()
     set(target_triplet "${arch}-${platform}-gcc")
@@ -102,9 +94,6 @@ else()
 endif()
 
 list(APPEND args --target=${target_triplet})
-
-message(STATUS "libvpx target: ${target_triplet}")
-message(STATUS "libvpx args: ${args}")
 
 set(extra_cflags)
 set(extra_cxxflags)
@@ -158,10 +147,6 @@ elseif(WIN32)
     list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
   endif()
 endif()
-
-message(STATUS "libvpx args after platform-specific config: ${args}")
-message(STATUS "libvpx arch variable: ${arch}")
-message(STATUS "libvpx WIN32 variable: ${WIN32}")
 
 # Build up PATH with all necessary directories
 set(path)
@@ -251,9 +236,6 @@ endif()
 # Join path and add to environment
 list(JOIN path ":" path)
 list(APPEND env "PATH=${path}")
-
-message(STATUS "libvpx env: ${env}")
-message(STATUS "libvpx PATH: ${path}")
 
 declare_port(
   "github:webmproject/libvpx@v1.15.0"
