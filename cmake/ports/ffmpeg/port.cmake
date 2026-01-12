@@ -126,26 +126,14 @@ if(CMAKE_C_COMPILER)
 
   list(APPEND path "${CC_path}")
 
-  # For Android cross-compilation, use native compiler as host-cc
-  # if(ANDROID)
-  #   list(APPEND args
-  #     "--cc=${CC_filename}"
-  #     "--host-cc=cc"
-  #     "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-  #     "--ld=${CC_filename}"
-  #     "--host-ld=cc"
-  #     "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
-  #   )
-  # else()
-    list(APPEND args
-      "--cc=${CC_filename}"
-      "--host-cc=${CC_filename}"
-      "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-      "--ld=${CC_filename}"
-      "--host-ld=${CC_filename}"
-      "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
-    )
-  # endif()
+  list(APPEND args
+    "--cc=${CC_filename}"
+    "--host-cc=${CC_filename}"
+    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+    "--ld=${CC_filename}"
+    "--host-ld=${CC_filename}"
+    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
+  )
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND args --extra-ldflags=-fuse-ld=lld)
@@ -291,10 +279,10 @@ if("vpx" IN_LIST features)
   list(APPEND depends vpx)
   list(APPEND args
     --enable-libvpx
-    --enable-encoder=libvpx
-    --enable-encoder=libvpx_vp9
-    --enable-decoder=vp8
-    --enable-decoder=vp9
+    # --enable-encoder=libvpx
+    # --enable-encoder=libvpx_vp9
+    # --enable-decoder=vp8
+    # --enable-decoder=vp9
     "--extra-cflags=-I${libvpx_PREFIX}/include"
     "--extra-ldflags=-L${libvpx_PREFIX}/lib"
   )
