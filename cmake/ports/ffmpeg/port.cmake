@@ -127,16 +127,16 @@ if(CMAKE_C_COMPILER)
   list(APPEND path "${CC_path}")
 
   # For Android cross-compilation, use native compiler as host-cc
-  if(ANDROID)
-    list(APPEND args
-      "--cc=${CC_filename}"
-      "--host-cc=cc"
-      "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
-      "--ld=${CC_filename}"
-      "--host-ld=cc"
-      "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
-    )
-  else()
+  # if(ANDROID)
+  #   list(APPEND args
+  #     "--cc=${CC_filename}"
+  #     "--host-cc=cc"
+  #     "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
+  #     "--ld=${CC_filename}"
+  #     "--host-ld=cc"
+  #     "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
+  #   )
+  # else()
     list(APPEND args
       "--cc=${CC_filename}"
       "--host-cc=${CC_filename}"
@@ -145,7 +145,7 @@ if(CMAKE_C_COMPILER)
       "--host-ld=${CC_filename}"
       "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
     )
-  endif()
+  # endif()
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND args --extra-ldflags=-fuse-ld=lld)
