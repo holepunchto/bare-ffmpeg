@@ -130,28 +130,48 @@ if(add_compiler_target AND CMAKE_C_COMPILER_TARGET)
   endif()
 endif()
 
-# Build up PATH with all necessary directories
 set(path)
 
-if(CMAKE_C_COMPILER)
-  cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
-
-  if(ANDROID)
-    # For Android, use the full path to the compiler which includes target info
+if(ANDROID)
+  if(CMAKE_C_COMPILER)
     list(APPEND env "CC=${CMAKE_C_COMPILER}")
-    # For ARM: Use clang as assembler instead of GNU as to support --target and --sysroot flags
-    # For x86: Don't set AS, let libvpx use YASM/NASM which doesn't need these flags
     if(arch MATCHES "arm")
       list(APPEND env "AS=${CMAKE_C_COMPILER}")
     endif()
-  else()
+  endif()
+  if(CMAKE_CXX_COMPILER)
+    list(APPEND env "CXX=${CMAKE_CXX_COMPILER}")
+  endif()
+  if(CMAKE_AR)
+    list(APPEND env "AR=${CMAKE_AR}")
+  endif()
+else()
+  if(CMAKE_C_COMPILER)
+    cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
     cmake_path(GET CMAKE_C_COMPILER FILENAME CC_filename)
     list(APPEND env "CC=${CC_filename}")
     list(APPEND path "${CC_path}")
   endif()
+
+  if(CMAKE_CXX_COMPILER)
+    cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
+    cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
+    list(APPEND env "CXX=${CXX_filename}")
+    list(APPEND path "${CXX_path}")
+  endif()
+
+  if(CMAKE_AR)
+    cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
+    if(WIN32)
+      list(APPEND env "AR=llvm-ar.exe")
+    else()
+      cmake_path(GET CMAKE_AR FILENAME AR_filename)
+      list(APPEND env "AR=${AR_filename}")
+    endif()
+    list(APPEND path "${AR_path}")
+  endif()
 endif()
 
-# Add extra CFLAGS, CXXFLAGS, ASFLAGS and LDFLAGS if any
 if(extra_cflags)
   list(JOIN extra_cflags " " extra_cflags_str)
   list(APPEND env "CFLAGS=${extra_cflags_str}")
@@ -172,50 +192,17 @@ if(extra_ldflags)
   list(APPEND env "LDFLAGS=${extra_ldflags_str}")
 endif()
 
-if(CMAKE_CXX_COMPILER)
-  if(ANDROID)
-    # For Android, use the full path to the compiler which includes target info
-    list(APPEND env "CXX=${CMAKE_CXX_COMPILER}")
-  else()
-    cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
-    cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
-    list(APPEND env "CXX=${CXX_filename}")
-    list(APPEND path "${CXX_path}")
-  endif()
-endif()
-
-if(CMAKE_AR)
-  if(ANDROID)
-    # For Android, use the full path to the archiver
-    list(APPEND env "AR=${CMAKE_AR}")
-  elseif(WIN32)
-    # For Windows, use llvm-ar instead of llvm-lib to support GCC-style flags (-crs)
-    cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
-    # Replace llvm-lib with llvm-ar
-    list(APPEND env "AR=llvm-ar.exe")
-    list(APPEND path "${AR_path}")
-  else()
-    cmake_path(GET CMAKE_AR PARENT_PATH AR_path)
-    cmake_path(GET CMAKE_AR FILENAME AR_filename)
-    list(APPEND env "AR=${AR_filename}")
-    list(APPEND path "${AR_path}")
-  endif()
-endif()
-
-# Add system PATH
 foreach(part "$ENV{PATH}")
   cmake_path(NORMAL_PATH part)
   list(APPEND path "${part}")
 endforeach()
 
-# Remove duplicates and transform Windows paths for bash
 list(REMOVE_DUPLICATES path)
 
 if(CMAKE_HOST_WIN32)
   list(TRANSFORM path REPLACE "([A-Z]):" "/\\1")
 endif()
 
-# Join path and add to environment
 list(JOIN path ":" path)
 list(APPEND env "PATH=${path}")
 
