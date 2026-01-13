@@ -103,48 +103,30 @@ set(extra_ldflags)
 if(APPLE)
   list(APPEND extra_cflags "-isysroot${CMAKE_OSX_SYSROOT}")
   list(APPEND extra_ldflags "-isysroot${CMAKE_OSX_SYSROOT}")
-
-  # For iOS simulator, add target to tag binaries correctly
-  if(CMAKE_C_COMPILER_TARGET AND platform MATCHES "ios-simulator")
-    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  if(platform MATCHES "ios-simulator")
+    set(add_compiler_target ON)
   endif()
 elseif(ANDROID)
   list(APPEND args --disable-runtime-cpu-detect)
   list(APPEND extra_cflags "--sysroot=${CMAKE_SYSROOT}")
   list(APPEND extra_cxxflags "--sysroot=${CMAKE_SYSROOT}")
   list(APPEND extra_ldflags "--sysroot=${CMAKE_SYSROOT}")
-
-  # For ARM: Set ASFLAGS for clang assembler
-  # For x86: Don't set ASFLAGS (YASM/NASM doesn't understand these flags)
   if(arch MATCHES "arm")
     list(APPEND extra_asflags "--sysroot=${CMAKE_SYSROOT}")
   endif()
-
-  # For Android, add target to ensure proper architecture-specific headers
-  if(CMAKE_C_COMPILER_TARGET)
-    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
-
-    # For ARM: Add target to ASFLAGS
-    # For x86: Don't add to ASFLAGS (YASM/NASM doesn't understand --target)
-    if(arch MATCHES "arm")
-      list(APPEND extra_asflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    endif()
-  endif()
+  set(add_compiler_target ON)
 elseif(WIN32)
-  # Disable NEON optimizations for Windows (ARM64)
-  # Cross-compilation toolchains typically lack ARM NEON headers
   list(APPEND args --disable-neon --disable-neon-dotprod --disable-neon-i8mm)
-  # Disable dependency tracking to avoid make parsing issues with Windows paths
   list(APPEND args --disable-dependency-tracking)
+  set(add_compiler_target ON)
+endif()
 
-  # For cross-compilation, ensure clang-cl targets the correct architecture
-  if(CMAKE_C_COMPILER_TARGET)
-    list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
-    list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+if(add_compiler_target AND CMAKE_C_COMPILER_TARGET)
+  list(APPEND extra_cflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  list(APPEND extra_cxxflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  list(APPEND extra_ldflags "--target=${CMAKE_C_COMPILER_TARGET}")
+  if(arch MATCHES "arm")
+    list(APPEND extra_asflags "--target=${CMAKE_C_COMPILER_TARGET}")
   endif()
 endif()
 
