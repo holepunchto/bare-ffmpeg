@@ -20,6 +20,8 @@ Complete API documentation for all components is available in the `/docs` direct
 ### Codecs & Streams
 
 - [Codec](docs/codec.md) - Access to FFmpeg codecs
+- [Encoder](docs/encoder.md) - Find and access encoders by name or codec
+- [Decoder](docs/decoder.md) - Find and access decoders by name or codec
 - [CodecContext](docs/codec-context.md) - Encoding/decoding functionality
 - [CodecParameters](docs/codec-parameters.md) - Codec parameter configuration
 - [Stream](docs/stream.md) - Media stream information and operations
