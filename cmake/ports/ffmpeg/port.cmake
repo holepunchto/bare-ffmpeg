@@ -125,6 +125,7 @@ if(CMAKE_C_COMPILER)
   endif()
 
   list(APPEND path "${CC_path}")
+
   list(APPEND args
     "--cc=${CC_filename}"
     "--host-cc=${CC_filename}"
@@ -270,6 +271,20 @@ if("opus" IN_LIST features)
   list(APPEND pkg_config_path "${opus_PREFIX}/lib/pkgconfig")
 
   target_link_libraries(avcodec INTERFACE opus)
+endif()
+
+if("vpx" IN_LIST features)
+  find_port(libvpx)
+
+  list(APPEND depends vpx)
+  list(APPEND args
+    --enable-libvpx
+    "--extra-cflags=-I${libvpx_PREFIX}/include"
+    "--extra-ldflags=-L${libvpx_PREFIX}/lib"
+  )
+  list(APPEND pkg_config_path "${libvpx_PREFIX}/lib/pkgconfig")
+
+  target_link_libraries(avcodec INTERFACE vpx)
 endif()
 
 if(LINUX)

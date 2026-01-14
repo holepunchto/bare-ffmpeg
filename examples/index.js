@@ -1,3 +1,5 @@
+require('./decode-webm')
+require('./encode-vp8-vp9')
 require('./negate-pixel')
 require('./sine-to-webm')
 require('./reduce-volume')
