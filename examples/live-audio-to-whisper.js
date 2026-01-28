@@ -42,6 +42,7 @@ const SAMPLE_RATE = 16000
 const NUM_CHANNELS = 1
 const BITS_PER_SAMPLE = 16
 const BYTES_PER_SAMPLE = NUM_CHANNELS * (BITS_PER_SAMPLE / 8)
+const SEGMENT_DURATION = 10 // seconds per whisper segment
 
 // ─────────────────────────────────────────────────────────────────
 
@@ -52,30 +53,61 @@ async function main() {
     return
   }
 
-  const pcmChunks = inputFile ? await decodeFile(inputFile) : await captureAudio(duration)
+  // Segments are filled via onFrame, then sent to whisper sequentially
+  const segments = []
+  let current = []
+  let currentSamples = 0
 
-  const totalSamples = pcmChunks.reduce((sum, buf) => sum + buf.length / BYTES_PER_SAMPLE, 0)
-  console.log(`Audio: ${totalSamples} samples (${(totalSamples / SAMPLE_RATE).toFixed(2)}s)`)
+  function onFrame(chunk, numSamples) {
+    current.push(chunk)
+    currentSamples += numSamples
 
-  const wavData = buildWav(Buffer.concat(pcmChunks), totalSamples)
-  console.log(`WAV: ${wavData.length} bytes`)
+    if (currentSamples >= SEGMENT_DURATION * SAMPLE_RATE) {
+      segments.push({ data: Buffer.concat(current), samples: currentSamples })
+      current = []
+      currentSamples = 0
+    }
+  }
 
-  const text = await transcribe(wavData)
+  if (inputFile) {
+    decodeFile(inputFile, onFrame)
+  } else {
+    captureAudio(duration, onFrame)
+  }
+
+  // Flush any remaining samples as a final segment
+  if (currentSamples > 0) {
+    segments.push({ data: Buffer.concat(current), samples: currentSamples })
+  }
+
+  // Send segments to whisper one by one, accumulate transcription
+  const parts = []
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]
+    const wav = buildWav(seg.data, seg.samples)
+    console.log(
+      `Segment ${i + 1}/${segments.length}: ${(seg.samples / SAMPLE_RATE).toFixed(2)}s, ${wav.length} bytes`
+    )
+
+    const text = await transcribe(wav)
+    parts.push(text.trim())
+  }
+
   console.log('\n─── Transcription ───')
-  console.log(text)
+  console.log(parts.join(' '))
 }
 
 // ─────────────────────────────────────────────────────────────────
 // Decode audio file → resample to 16kHz mono S16
 // ─────────────────────────────────────────────────────────────────
 
-async function decodeFile(filePath) {
+function decodeFile(filePath, onFrame) {
   console.log(`Reading ${filePath}...`)
 
   const buffer = fs.readFileSync(filePath)
   using inputContext = new ffmpeg.InputFormatContext(new ffmpeg.IOContext(buffer))
 
-  return decodeAndResample(inputContext, Infinity)
+  decodeAndResample(inputContext, Infinity, onFrame)
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -109,41 +141,11 @@ function getCaptureUrl(idx) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// List available audio devices by probing indices
+// List available audio devices
 // ─────────────────────────────────────────────────────────────────
 
 function listAudioDevices() {
-  const captureFormat = getCaptureFormat()
-  const devices = []
-
-  // Silence FFmpeg stderr during device probing
-  ffmpeg.log.level = ffmpeg.log.QUIET
-
-  for (let i = 0; i < 10; i++) {
-    try {
-      const dict = new ffmpeg.Dictionary()
-      dict.set('audio_only', '1')
-      dict.set('probesize', '8192')
-      const ctx = new ffmpeg.InputFormatContext(
-        new ffmpeg.InputFormat(captureFormat),
-        dict,
-        getCaptureUrl(i)
-      )
-      const stream = ctx.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
-      if (stream) {
-        devices.push({
-          index: i,
-          sampleRate: stream.codecParameters.sampleRate,
-          channels: stream.codecParameters.channelLayout.nbChannels
-        })
-      }
-      ctx.destroy()
-    } catch {
-      // device not available
-    }
-  }
-
-  ffmpeg.log.level = ffmpeg.log.WARNING
+  const devices = new ffmpeg.InputFormat(getCaptureFormat()).listAudioDevices()
 
   if (devices.length === 0) {
     console.log('No audio devices found.')
@@ -151,12 +153,12 @@ function listAudioDevices() {
   }
 
   console.log('Available audio devices:\n')
-  for (const dev of devices) {
-    console.log(`  [${dev.index}] ${dev.sampleRate}Hz, ${dev.channels}ch`)
+  for (const [index, name] of devices) {
+    console.log(`  [${index}] ${name}`)
   }
   console.log(`\nRun with --device <index>:`)
   console.log(
-    `  bare examples/live-audio-to-whisper.js --device ${devices[0].index} 15 http://localhost:9090`
+    `  bare examples/live-audio-to-whisper.js --device ${devices[0][0]} 15 http://localhost:9090`
   )
 }
 
@@ -164,7 +166,7 @@ function listAudioDevices() {
 // Live mic capture → resample to 16kHz mono S16
 // ─────────────────────────────────────────────────────────────────
 
-async function captureAudio(dur) {
+function captureAudio(dur, onFrame) {
   const captureFormat = getCaptureFormat()
   const captureUrl = getCaptureUrl(deviceIndex)
 
@@ -176,14 +178,14 @@ async function captureAudio(dur) {
     captureUrl
   )
 
-  return decodeAndResample(inputContext, dur)
+  decodeAndResample(inputContext, dur, onFrame)
 }
 
 // ─────────────────────────────────────────────────────────────────
 // Shared: decode + resample any audio input to 16kHz mono S16
 // ─────────────────────────────────────────────────────────────────
 
-function decodeAndResample(inputContext, maxDuration) {
+function decodeAndResample(inputContext, maxDuration, onFrame) {
   const stream = inputContext.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
   if (!stream) throw new Error('No audio stream found')
 
@@ -203,7 +205,6 @@ function decodeAndResample(inputContext, maxDuration) {
     ffmpeg.constants.sampleFormats.S16
   )
 
-  const chunks = []
   let totalSamples = 0
   const targetSamples = maxDuration * SAMPLE_RATE
 
@@ -246,8 +247,9 @@ function decodeAndResample(inputContext, maxDuration) {
 
       const converted = resampler.convert(raw, output)
       if (converted > 0) {
-        chunks.push(
-          Buffer.from(samples.data.buffer, samples.data.byteOffset, converted * BYTES_PER_SAMPLE)
+        onFrame(
+          Buffer.from(samples.data.buffer, samples.data.byteOffset, converted * BYTES_PER_SAMPLE),
+          converted
         )
         totalSamples += converted
       }
@@ -266,16 +268,15 @@ function decodeAndResample(inputContext, maxDuration) {
 
   let flushed
   while ((flushed = resampler.flush(flushOut)) > 0) {
-    chunks.push(
+    onFrame(
       Buffer.from(
         flushSamples.data.buffer,
         flushSamples.data.byteOffset,
         flushed * BYTES_PER_SAMPLE
-      )
+      ),
+      flushed
     )
   }
-
-  return chunks
 }
 
 // ─────────────────────────────────────────────────────────────────
