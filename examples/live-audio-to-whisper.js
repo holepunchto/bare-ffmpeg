@@ -1,17 +1,12 @@
 const ffmpeg = require('..')
 const fetch = require('bare-fetch')
-const fs = require('bare-fs')
 
 const args = Bare.argv.slice(2)
 let duration = 5
-let inputFile = null
 let deviceIndex = null
 let whisperUrl = 'http://localhost:9090'
 
-if (args[0] === '--file') {
-  inputFile = args[1]
-  whisperUrl = args[2] || whisperUrl
-} else if (args[0] === '--device') {
+if (args[0] === '--device') {
   deviceIndex = parseInt(args[1])
   duration = parseInt(args[2]) || 5
   whisperUrl = args[3] || whisperUrl
@@ -22,18 +17,20 @@ const SAMPLE_RATE = 16000
 const SEGMENT_DURATION = 10
 
 async function main() {
-  if (!inputFile && deviceIndex === null) {
+  if (deviceIndex === null) {
+    const format = AudioCapture.getCaptureFormat()
     console.log('Usage:')
-    console.log('  bare examples/live-audio-to-whisper.js --file <path> [whisper-url]')
-    console.log('  bare examples/live-audio-to-whisper.js --device <index> [duration] [whisper-url]')
+    console.log(
+      '  bare examples/live-audio-to-whisper.js --device <index> [duration] [whisper-url]'
+    )
+    console.log('\nList audio devices:')
+    console.log(`  ffmpeg -f ${format} -list_devices true -i ""`)
     console.log('\nExample:')
-    console.log('  bare examples/live-audio-to-whisper.js --file test/fixtures/audio/sample.mp3')
-    console.log('  bare examples/live-audio-to-whisper.js --device 0 15 http://localhost:9090')
+    console.log('  bare examples/live-audio-to-whisper.js --device 0 15')
     return
   }
 
   const capture = new AudioCapture({
-    file: inputFile,
     device: deviceIndex,
     duration,
     sampleRate: SAMPLE_RATE
@@ -64,8 +61,7 @@ async function main() {
 }
 
 class AudioCapture {
-  constructor({ file, device, duration = Infinity, sampleRate = 16000 }) {
-    this.file = file
+  constructor({ device, duration = Infinity, sampleRate = 16000 }) {
     this.device = device
     this.duration = duration
     this.sampleRate = sampleRate
@@ -109,23 +105,6 @@ class AudioCapture {
   }
 
   start() {
-    if (this.file) {
-      this._decodeFile()
-    } else {
-      this._captureDevice()
-    }
-  }
-
-  _decodeFile() {
-    console.log(`Reading ${this.file}...`)
-
-    const buffer = fs.readFileSync(this.file)
-    using inputContext = new ffmpeg.InputFormatContext(new ffmpeg.IOContext(buffer))
-
-    this._decodeAndResample(inputContext, Infinity)
-  }
-
-  _captureDevice() {
     const captureFormat = AudioCapture.getCaptureFormat()
     const captureUrl = AudioCapture.getCaptureUrl(this.device)
 
@@ -137,10 +116,10 @@ class AudioCapture {
       captureUrl
     )
 
-    this._decodeAndResample(inputContext, this.duration)
+    this._decodeAndResample(inputContext)
   }
 
-  _decodeAndResample(inputContext, maxDuration) {
+  _decodeAndResample(inputContext) {
     const stream = inputContext.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
     if (!stream) throw new Error('No audio stream found')
 
@@ -161,14 +140,14 @@ class AudioCapture {
     )
 
     let totalSamples = 0
-    const targetSamples = maxDuration * this.sampleRate
+    const targetSamples = this.duration * this.sampleRate
     const bytesPerSample = 2
 
     using packet = new ffmpeg.Packet()
     using raw = new ffmpeg.Frame()
 
-    if (maxDuration < Infinity) {
-      console.log(`Capturing ${maxDuration}s...`)
+    if (this.duration < Infinity) {
+      console.log(`Capturing ${this.duration}s...`)
     }
 
     while (totalSamples < targetSamples) {
@@ -225,7 +204,11 @@ class AudioCapture {
     while ((flushed = resampler.flush(flushOut)) > 0) {
       this._emit(
         'data',
-        Buffer.from(flushSamples.data.buffer, flushSamples.data.byteOffset, flushed * bytesPerSample),
+        Buffer.from(
+          flushSamples.data.buffer,
+          flushSamples.data.byteOffset,
+          flushed * bytesPerSample
+        ),
         flushed
       )
     }
