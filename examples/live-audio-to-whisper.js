@@ -18,7 +18,7 @@ const SEGMENT_DURATION = 10
 
 async function main() {
   if (deviceIndex === null) {
-    const format = AudioCapture.getCaptureFormat()
+    const format = Bare.platform === 'linux' ? 'alsa' : new ffmpeg.InputFormat().name
     console.log('Usage:')
     console.log(
       '  bare examples/live-audio-to-whisper.js --device <index> [duration] [whisper-url]'
@@ -78,20 +78,6 @@ class AudioCapture {
     for (const fn of listeners) fn(...args)
   }
 
-  static getCaptureFormat() {
-    switch (Bare.platform) {
-      case 'darwin':
-      case 'ios':
-        return 'avfoundation'
-      case 'linux':
-        return 'alsa'
-      case 'win32':
-        return 'dshow'
-      default:
-        throw new Error(`Unsupported platform: ${Bare.platform}`)
-    }
-  }
-
   static getCaptureUrl(idx) {
     switch (Bare.platform) {
       case 'darwin':
@@ -105,16 +91,13 @@ class AudioCapture {
   }
 
   start() {
-    const captureFormat = AudioCapture.getCaptureFormat()
-    const captureUrl = AudioCapture.getCaptureUrl(this.device)
+    const format =
+      Bare.platform === 'linux' ? new ffmpeg.InputFormat('alsa') : new ffmpeg.InputFormat()
+    const url = AudioCapture.getCaptureUrl(this.device)
 
-    console.log(`Opening ${captureFormat} (${captureUrl})...`)
+    console.log(`Opening ${format.name} (${url})...`)
 
-    using inputContext = new ffmpeg.InputFormatContext(
-      new ffmpeg.InputFormat(captureFormat),
-      new ffmpeg.Dictionary(),
-      captureUrl
-    )
+    using inputContext = new ffmpeg.InputFormatContext(format, new ffmpeg.Dictionary(), url)
 
     this._decodeAndResample(inputContext)
   }
