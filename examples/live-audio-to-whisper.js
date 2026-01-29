@@ -61,20 +61,21 @@ async function main() {
 }
 
 class AudioCapture {
+  #listeners = new Map()
+
   constructor({ device, duration = Infinity, sampleRate = 16000 }) {
     this.device = device
     this.duration = duration
     this.sampleRate = sampleRate
-    this._listeners = new Map()
   }
 
   on(event, fn) {
-    if (!this._listeners.has(event)) this._listeners.set(event, [])
-    this._listeners.get(event).push(fn)
+    if (!this.#listeners.has(event)) this.#listeners.set(event, [])
+    this.#listeners.get(event).push(fn)
   }
 
-  _emit(event, ...args) {
-    const listeners = this._listeners.get(event) || []
+  #emit(event, ...args) {
+    const listeners = this.#listeners.get(event) || []
     for (const fn of listeners) fn(...args)
   }
 
@@ -99,10 +100,10 @@ class AudioCapture {
 
     using inputContext = new ffmpeg.InputFormatContext(format, new ffmpeg.Dictionary(), url)
 
-    this._decodeAndResample(inputContext)
+    this.#decodeAndResample(inputContext)
   }
 
-  _decodeAndResample(inputContext) {
+  #decodeAndResample(inputContext) {
     const stream = inputContext.getBestStream(ffmpeg.constants.mediaTypes.AUDIO)
     if (!stream) throw new Error('No audio stream found')
 
@@ -164,7 +165,7 @@ class AudioCapture {
 
         const converted = resampler.convert(raw, output)
         if (converted > 0) {
-          this._emit(
+          this.#emit(
             'data',
             Buffer.from(samples.data.buffer, samples.data.byteOffset, converted * bytesPerSample),
             converted
@@ -185,7 +186,7 @@ class AudioCapture {
 
     let flushed
     while ((flushed = resampler.flush(flushOut)) > 0) {
-      this._emit(
+      this.#emit(
         'data',
         Buffer.from(
           flushSamples.data.buffer,
@@ -196,7 +197,7 @@ class AudioCapture {
       )
     }
 
-    this._emit('end')
+    this.#emit('end')
   }
 }
 
@@ -229,19 +230,19 @@ class WhisperRecorder {
     const parts = []
     for (let i = 0; i < this.segments.length; i++) {
       const seg = this.segments[i]
-      const wav = this._buildWav(seg.data, seg.samples)
+      const wav = this.#buildWav(seg.data, seg.samples)
       console.log(
         `Segment ${i + 1}/${this.segments.length}: ${(seg.samples / this.sampleRate).toFixed(2)}s, ${wav.length} bytes`
       )
 
-      const text = await this._transcribe(wav)
+      const text = await this.#transcribe(wav)
       parts.push(text.trim())
     }
 
     return parts.join(' ')
   }
 
-  _buildWav(pcmData, numSamples) {
+  #buildWav(pcmData, numSamples) {
     const bytesPerSample = 2
     const numChannels = 1
     const bitsPerSample = 16
@@ -267,7 +268,7 @@ class WhisperRecorder {
     return Buffer.concat([header, pcmData.subarray(0, dataSize)])
   }
 
-  async _transcribe(wavData) {
+  async #transcribe(wavData) {
     console.log(`Sending to ${this.url}/inference ...`)
 
     const boundary = `----Boundary${Date.now()}${Math.random().toString(36).slice(2)}`
