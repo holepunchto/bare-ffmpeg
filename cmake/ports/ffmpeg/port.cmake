@@ -351,6 +351,8 @@ declare_port(
   AUTOTOOLS
   DEPENDS ${depends}
   BYPRODUCTS ${byproducts}
+  PATCHES
+    patches/01-opus-parser-complete-frames-eof.patch
   ARGS ${args}
   ENV ${env}
 )
