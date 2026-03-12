@@ -1,0 +1,24 @@
+diff --git a/libavcodec/opus/parser.c b/libavcodec/opus/parser.c
+index 630990fc03..9b3d12d7e1 100644
+--- a/libavcodec/opus/parser.c
++++ b/libavcodec/opus/parser.c
+@@ -188,7 +188,10 @@ static int opus_parse(AVCodecParserContext *ctx, AVCodecContext *avctx,
+     if (ctx->flags & PARSER_FLAG_COMPLETE_FRAMES) {
+         next = buf_size;
+ 
+-        if (set_frame_duration(ctx, avctx, buf, buf_size) < 0)
++        if (!buf_size)
++            goto done;
++
++        if (set_frame_duration(ctx, avctx, buf, buf_size) < 0)
+             goto fail;
+     } else {
+         next = opus_find_frame_end(ctx, avctx, buf, buf_size, &header_len);
+@@ -203,6 +206,7 @@ static int opus_parse(AVCodecParserContext *ctx, AVCodecContext *avctx,
+         }
+     }
+ 
++done:
+     *poutbuf      = buf + header_len;
+     *poutbuf_size = buf_size - header_len;
+     return next;
