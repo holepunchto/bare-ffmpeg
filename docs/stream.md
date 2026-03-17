@@ -42,6 +42,12 @@ Gets the codec parameters for this stream.
 
 **Returns**: `CodecParameters` instance
 
+### `Stream.sideData`
+
+Gets the side data associated with the stream.
+
+**Returns**: `Array<SideData>`
+
 ### `Stream.timeBase`
 
 Gets or sets the time base for the stream.

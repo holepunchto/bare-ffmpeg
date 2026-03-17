@@ -37,6 +37,14 @@ test('it should expose a codec parameters getter', (t) => {
   t.ok(stream.codecParameters instanceof ffmpeg.CodecParameters)
 })
 
+test('it should expose a sideData getter', (t) => {
+  using inputFormatContext = getInputFormatContext()
+  const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+
+  const sideData = stream.sideData
+  t.ok(Array.isArray(sideData))
+})
+
 test('it should expose a timeBase getter', (t) => {
   using inputFormatContext = getInputFormatContext()
   const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
