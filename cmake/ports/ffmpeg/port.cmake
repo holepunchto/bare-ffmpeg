@@ -33,6 +33,10 @@ set(args
   --enable-cross-compile
 )
 
+if(WIN32)
+  list(APPEND args --disable-filter=gfxcapture)
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES "Release")
   list(APPEND args --disable-debug)
 elseif(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -119,14 +123,9 @@ elseif(WIN32)
 endif()
 
 set(env)
-set(extra_cflags)
-set(extra_cxxflags)
-set(extra_ldflags)
-
-if(WIN32 AND CMAKE_BUILD_TYPE MATCHES "Debug")
-  list(APPEND extra_cflags -D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2)
-  list(APPEND extra_cxxflags -D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2)
-endif()
+set(cflags)
+set(cxxflags)
+set(ldflags)
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
@@ -138,8 +137,8 @@ if(CMAKE_C_COMPILER)
 
   list(APPEND path "${CC_path}")
 
-  list(APPEND extra_cflags --target=${CMAKE_C_COMPILER_TARGET})
-  list(APPEND extra_ldflags --target=${CMAKE_C_COMPILER_TARGET})
+  list(APPEND cflags --target=${CMAKE_C_COMPILER_TARGET})
+  list(APPEND ldflags --target=${CMAKE_C_COMPILER_TARGET})
 
   list(APPEND args
     "--cc=${CC_filename}"
@@ -149,7 +148,7 @@ if(CMAKE_C_COMPILER)
   )
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
-    list(APPEND extra_ldflags -fuse-ld=lld)
+    list(APPEND ldflags -fuse-ld=lld)
   endif()
 endif()
 
@@ -162,7 +161,7 @@ if(CMAKE_CXX_COMPILER)
   endif()
 
   list(APPEND path "${CXX_path}")
-  list(APPEND extra_cxxflags --target=${CMAKE_CXX_COMPILER_TARGET})
+  list(APPEND cxxflags --target=${CMAKE_CXX_COMPILER_TARGET})
 
   list(APPEND args
     "--cxx=${CXX_filename}"
@@ -359,14 +358,14 @@ list(APPEND env
   "PKG_CONFIG_PATH=${pkg_config_path}"
 )
 
-list(JOIN extra_cflags " " extra_cflags)
-list(JOIN extra_cxxflags " " extra_cxxflags)
-list(JOIN extra_ldflags " " extra_ldflags)
+list(JOIN cflags " " cflags)
+list(JOIN cxxflags " " cxxflags)
+list(JOIN ldflags " " ldflags)
 
 list(APPEND args
-  "--extra-cflags=${extra_cflags}"
-  "--extra-cxxflags=${extra_cxxflags}"
-  "--extra-ldflags=${extra_ldflags}"
+  "--extra-cflags=${cflags}"
+  "--extra-cxxflags=${cxxflags}"
+  "--extra-ldflags=${ldflags}"
 )
 
 declare_port(
