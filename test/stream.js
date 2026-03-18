@@ -45,6 +45,17 @@ test('it should expose a sideData getter', (t) => {
   t.ok(Array.isArray(sideData))
 })
 
+test('it should expose Stream.SideData', (t) => {
+  t.is(typeof ffmpeg.Stream.SideData, 'function')
+
+  const sideData = ffmpeg.Stream.SideData.fromData(
+    Buffer.from('lol'),
+    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
+  )
+
+  t.ok(sideData instanceof ffmpeg.Stream.SideData)
+})
+
 test('it should expose a timeBase getter', (t) => {
   using inputFormatContext = getInputFormatContext()
   const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
