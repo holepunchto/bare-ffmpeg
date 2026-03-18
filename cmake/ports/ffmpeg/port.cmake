@@ -15,7 +15,11 @@ set(byproducts)
 foreach(name IN LISTS libraries)
   add_library(${name} STATIC IMPORTED GLOBAL)
 
-  list(APPEND byproducts lib/lib${name}.a)
+  if(WIN32)
+    list(APPEND byproducts lib/${name}.lib)
+  else()
+    list(APPEND byproducts lib/lib${name}.a)
+  endif()
 endforeach()
 
 set(path)
@@ -115,6 +119,14 @@ elseif(WIN32)
 endif()
 
 set(env)
+set(extra_cflags)
+set(extra_cxxflags)
+set(extra_ldflags)
+
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES "Debug")
+  list(APPEND extra_cflags -D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2)
+  list(APPEND extra_cxxflags -D_DEBUG -D_ITERATOR_DEBUG_LEVEL=2)
+endif()
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
@@ -126,17 +138,18 @@ if(CMAKE_C_COMPILER)
 
   list(APPEND path "${CC_path}")
 
+  list(APPEND extra_cflags --target=${CMAKE_C_COMPILER_TARGET})
+  list(APPEND extra_ldflags --target=${CMAKE_C_COMPILER_TARGET})
+
   list(APPEND args
     "--cc=${CC_filename}"
     "--host-cc=${CC_filename}"
-    "--extra-cflags=--target=${CMAKE_C_COMPILER_TARGET}"
     "--ld=${CC_filename}"
     "--host-ld=${CC_filename}"
-    "--extra-ldflags=--target=${CMAKE_C_COMPILER_TARGET}"
   )
 
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
-    list(APPEND args --extra-ldflags=-fuse-ld=lld)
+    list(APPEND extra_ldflags -fuse-ld=lld)
   endif()
 endif()
 
@@ -149,9 +162,10 @@ if(CMAKE_CXX_COMPILER)
   endif()
 
   list(APPEND path "${CXX_path}")
+  list(APPEND extra_cxxflags --target=${CMAKE_CXX_COMPILER_TARGET})
+
   list(APPEND args
     "--cxx=${CXX_filename}"
-    "--extra-cxxflags=--target=${CMAKE_CXX_COMPILER_TARGET}"
   )
 endif()
 
@@ -345,6 +359,16 @@ list(APPEND env
   "PKG_CONFIG_PATH=${pkg_config_path}"
 )
 
+list(JOIN extra_cflags " " extra_cflags)
+list(JOIN extra_cxxflags " " extra_cxxflags)
+list(JOIN extra_ldflags " " extra_ldflags)
+
+list(APPEND args
+  "--extra-cflags=${extra_cflags}"
+  "--extra-cxxflags=${extra_cxxflags}"
+  "--extra-ldflags=${extra_ldflags}"
+)
+
 declare_port(
   "github:FFmpeg/FFmpeg#n8.1"
   ffmpeg
@@ -360,10 +384,16 @@ file(MAKE_DIRECTORY "${ffmpeg_PREFIX}/include")
 foreach(name IN LISTS libraries)
   add_dependencies(${name} ${ffmpeg})
 
+  if(WIN32)
+    set(_lib_filename "${name}.lib")
+  else()
+    set(_lib_filename "lib${name}.a")
+  endif()
+
   set_target_properties(
     ${name}
     PROPERTIES
-    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/lib${name}.a"
+    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/${_lib_filename}"
   )
 
   target_include_directories(
