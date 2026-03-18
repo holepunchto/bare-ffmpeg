@@ -911,6 +911,32 @@ bare_ffmpeg_stream_get_duration(
   return stream->handle->duration;
 }
 
+static std::vector<js_arraybuffer_t>
+bare_ffmpeg_stream_get_side_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_stream_t, 1> stream
+) {
+  std::vector<js_arraybuffer_t> res{};
+
+  AVCodecParameters *codecpar = stream->handle->codecpar;
+  int count = codecpar->nb_coded_side_data;
+  if (count == 0) return res;
+
+  for (int i = 0; i < count; i++) {
+    js_arraybuffer_t handle;
+    bare_ffmpeg_side_data_t *sd;
+    int err = js_create_arraybuffer(env, sd, handle);
+    assert(err == 0);
+
+    sd->handle = &codecpar->coded_side_data[i];
+
+    res.push_back(handle);
+  }
+
+  return res;
+}
+
 static void
 bare_ffmpeg_stream_set_duration(
   js_env_t *env,
@@ -4751,6 +4777,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("getStreamAverageFramerate", bare_ffmpeg_stream_get_avg_framerate)
   V("setStreamAverageFramerate", bare_ffmpeg_stream_set_avg_framerate)
   V("getStreamCodecParameters", bare_ffmpeg_stream_get_codec_parameters)
+  V("getStreamSideData", bare_ffmpeg_stream_get_side_data)
   V("getStreamDuration", bare_ffmpeg_stream_get_duration)
   V("setStreamDuration", bare_ffmpeg_stream_set_duration)
 
