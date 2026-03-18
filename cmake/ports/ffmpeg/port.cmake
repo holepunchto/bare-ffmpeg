@@ -385,15 +385,15 @@ foreach(name IN LISTS libraries)
   add_dependencies(${name} ${ffmpeg})
 
   if(WIN32)
-    set(_lib_filename "${name}.lib")
+    set(lib "${name}.lib")
   else()
-    set(_lib_filename "lib${name}.a")
+    set(lib "lib${name}.a")
   endif()
 
   set_target_properties(
     ${name}
     PROPERTIES
-    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/${_lib_filename}"
+    IMPORTED_LOCATION "${ffmpeg_PREFIX}/lib/${lib}"
   )
 
   target_include_directories(
