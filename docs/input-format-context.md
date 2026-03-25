@@ -10,8 +10,8 @@ const format = new ffmpeg.InputFormatContext(io, options[, url])
 
 ### Parameters
 
-- `io` (`IOContext` | `InputFormat`): The IO context or input format. The ownership of `io` is transferred.
-- `options` (`Dictionary`): Format options. Required when using `InputFormat`, ignored when using `IOContext`. The ownership of `options` is transferred.
+- `io` (`IOContext` | `InputFormat`): The IO context or input format.
+- `options` (`Dictionary`): Format options. Required when using `InputFormat`, ignored when using `IOContext`.
 - `url` (`string`, optional): Media source URL. Defaults to a platform-specific value
 
 **Returns**: A new `InputFormatContext` instance

@@ -60,8 +60,7 @@ Callback function called when FFmpeg needs to seek within the data source.
 const image = require('./fixtures/image/sample.jpeg', {
   with: { type: 'binary' }
 })
-const io = new ffmpeg.IOContext(image)
-io.destroy()
+using io = new ffmpeg.IOContext(image)
 ```
 
 ### Streaming with custom read callback

@@ -6,7 +6,7 @@ test('it should preseve line number in case of downscale', (t) => {
     with: { type: 'binary' }
   })
 
-  const io = new ffmpeg.IOContext(image)
+  using io = new ffmpeg.IOContext(image)
   using format = new ffmpeg.InputFormatContext(io)
 
   for (const stream of format.streams) {
@@ -14,30 +14,28 @@ test('it should preseve line number in case of downscale', (t) => {
     format.readFrame(packet)
 
     using raw = new ffmpeg.Frame()
-    using rgba = new ffmpeg.Frame()
 
     using decoder = stream.decoder()
+    decoder.open()
     decoder.sendPacket(packet)
     decoder.receiveFrame(raw)
 
-    const targetWidth = decoder.width / 2
-    const targetHeight = decoder.height / 2
-
-    rgba.width = targetWidth
-    rgba.height = targetHeight
-    rgba.pixelFormat = ffmpeg.constants.pixelFormats.RGBA
+    using rgba = new ffmpeg.Frame()
+    rgba.width = decoder.width / 2
+    rgba.height = decoder.height / 2
+    rgba.format = ffmpeg.constants.pixelFormats.RGBA
     rgba.alloc()
 
     using scaler = new ffmpeg.Scaler(
       decoder.pixelFormat,
       decoder.width,
       decoder.height,
-      rgba.pixelFormat,
+      rgba.format,
       rgba.width,
       rgba.height
     )
     const lines = scaler.scale(raw, rgba)
 
-    t.ok(lines == targetHeight)
+    t.ok(lines == rgba.height)
   }
 })
