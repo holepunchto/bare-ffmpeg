@@ -10,8 +10,7 @@ test('InputFormatContext should be instantiate with IOContext', (t) => {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(image)
-
+  using io = new ffmpeg.IOContext(image)
   using inputFormatContext = new ffmpeg.InputFormatContext(io)
 
   t.ok(inputFormatContext)
@@ -76,8 +75,8 @@ test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) =>
 // OutputFormatContext
 
 test('OutputFormatContext should expose an outputFormat getter', (t) => {
-  const io = new ffmpeg.IOContext(4096)
-  const outContext = new ffmpeg.OutputFormatContext(new ffmpeg.OutputFormat('webm'), io)
+  using io = new ffmpeg.IOContext(4096)
+  using outContext = new ffmpeg.OutputFormatContext(new ffmpeg.OutputFormat('webm'), io)
 
   const outputFormat = outContext.outputFormat
 

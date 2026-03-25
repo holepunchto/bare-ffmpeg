@@ -60,8 +60,7 @@ Callback function called when FFmpeg needs to seek within the data source.
 const image = require('./fixtures/image/sample.jpeg', {
   with: { type: 'binary' }
 })
-const io = new ffmpeg.IOContext(image)
-io.destroy()
+using io = new ffmpeg.IOContext(image)
 ```
 
 ### Streaming with custom read callback
@@ -105,6 +104,25 @@ const io = new ffmpeg.IOContext(4096, {
 
 ### `IOContext.destroy()`
 
-Destroys the `IOContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration.
+Destroys the `IOContext` and frees all associated resources. Automatically called when the object is managed by a `using` declaration. Safe to call multiple times - becomes a no-op after the native handle is transferred.
 
 **Returns**: `void`
+
+### `IOContext.transfer(targetIOContext)`
+
+Transfers ownership from this IOContext to another IOContext. After transfer, this IOContext becomes inactive while the target takes full ownership. This enables safe ownership transfer between objects.
+
+**Parameters:**
+
+- `targetIOContext` (`IOContext`): The IOContext instance to receive ownership
+
+**Returns**: `void`
+
+**Example:**
+
+```js
+const sourceIO = new ffmpeg.IOContext(buffer)
+const targetIO = new ffmpeg.IOContext(null, null) // Empty IOContext
+sourceIO.transfer(targetIO)
+// sourceIO is now safe to destroy, targetIO has full ownership
+```
