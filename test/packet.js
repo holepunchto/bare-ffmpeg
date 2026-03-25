@@ -230,8 +230,8 @@ function fillPacket(packet) {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.InputFormatContext(io)
+  using io = new ffmpeg.IOContext(image)
+  using format = new ffmpeg.InputFormatContext(io)
   format.readFrame(packet)
 }
 

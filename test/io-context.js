@@ -5,7 +5,7 @@ const { mediaTypes } = ffmpeg.constants
 
 test('IOContext should propagate onread throwed error properly', (t) => {
   const readError = 'read error'
-  const io = new ffmpeg.IOContext(4096, {
+  using io = new ffmpeg.IOContext(4096, {
     onread: () => {
       throw new Error(readError)
     }
@@ -26,7 +26,7 @@ test('IOContext should propagate onseek throwed error properly', (t) => {
   const seekError = 'seek error'
 
   let offset = 0
-  const io = new ffmpeg.IOContext(4096, {
+  using io = new ffmpeg.IOContext(4096, {
     onread: (buffer) => {
       const remaining = data.length - offset
       if (remaining <= 0) return 0
@@ -51,7 +51,7 @@ test('IOContext should propagate onseek throwed error properly', (t) => {
 
 test('IOContext should propagate onwrite throwed error properly', (t) => {
   const writeError = 'write error'
-  const io = new ffmpeg.IOContext(4096, {
+  using io = new ffmpeg.IOContext(4096, {
     onwrite: () => {
       throw new Error(writeError)
     }
@@ -80,7 +80,7 @@ test('IOContext streaming webm with onread', (t) => {
   })
 
   let offset = 0
-  const io = new ffmpeg.IOContext(4096, {
+  using io = new ffmpeg.IOContext(4096, {
     onread: (buffer) => {
       if (!offset) {
         t.ok(Buffer.isBuffer(buffer), 'is buffer')
@@ -112,7 +112,7 @@ test('IOContext streaming mp4 with onseek', (t) => {
   })
 
   let offset = 0
-  const io = new ffmpeg.IOContext(4096, {
+  using io = new ffmpeg.IOContext(4096, {
     onread: (buffer) => {
       if (!offset) {
         t.ok(Buffer.isBuffer(buffer), 'is buffer')
@@ -151,6 +151,19 @@ test('IOContext streaming mp4 with onseek', (t) => {
 
   t.is(video.length, 140102, `video size: got ${video.length}, expected 140102`)
   t.is(audio.length, 34914, `audio size: got ${audio.length}, expected 34914`)
+})
+
+test('IOContext.transfer() should transfer ownership between IOContext instances', (t) => {
+  const buffer = require('./fixtures/image/sample.jpeg', {
+    with: { type: 'binary' }
+  })
+  using sourceIO = new ffmpeg.IOContext(buffer)
+
+  using targetIO = sourceIO.transfer()
+
+  using format = new ffmpeg.InputFormatContext(targetIO)
+  t.ok(format, 'targetIO works after transfer')
+  t.pass('both IOContext instances can be destroyed safely')
 })
 
 // Helpers

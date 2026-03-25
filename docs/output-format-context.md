@@ -11,7 +11,7 @@ const format = new ffmpeg.OutputFormatContext(formatName, io)
 ### Parameters
 
 - `formatName` (`string`): The output format name (e.g., `'mp4'`, `'avi'`)
-- `io` (`IOContext`): The IO context for writing. The ownership of `io` is transferred.
+- `io` (`IOContext`): The IO context for writing. Ownership is automatically transferred to the format context, making the original IOContext safe to destroy multiple times.
 
 **Returns**: A new `OutputFormatContext` instance
 

@@ -107,8 +107,8 @@ test('resampler with audio from aiff file', (t) => {
   const audio = require('./fixtures/audio/sample.aiff', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(audio)
-  const format = new ffmpeg.InputFormatContext(io)
+  using io = new ffmpeg.IOContext(audio)
+  using format = new ffmpeg.InputFormatContext(io)
 
   for (const stream of format.streams) {
     const decoder = stream.decoder()
@@ -146,8 +146,6 @@ test('resampler with audio from aiff file', (t) => {
     decoder.destroy()
     resampler.destroy()
   }
-
-  format.destroy()
 })
 
 test('resampler converts between different sample formats', (t) => {
@@ -155,7 +153,7 @@ test('resampler converts between different sample formats', (t) => {
     with: { type: 'binary' }
   })
 
-  const io = new ffmpeg.IOContext(audio)
+  using io = new ffmpeg.IOContext(audio)
   using format = new ffmpeg.InputFormatContext(io)
   const stream = format.streams[0]
   using decoder = stream.decoder()

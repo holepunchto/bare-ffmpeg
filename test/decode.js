@@ -87,7 +87,7 @@ test('decode .webm', (t) => {
 })
 
 function decodeImage(image) {
-  const io = new ffmpeg.IOContext(image)
+  using io = new ffmpeg.IOContext(image)
   using format = new ffmpeg.InputFormatContext(io)
 
   let result
@@ -123,7 +123,7 @@ function decodeImage(image) {
 }
 
 function decodeAudio(audio) {
-  const io = new ffmpeg.IOContext(audio)
+  using io = new ffmpeg.IOContext(audio)
   using format = new ffmpeg.InputFormatContext(io)
 
   let result
@@ -189,7 +189,7 @@ function decodeAudio(audio) {
 }
 
 function decodeVideo(video) {
-  const io = new ffmpeg.IOContext(video)
+  using io = new ffmpeg.IOContext(video)
   using format = new ffmpeg.InputFormatContext(io)
 
   using packet = new ffmpeg.Packet()
