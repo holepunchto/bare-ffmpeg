@@ -108,21 +108,16 @@ Destroys the `IOContext` and frees all associated resources. Automatically calle
 
 **Returns**: `void`
 
-### `IOContext.transfer(targetIOContext)`
+### `IOContext.transfer()`
 
-Transfers ownership from this IOContext to another IOContext. After transfer, this IOContext becomes inactive while the target takes full ownership. This enables safe ownership transfer between objects.
+Creates a new IOContext and transfers ownership from this IOContext to the new instance. After transfer, this IOContext becomes inactive while the returned IOContext has full ownership. This enables safe ownership transfer between objects.
 
-**Parameters:**
-
-- `targetIOContext` (`IOContext`): The IOContext instance to receive ownership
-
-**Returns**: `void`
+**Returns**: `IOContext` - A new IOContext instance with transferred ownership
 
 **Example:**
 
 ```js
 const sourceIO = new ffmpeg.IOContext(buffer)
-const targetIO = new ffmpeg.IOContext(null, null) // Empty IOContext
-sourceIO.transfer(targetIO)
+const targetIO = sourceIO.transfer()
 // sourceIO is now safe to destroy, targetIO has full ownership
 ```

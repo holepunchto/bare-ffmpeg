@@ -158,9 +158,8 @@ test('IOContext.transfer() should transfer ownership between IOContext instances
     with: { type: 'binary' }
   })
   using sourceIO = new ffmpeg.IOContext(buffer)
-  using targetIO = new ffmpeg.IOContext(null, null)
 
-  sourceIO.transfer(targetIO)
+  using targetIO = sourceIO.transfer()
 
   using format = new ffmpeg.InputFormatContext(targetIO)
   t.ok(format, 'targetIO works after transfer')
