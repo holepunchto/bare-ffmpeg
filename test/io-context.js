@@ -157,18 +157,13 @@ test('IOContext.transfer() should transfer ownership between IOContext instances
   const buffer = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
-
   using sourceIO = new ffmpeg.IOContext(buffer)
-  using targetIO = new ffmpeg.IOContext(null, null) // Empty IOContext
+  using targetIO = new ffmpeg.IOContext(null, null)
 
-  // Transfer ownership
   sourceIO.transfer(targetIO)
 
-  // Verify targetIO works after transfer
   using format = new ffmpeg.InputFormatContext(targetIO)
   t.ok(format, 'targetIO works after transfer')
-
-  // Both should be safe to destroy (via using)
   t.pass('both IOContext instances can be destroyed safely')
 })
 
