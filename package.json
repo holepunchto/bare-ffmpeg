@@ -33,6 +33,7 @@
   "homepage": "https://github.com/holepunchto/bare-ffmpeg#readme",
   "devDependencies": {
     "bare-assert": "^1.1.0",
+    "bare-fetch": "^2.5.1",
     "brittle": "^3.4.0",
     "cmake-bare": "^1.1.2",
     "cmake-harden": "^1.0.2",
