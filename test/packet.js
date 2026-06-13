@@ -1,6 +1,5 @@
 const test = require('brittle')
 const ffmpeg = require('..')
-const { SideData } = require('../lib/packet')
 
 test('packet should expose a buffer getter', (t) => {
   const packet = new ffmpeg.Packet()
@@ -14,7 +13,7 @@ test('packet should expose a streamIndex accessor', (t) => {
   const packet = new ffmpeg.Packet()
   fillPacket(packet)
 
-  t.ok(typeof packet.streamIndex == 'number')
+  t.ok(typeof packet.streamIndex === 'number')
 
   packet.streamIndex = 9
 
@@ -33,10 +32,10 @@ test('packet should copy and expose its data', (t) => {
 
   const buffer = packet.data
 
-  t.ok(buffer[0] == 0x41)
-  t.ok(buffer[1] == 0x42)
-  t.ok(buffer[2] == 0x43)
-  t.ok(buffer[3] == 0x44)
+  t.ok(buffer[0] === 0x41)
+  t.ok(buffer[1] === 0x42)
+  t.ok(buffer[2] === 0x43)
+  t.ok(buffer[3] === 0x44)
 })
 
 test('packet set data', (t) => {
@@ -47,10 +46,10 @@ test('packet set data', (t) => {
 
   const buffer = packet.data
 
-  t.ok(buffer[0] == 0x45)
-  t.ok(buffer[1] == 0x46)
-  t.ok(buffer[2] == 0x47)
-  t.ok(buffer[3] == 0x48)
+  t.ok(buffer[0] === 0x45)
+  t.ok(buffer[1] === 0x46)
+  t.ok(buffer[2] === 0x47)
+  t.ok(buffer[3] === 0x48)
 })
 
 test('packet should expose dts acessor', (t) => {
@@ -256,7 +255,7 @@ function makePacket(options = {}) {
 
   options = { ...defaultOptions, ...options }
 
-  for ([key, value] of Object.entries(options)) {
+  for (const [key, value] of Object.entries(options)) {
     packet[key] = value
   }
 

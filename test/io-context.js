@@ -187,7 +187,7 @@ function runStreams(io) {
     decoder.open()
     decoder.sendPacket(packet)
 
-    while (decoder.receiveFrame(new ffmpeg.Frame())) {}
+    while (decoder.receiveFrame(new ffmpeg.Frame()));
 
     if (mediaType === mediaTypes.VIDEO) {
       video.push(packet.data)

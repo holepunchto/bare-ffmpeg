@@ -83,10 +83,10 @@ test('CodecParameters class should expose a extraData setter', (t) => {
   const buf = Buffer.from('test')
   codecParam.extraData = buf
 
-  t.ok(codecParam.extraData[0] == 't'.charCodeAt(0))
-  t.ok(codecParam.extraData[1] == 'e'.charCodeAt(0))
-  t.ok(codecParam.extraData[2] == 's'.charCodeAt(0))
-  t.ok(codecParam.extraData[3] == 't'.charCodeAt(0))
+  t.ok(codecParam.extraData[0] === 't'.charCodeAt(0))
+  t.ok(codecParam.extraData[1] === 'e'.charCodeAt(0))
+  t.ok(codecParam.extraData[2] === 's'.charCodeAt(0))
+  t.ok(codecParam.extraData[3] === 't'.charCodeAt(0))
 })
 
 test('CodecParameters class should expose bitRate getter', (t) => {

@@ -1,8 +1,11 @@
-name: Prebuild
+name: Publish
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - v*
 permissions:
-  contents: read
+  id-token: write
+  contents: write
 jobs:
   prebuild:
     strategy:
@@ -59,6 +62,21 @@ jobs:
     name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
+      - run: sudo apt install -y nasm
+        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
+      - run: pip3 install meson
+        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
+      - run: brew install meson nasm llvm@20
+        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
+      - run: choco upgrade llvm
+        if: ${{ matrix.platform == 'win32' }}
+      - run: choco install --ignore-package-exit-codes meson nasm msys2
+        if: ${{ matrix.platform == 'win32' }}
+      - run: pacman --noconfirm -S git make ninja pkgconf nasm
+        shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
+        env:
+          PATH: C:\tools\msys64\usr\bin
+        if: ${{ matrix.platform == 'win32' }}
       - uses: holepunchto/actions/compile-prebuilds@v1
         with:
           platform: ${{ matrix.platform }}
@@ -66,9 +84,13 @@ jobs:
           tags: ${{ matrix.tags}}
           flags: ${{ matrix.flags }}
           upload: true
-  merge:
+  publish:
     runs-on: ubuntu-latest
+    environment:
+      name: npm
     needs: prebuild
-    name: Merge
+    name: Publish
     steps:
-      - uses: holepunchto/actions/merge-prebuilds@v1
+      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/download-prebuilds@v1
+      - uses: holepunchto/actions/publish@v1

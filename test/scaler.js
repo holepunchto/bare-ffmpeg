@@ -36,6 +36,6 @@ test('it should preseve line number in case of downscale', (t) => {
     )
     const lines = scaler.scale(raw, rgba)
 
-    t.ok(lines == rgba.height)
+    t.ok(lines === rgba.height)
   }
 })

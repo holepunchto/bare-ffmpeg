@@ -1,4 +1,4 @@
-name: Test
+name: Integrate
 on:
   push:
     branches:
@@ -9,7 +9,13 @@ on:
 permissions:
   contents: read
 jobs:
-  test:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - run: npm run lint
+  prebuild:
     strategy:
       matrix:
         include:
@@ -61,15 +67,10 @@ jobs:
             platform: win32
             arch: arm64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-      - run: |
-          sudo apt update
-          sudo apt install -y nasm
+      - uses: holepunchto/actions/bare-base@v1
+      - run: sudo apt install -y nasm
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
       - run: pip3 install meson
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
@@ -84,12 +85,27 @@ jobs:
         env:
           PATH: C:\tools\msys64\usr\bin
         if: ${{ matrix.platform == 'win32' }}
-      - run: npm install -g bare-runtime bare-make
-      - run: npm install
-      - run: bare-make generate --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --debug ${{ matrix.flags }}
-      - run: bare-make build
-      - run: bare-make install
+      - uses: holepunchto/actions/compile-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          tags: ${{ matrix.tags}}
+          flags: --debug ${{ matrix.flags }}
+          upload: true
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: darwin
+          - os: windows-latest
+            platform: win32
+    runs-on: ${{ matrix.os }}
+    needs: prebuild
+    name: Test / ${{ matrix.platform }}
+    steps:
+      - uses: holepunchto/actions/bare-base@v1
+      - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
-        if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
-      - run: npm run example
-        if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}

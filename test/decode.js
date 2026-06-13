@@ -216,7 +216,7 @@ function decodeVideo(video) {
     decoder.open()
     decoder.sendPacket(packet)
 
-    while (decoder.receiveFrame(frame)) {}
+    while (decoder.receiveFrame(frame));
 
     if (stream.codecParameters.type === constants.mediaTypes.VIDEO) {
       result.video.push(packet.data)
