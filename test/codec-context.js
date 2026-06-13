@@ -94,7 +94,7 @@ test('codec context should return false when buffer is full', (t) => {
   const frame = fakeFrame()
 
   t.plan(1)
-  while (codecCtx.sendFrame(frame)) {} // Make the internal buffer full
+  while (codecCtx.sendFrame(frame)); // Make the internal buffer full
   t.ok(true)
 })
 
@@ -103,7 +103,7 @@ test('codec context should expose a receivePacket method', (t) => {
   setDefaultOptions(codecCtx)
   codecCtx.open(getEncoderOptions())
   const frame = fakeFrame()
-  while (codecCtx.sendFrame(frame)) {} // Make the internal buffer full
+  while (codecCtx.sendFrame(frame)); // Make the internal buffer full
 
   const packet = new ffmpeg.Packet()
   t.ok(codecCtx.receivePacket(packet))
@@ -186,7 +186,7 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
 
   t.execution(() => {
-    codecCtx.getFormat = function getFormat() {}
+    codecCtx.getFormat = function () {}
   })
 })
 
@@ -194,7 +194,7 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
   const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
-  decoder.getFormat = function getFormat(context, pixelFormats) {
+  decoder.getFormat = function (context, pixelFormats) {
     t.ok(context instanceof ffmpeg.CodecContext)
     const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
@@ -206,7 +206,7 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
 test('pixelFormat should have been changed after negociation', (t) => {
   const { decodeOnce, decoder } = setupDecoder()
 
-  decoder.getFormat = function getFormat(_context, pixelFormats) {
+  decoder.getFormat = function (context, pixelFormats) {
     const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
@@ -219,7 +219,7 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
   const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
-  decoder.getFormat = function getFormat(_context, pixelFormats) {
+  decoder.getFormat = function (context, pixelFormats) {
     t.ok(Array.isArray(pixelFormats))
     const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
@@ -403,7 +403,7 @@ function setupDecoder() {
     let newPixelFormat
 
     while (format.readFrame(packet)) {
-      if (packet.streamIndex != stream.index) continue
+      if (packet.streamIndex !== stream.index) continue
 
       decoder.open()
       newPixelFormat = decoder.pixelFormat

@@ -46,7 +46,7 @@ test('it should expose an entries method', (t) => {
   dict.set('foo', 'bar')
   dict.set('boo', 'baz')
 
-  let entries = dict.entries()
+  const entries = dict.entries()
 
   t.alike(entries.at(0), ['foo', 'bar'])
   t.alike(entries.at(1), ['boo', 'baz'])
@@ -57,7 +57,7 @@ test('it should expose an iterator', (t) => {
   dict.set('foo', 'bar')
   dict.set('boo', 'baz')
 
-  let result = []
+  const result = []
   for (const [key, value] of dict) result.push({ key, value })
 
   t.is(result.at(0).key, 'foo')
