@@ -369,7 +369,7 @@ list(APPEND args
 )
 
 declare_port(
-  "github:FFmpeg/FFmpeg#n8.1"
+  "github:FFmpeg/FFmpeg#n8.1.1"
   ffmpeg
   AUTOTOOLS
   DEPENDS ${depends}
