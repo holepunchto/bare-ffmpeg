@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: holepunchto/actions/node-base@v1
       - run: npm run lint
-  test:
+  prebuild:
     strategy:
       matrix:
         include:
@@ -67,7 +67,7 @@ jobs:
             platform: win32
             arch: arm64
     runs-on: ${{ matrix.os }}
-    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
       - run: sudo apt install -y nasm
@@ -91,5 +91,21 @@ jobs:
           arch: ${{ matrix.arch }}
           tags: ${{ matrix.tags}}
           flags: --debug ${{ matrix.flags }}
+          upload: true
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: darwin
+          - os: windows-latest
+            platform: win32
+    runs-on: ${{ matrix.os }}
+    needs: prebuild
+    name: Test / ${{ matrix.platform }}
+    steps:
+      - uses: holepunchto/actions/bare-base@v1
+      - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
-        if: ${{ matrix.platform == 'linux' || (matrix.platform == 'darwin' && matrix.arch == 'arm64') || (matrix.platform == 'win32' && matrix.arch == 'x64') }}
