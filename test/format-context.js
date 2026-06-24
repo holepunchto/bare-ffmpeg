@@ -72,6 +72,17 @@ test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) =>
   t.ok(inputFormat instanceof ffmpeg.InputFormat)
 })
 
+test('InputFormatContext.duration should expose the container duration', (t) => {
+  const video = require('./fixtures/video/sample.mp4', {
+    with: { type: 'binary' }
+  })
+
+  using io = new ffmpeg.IOContext(video)
+  using inputFormatContext = new ffmpeg.InputFormatContext(io)
+
+  t.is(inputFormatContext.duration, 4000000)
+})
+
 // OutputFormatContext
 
 test('OutputFormatContext should expose an outputFormat getter', (t) => {

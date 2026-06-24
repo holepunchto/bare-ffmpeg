@@ -18,6 +18,12 @@ Gets the array of media streams.
 
 **Returns**: Array of `Stream` instances
 
+### `FormatContext.duration`
+
+Gets the container duration in `AV_TIME_BASE` units, or `-1` if unknown.
+
+**Returns**: `number`
+
 ## Methods
 
 ### `FormatContext.readFrame(packet)`
