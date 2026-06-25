@@ -613,6 +613,17 @@ bare_ffmpeg_format_context_get_streams(
   return result;
 }
 
+static int64_t
+bare_ffmpeg_format_context_get_duration(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_format_context_t, 1> context
+) {
+  if (context->handle->duration == AV_NOPTS_VALUE) return -1;
+
+  return context->handle->duration;
+}
+
 static int
 bare_ffmpeg_format_context_get_best_stream_index(
   js_env_t *env,
@@ -4759,6 +4770,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("closeOutputFormatContext", bare_ffmpeg_format_context_close_output)
 
   V("getFormatContextStreams", bare_ffmpeg_format_context_get_streams)
+  V("getFormatContextDuration", bare_ffmpeg_format_context_get_duration)
   V("getFormatContextBestStreamIndex", bare_ffmpeg_format_context_get_best_stream_index)
   V("createFormatContextStream", bare_ffmpeg_format_context_create_stream)
   V("readFormatContextFrame", bare_ffmpeg_format_context_read_frame)
