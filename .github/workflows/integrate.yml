@@ -108,13 +108,13 @@ jobs:
         working-directory: .bare
       - id: prefix
         run: echo "path=$(npm prefix --global)" >> "$GITHUB_OUTPUT"
-      - uses: holepunchto/actions/compile-prebuilds@da669868edaabd0d256070654cf9735a05d88cc1
+      - uses: holepunchto/actions/compile-prebuilds@9a12adc5ba9e863f8e6572ef0d0475326137e959
         with:
           flags: --sanitize address
           path: .bare
           prefix: ${{ steps.prefix.outputs.path }}
       - run: brew install meson nasm llvm@20
-      - uses: holepunchto/actions/compile-prebuilds@da669868edaabd0d256070654cf9735a05d88cc1
+      - uses: holepunchto/actions/compile-prebuilds@9a12adc5ba9e863f8e6572ef0d0475326137e959
         with:
           flags: --debug --sanitize address
       - run: npm test
