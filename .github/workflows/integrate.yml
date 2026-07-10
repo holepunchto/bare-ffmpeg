@@ -120,6 +120,7 @@ jobs:
           flags: --debug --sanitize address
       - run: npm test
         env:
+          ASAN_OPTIONS: symbolize=1
           LSAN_OPTIONS: suppressions=test/leaks.txt
   test:
     strategy:
