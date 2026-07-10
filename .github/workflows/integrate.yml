@@ -92,6 +92,21 @@ jobs:
           tags: ${{ matrix.tags}}
           flags: --debug ${{ matrix.flags }}
           upload: true
+  sanitize:
+    runs-on: macos-15
+    name: Sanitize / darwin-arm64
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/compile-bare@da669868edaabd0d256070654cf9735a05d88cc1
+        with:
+          flags: --sanitize address
+      - run: brew install meson nasm llvm@20
+      - uses: holepunchto/actions/compile-prebuilds@da669868edaabd0d256070654cf9735a05d88cc1
+        with:
+          flags: --debug --sanitize address
+      - run: npm test
+        env:
+          LSAN_OPTIONS: suppressions=test/leaks.txt
   test:
     strategy:
       matrix:
