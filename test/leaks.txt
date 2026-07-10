@@ -4,9 +4,6 @@ leak:js_create_external
 leak:js_create_module
 leak:js_create_synthetic_module
 leak:js_wrap
-leak:js_callback_s
-
-leak:posix_memalign
 
 leak:v8::internal::GCTracer::*
 
