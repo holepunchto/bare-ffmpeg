@@ -110,7 +110,7 @@ jobs:
         run: echo "path=$(npm prefix --global)" >> "$GITHUB_OUTPUT"
       - uses: holepunchto/actions/compile-prebuilds@9a12adc5ba9e863f8e6572ef0d0475326137e959
         with:
-          flags: --sanitize address
+          flags: --debug --sanitize address
           path: .bare
           prefix: ${{ steps.prefix.outputs.path }}
       - run: sudo apt install -y nasm
