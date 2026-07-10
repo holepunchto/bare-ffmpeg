@@ -5,6 +5,8 @@ leak:js_create_module
 leak:js_create_synthetic_module
 leak:js_wrap
 
+leak:posix_memalign
+
 leak:v8::internal::GCTracer::*
 
 # https://github.com/llvm/llvm-project/issues/115992
