@@ -141,6 +141,7 @@ test('resampler with audio from aiff file', (t) => {
       }
     }
 
+    packet.destroy()
     inputFrame.destroy()
     outputFrame.destroy()
     decoder.destroy()
@@ -167,8 +168,8 @@ test('resampler converts between different sample formats', (t) => {
     ffmpeg.constants.sampleFormats.FLTP
   )
 
-  const packet = new ffmpeg.Packet()
-  const inputFrame = new ffmpeg.Frame()
+  using packet = new ffmpeg.Packet()
+  using inputFrame = new ffmpeg.Frame()
 
   decoder.open()
 

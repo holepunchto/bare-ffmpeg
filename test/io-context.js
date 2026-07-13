@@ -171,6 +171,7 @@ test('IOContext.transfer() should transfer ownership between IOContext instances
 function runStreams(io) {
   using format = new ffmpeg.InputFormatContext(io)
   using packet = new ffmpeg.Packet()
+  const frame = new ffmpeg.Frame()
 
   const streams = []
   for (const stream of format.streams) {
@@ -187,7 +188,7 @@ function runStreams(io) {
     decoder.open()
     decoder.sendPacket(packet)
 
-    while (decoder.receiveFrame(new ffmpeg.Frame()));
+    while (decoder.receiveFrame(frame));
 
     if (mediaType === mediaTypes.VIDEO) {
       video.push(packet.data)
@@ -197,6 +198,10 @@ function runStreams(io) {
 
     packet.unref()
   }
+
+  // Release the frame's buffer refs while the decoders (and their buffer
+  // pools) are still alive, then free the decoders.
+  frame.destroy()
 
   for (const { decoder } of streams) {
     decoder.destroy()

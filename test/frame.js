@@ -2,49 +2,49 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('frame expose a setter for width', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.width = 200
   })
 })
 
 test('frame expose a getter for width', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.width = 200
 
   t.ok(fr.width === 200)
 })
 
 test('frame expose a setter for height', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.height = 200
   })
 })
 
 test('frame expose a getter for height', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.height = 200
 
   t.ok(fr.height === 200)
 })
 
 test('frame expose a setter for format', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.format = ffmpeg.constants.pixelFormats.YUV420P
   })
 })
 
 test('frame expose a getter for format', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.format = ffmpeg.constants.pixelFormats.YUV420P
 
   t.ok(fr.format === ffmpeg.constants.pixelFormats.YUV420P)
 })
 
 test('frame expose an alloc method', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   fr.height = 200
   fr.width = 200
@@ -55,14 +55,14 @@ test('frame expose an alloc method', (t) => {
 })
 
 test('frame expose a setter for nbSamples', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.nbSamples = 1024
   })
 })
 
 test('frame expose a accessor for pts', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.is(fr.pts, -1)
 
@@ -72,7 +72,7 @@ test('frame expose a accessor for pts', (t) => {
 })
 
 test('frame expose a accessor for pkt_dts', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.is(fr.packetDTS, -1)
 
@@ -82,7 +82,7 @@ test('frame expose a accessor for pkt_dts', (t) => {
 })
 
 test('frame expose a accessor for timeBase', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.alike(fr.timeBase, new ffmpeg.Rational(0, 1))
 
@@ -93,29 +93,29 @@ test('frame expose a accessor for timeBase', (t) => {
 })
 
 test('frame expose getter for picture type', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.is(fr.pictType, ffmpeg.constants.pictureTypes.NONE)
 })
 
 test('frame expose a setter for sampleRate', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.sampleRate = 48000
   })
 })
 
 test('frame expose a getter for sampleRate', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.sampleRate = 48000
 
   t.ok(fr.sampleRate === 48000)
 })
 
 test('copy frame properties', (t) => {
-  const a = new ffmpeg.Frame()
+  using a = new ffmpeg.Frame()
   a.pts = 12
 
-  const b = new ffmpeg.Frame()
+  using b = new ffmpeg.Frame()
   t.not(b.pts, 12)
 
   b.copyProperties(a)
@@ -124,13 +124,13 @@ test('copy frame properties', (t) => {
 })
 
 test('frame transferData should throw on software frames', (t) => {
-  const src = new ffmpeg.Frame()
+  using src = new ffmpeg.Frame()
   src.width = 100
   src.height = 100
   src.format = ffmpeg.constants.pixelFormats.YUV420P
   src.alloc()
 
-  const dst = new ffmpeg.Frame()
+  using dst = new ffmpeg.Frame()
   dst.width = 100
   dst.height = 100
   dst.format = ffmpeg.constants.pixelFormats.YUV420P
@@ -142,7 +142,7 @@ test('frame transferData should throw on software frames', (t) => {
 })
 
 test('frame hwFramesCtx getter returns null for software frames', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.width = 100
   fr.height = 100
   fr.format = ffmpeg.constants.pixelFormats.YUV420P
