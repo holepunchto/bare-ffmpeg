@@ -227,6 +227,8 @@ function decodeVideo(video) {
     packet.unref()
   }
 
+  frame.destroy()
+
   for (const { decoder } of streams) decoder.destroy()
 
   result.video = Buffer.concat(result.video)

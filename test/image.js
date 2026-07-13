@@ -13,7 +13,7 @@ test('Image class should expose a method for reading from frame which handle RGB
     imageA.data[i + 2] = 150
   }
 
-  const frame = new ffmpeg.Frame()
+  using frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
   frame.format = format
@@ -37,7 +37,7 @@ test('Image class should expose a method for reading from frame which handle YUV
   const imageA = new ffmpeg.Image(format, width, height)
   addFakeYUVData(imageA)
 
-  const frame = new ffmpeg.Frame()
+  using frame = new ffmpeg.Frame()
   frame.width = width
   frame.height = height
   frame.format = format
