@@ -227,8 +227,6 @@ function decodeVideo(video) {
     packet.unref()
   }
 
-  // Release the frame's buffer refs while the decoders (and their buffer
-  // pools) are still alive, then free the decoders.
   frame.destroy()
 
   for (const { decoder } of streams) decoder.destroy()
