@@ -87,7 +87,7 @@ test('it should expose avgFramerate', (t) => {
 })
 
 test('it should expose a duration getter', (t) => {
-  const outputFormat = new ffmpeg.OutputFormatContext(
+  using outputFormat = new ffmpeg.OutputFormatContext(
     'webm',
     new ffmpeg.IOContext(Buffer.alloc(4096))
   )
@@ -97,7 +97,7 @@ test('it should expose a duration getter', (t) => {
 })
 
 test('it should expose a duration setter', (t) => {
-  const outputFormat = new ffmpeg.OutputFormatContext(
+  using outputFormat = new ffmpeg.OutputFormatContext(
     'webm',
     new ffmpeg.IOContext(Buffer.alloc(4096))
   )
@@ -112,14 +112,16 @@ test('it should expose an encoder helper', (t) => {
   using inputFormatContext = getInputFormatContext()
   const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
-  t.ok(stream.encoder() instanceof ffmpeg.CodecContext)
+  using encoder = stream.encoder()
+  t.ok(encoder instanceof ffmpeg.CodecContext)
 })
 
 test('it should expose a decoder helper', (t) => {
   using inputFormatContext = getInputFormatContext()
   const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
-  t.ok(stream.decoder() instanceof ffmpeg.CodecContext)
+  using decoder = stream.decoder()
+  t.ok(decoder instanceof ffmpeg.CodecContext)
 })
 
 // Helpers
