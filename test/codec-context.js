@@ -290,7 +290,7 @@ test('CodecContext.listOptionNames returns array of names', (t) => {
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
-  const options = ffmpeg.Dictionary.from({
+  using options = ffmpeg.Dictionary.from({
     crf: '20',
     preset: '1',
     threads: '8'
@@ -305,7 +305,7 @@ test('CodecContext can set options via dictionary', (t) => {
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
-  const options = ffmpeg.Dictionary.from({
+  using options = ffmpeg.Dictionary.from({
     crf: 'throws'
   })
 

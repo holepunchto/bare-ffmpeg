@@ -455,6 +455,17 @@ bare_ffmpeg_format_context_open_input_with_io(
   }
 
   err = avformat_find_stream_info(context->handle, NULL);
+
+  bool is_exception_pending;
+  int check = js_is_exception_pending(env, &is_exception_pending);
+  assert(check == 0);
+
+  if (is_exception_pending) {
+    avformat_close_input(&context->handle);
+
+    throw js_pending_exception;
+  }
+
   if (err < 0) {
     avformat_close_input(&context->handle);
 
@@ -497,6 +508,17 @@ bare_ffmpeg_format_context_open_input_with_format(
   }
 
   err = avformat_find_stream_info(context->handle, NULL);
+
+  bool is_exception_pending;
+  int check = js_is_exception_pending(env, &is_exception_pending);
+  assert(check == 0);
+
+  if (is_exception_pending) {
+    avformat_close_input(&context->handle);
+
+    throw js_pending_exception;
+  }
+
   if (err < 0) {
     avformat_close_input(&context->handle);
 
