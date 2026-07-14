@@ -110,6 +110,10 @@ jobs:
     name: Test / ${{ matrix.platform }}
     steps:
       - uses: holepunchto/actions/node-base@v1
+      - run: sudo apt install -y nasm
+        if: ${{ matrix.platform == 'linux' }}
+      - run: pip3 install meson
+        if: ${{ matrix.platform == 'linux' }}
       - uses: holepunchto/actions/compile-bare@9a12adc5ba9e863f8e6572ef0d0475326137e959
         with:
           flags: --debug ${{ matrix.flags }}
