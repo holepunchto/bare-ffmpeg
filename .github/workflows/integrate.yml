@@ -102,37 +102,32 @@ jobs:
             flags: --sanitize address
           - os: macos-latest
             platform: darwin
-            arch: arm64
           - os: windows-latest
             platform: win32
-            arch: x64
     runs-on: ${{ matrix.os }}
+    needs: prebuild
     name: Test / ${{ matrix.platform }}
     steps:
       - uses: holepunchto/actions/node-base@v1
+        if: ${{ matrix.platform == 'linux' }}
       - run: sudo apt install -y nasm
         if: ${{ matrix.platform == 'linux' }}
       - run: pip3 install meson
         if: ${{ matrix.platform == 'linux' }}
-      - run: brew install meson nasm llvm@20
-        if: ${{ matrix.platform == 'darwin' }}
-      - run: choco upgrade llvm
-        if: ${{ matrix.platform == 'win32' }}
-      - run: choco install --ignore-package-exit-codes meson nasm msys2
-        if: ${{ matrix.platform == 'win32' }}
-      - run: pacman --noconfirm -S git make ninja pkgconf nasm
-        shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
-        env:
-          PATH: C:\tools\msys64\usr\bin
-        if: ${{ matrix.platform == 'win32' }}
       - uses: holepunchto/actions/compile-bare@9a12adc5ba9e863f8e6572ef0d0475326137e959
+        if: ${{ matrix.platform == 'linux' }}
         with:
           flags: --debug ${{ matrix.flags }}
       - uses: holepunchto/actions/compile-prebuilds@v1
+        if: ${{ matrix.platform == 'linux' }}
         with:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
           flags: --debug ${{ matrix.flags }}
+      - uses: holepunchto/actions/bare-base@v1
+        if: ${{ matrix.platform != 'linux' }}
+      - uses: holepunchto/actions/download-prebuilds@v1
+        if: ${{ matrix.platform != 'linux' }}
       - run: npm test
         env:
           LSAN_OPTIONS: suppressions=test/leaks.txt
