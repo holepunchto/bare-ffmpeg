@@ -22,6 +22,7 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             arch: x64
+            flags: --sanitize address
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
@@ -115,18 +116,7 @@ jobs:
         with:
           source: ${{ matrix.source }}
           flags: --debug ${{ matrix.flags }}
-      - run: sudo apt install -y nasm
-        if: ${{ matrix.platform == 'linux' }}
-      - run: pip3 install meson
-        if: ${{ matrix.platform == 'linux' }}
-      - uses: holepunchto/actions/compile-prebuilds@v1
-        if: ${{ matrix.platform == 'linux' }}
-        with:
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          flags: --debug ${{ matrix.flags }}
       - uses: holepunchto/actions/download-prebuilds@v1
-        if: ${{ matrix.platform != 'linux' }}
       - run: npm test
         env:
           LSAN_OPTIONS: suppressions=test/leaks.txt
