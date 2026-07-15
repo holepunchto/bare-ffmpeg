@@ -141,6 +141,33 @@ test('FilterGraph.parse should work without inputs and outputs', (t) => {
   })
 })
 
+test('FilterGraph.parse should work with only outputs (inputs undefined)', (t) => {
+  const bufferContext = new ffmpeg.FilterContext()
+  using graph = new ffmpeg.FilterGraph()
+  const buffer = new ffmpeg.Filter('buffer')
+  const args = `video_size=1x1:pix_fmt=${ffmpeg.constants.pixelFormats.RGB24}:time_base=1/30:pixel_aspect=1/1`
+
+  graph.createFilter(bufferContext, buffer, 'in', args)
+  using outputs = initOutputs(bufferContext)
+
+  t.execution(() => {
+    graph.parse('negate', undefined, outputs)
+  })
+})
+
+test('FilterGraph.parse should work with only inputs (outputs undefined)', (t) => {
+  const bufferSinkContext = new ffmpeg.FilterContext()
+  using graph = new ffmpeg.FilterGraph()
+  const sink = new ffmpeg.Filter('buffersink')
+
+  graph.createFilter(bufferSinkContext, sink, 'out')
+  using inputs = initInputs(bufferSinkContext)
+
+  t.execution(() => {
+    graph.parse('color=c=black:s=1x1', inputs, undefined)
+  })
+})
+
 test('FilterGraph.parse should throw an error if inputs are not valid', (t) => {
   const bufferContext = new ffmpeg.FilterContext()
   const bufferSinkContext = new ffmpeg.FilterContext()
