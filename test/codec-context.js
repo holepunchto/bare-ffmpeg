@@ -1,8 +1,11 @@
+const os = require('bare-os')
 const test = require('brittle')
 const ffmpeg = require('..')
 
+const darwinFilter = { skip: os.platform() !== 'darwin' }
+
 test('codec context could be open without options', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
   t.execution(() => {
@@ -11,7 +14,7 @@ test('codec context could be open without options', (t) => {
 })
 
 test('codec context could not open wihtout timebase', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   codecCtx.width = 100
   codecCtx.height = 100
@@ -22,7 +25,7 @@ test('codec context could not open wihtout timebase', (t) => {
 })
 
 test('codec context could not open wihtout pixelFormat', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.width = 100
   codecCtx.height = 100
@@ -33,7 +36,7 @@ test('codec context could not open wihtout pixelFormat', (t) => {
 })
 
 test('codec context could not open wihtout width', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   codecCtx.height = 100
@@ -44,7 +47,7 @@ test('codec context could not open wihtout width', (t) => {
 })
 
 test('codec context could not open wihtout height', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   codecCtx.timeBase = new ffmpeg.Rational(1, 30)
   codecCtx.pixelFormat = ffmpeg.constants.pixelFormats.YUV420P
   codecCtx.width = 100
@@ -55,7 +58,7 @@ test('codec context could not open wihtout height', (t) => {
 })
 
 test('codec context could be open with options', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
 
   t.execution(() => {
@@ -64,10 +67,10 @@ test('codec context could be open with options', (t) => {
 })
 
 test('codec context should expose a sendFrame method', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open()
-  const frame = fakeFrame()
+  using frame = fakeFrame()
 
   t.execution(() => {
     codecCtx.sendFrame(frame)
@@ -75,9 +78,9 @@ test('codec context should expose a sendFrame method', (t) => {
 })
 
 test('codec context sendFrame should throw if codec is not open', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
-  const frame = fakeFrame()
+  using frame = fakeFrame()
 
   t.exception(() => {
     codecCtx.sendFrame(frame)
@@ -85,50 +88,50 @@ test('codec context sendFrame should throw if codec is not open', (t) => {
 })
 
 test('codec context should return false when buffer is full', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open()
-  const frame = fakeFrame()
+  using frame = fakeFrame()
 
   t.plan(1)
-  while (codecCtx.sendFrame(frame)) {} // Make the internal buffer full
+  while (codecCtx.sendFrame(frame)); // Make the internal buffer full
   t.ok(true)
 })
 
 test('codec context should expose a receivePacket method', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open(getEncoderOptions())
-  const frame = fakeFrame()
-  while (codecCtx.sendFrame(frame)) {} // Make the internal buffer full
+  using frame = fakeFrame()
+  while (codecCtx.sendFrame(frame)); // Make the internal buffer full
 
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   t.ok(codecCtx.receivePacket(packet))
   t.ok(packet.data.length > 0)
 })
 
 test('receivePacket should return false when options are not set', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open()
-  const frame = fakeFrame()
+  using frame = fakeFrame()
   codecCtx.sendFrame(frame)
 
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   t.absent(codecCtx.receivePacket(packet))
 })
 
 test('receivePacket should return false when no frame has been sent', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   setDefaultOptions(codecCtx)
   codecCtx.open(getEncoderOptions())
 
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   t.absent(codecCtx.receivePacket(packet))
 })
 
 test('codec context should expose framerate', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
   t.ok(codecCtx.frameRate.uninitialized, 'empty timebase')
 
@@ -142,13 +145,12 @@ test('codec context should expose framerate', (t) => {
 })
 
 test('CodecContext class should expose a extraData getter', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   t.ok(codecCtx.extraData instanceof Buffer)
-  codecCtx.destroy()
 })
 
 test('CodecContext class should expose a extraData setter', (t) => {
-  const codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
   const buf = Buffer.from('test')
   codecCtx.extraData = buf
 
@@ -183,7 +185,7 @@ test('CodecContext should expose a getFormat callback setter', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.OPUS.decoder)
 
   t.execution(() => {
-    codecCtx.getFormat = function getFormat() {}
+    codecCtx.getFormat = function () {}
   })
 })
 
@@ -191,11 +193,9 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
   const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
-  decoder.getFormat = function getFormat(context, pixelFormats) {
+  decoder.getFormat = function (context, pixelFormats) {
     t.ok(context instanceof ffmpeg.CodecContext)
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -205,10 +205,8 @@ test('CodecContext getFormat callback should expose context as an CodecContext i
 test('pixelFormat should have been changed after negociation', (t) => {
   const { decodeOnce, decoder } = setupDecoder()
 
-  decoder.getFormat = function getFormat(_context, pixelFormats) {
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+  decoder.getFormat = function (context, pixelFormats) {
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -220,11 +218,9 @@ test('CodecContext getFormat callback should expose pixelFormats as an Array', (
   const { decodeOnce, decoder } = setupDecoder()
 
   t.plan(1)
-  decoder.getFormat = function getFormat(_context, pixelFormats) {
+  decoder.getFormat = function (context, pixelFormats) {
     t.ok(Array.isArray(pixelFormats))
-    const pixelFormat = pixelFormats.find(
-      (fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P
-    )
+    const pixelFormat = pixelFormats.find((fmt) => fmt === ffmpeg.constants.pixelFormats.YUV420P)
     return pixelFormat && ffmpeg.constants.pixelFormats.NONE
   }
 
@@ -243,8 +239,7 @@ test('CodecContext.getOption returns null if option is unset', (t) => {
 
   const params = codecCtx.getOption(
     'svtav1-params',
-    ffmpeg.constants.optionFlags.SEARCH_CHILDREN |
-      ffmpeg.constants.optionFlags.ALLOW_NULL
+    ffmpeg.constants.optionFlags.SEARCH_CHILDREN | ffmpeg.constants.optionFlags.ALLOW_NULL
   )
 
   t.absent(params)
@@ -264,15 +259,8 @@ test('CodecContext can get and set options', (t) => {
   codecCtx.setOption('crf', '23')
   t.is(codecCtx.getOption('crf'), '23')
 
-  codecCtx.setOption(
-    'threads',
-    '4',
-    ffmpeg.constants.optionFlags.SEARCH_CHILDREN
-  )
-  t.is(
-    codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN),
-    '4'
-  )
+  codecCtx.setOption('threads', '4', ffmpeg.constants.optionFlags.SEARCH_CHILDREN)
+  t.is(codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN), '4')
 })
 
 test('CodecContext.setOption throws if option is not found', (t) => {
@@ -302,7 +290,7 @@ test('CodecContext.listOptionNames returns array of names', (t) => {
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
-  const options = ffmpeg.Dictionary.from({
+  using options = ffmpeg.Dictionary.from({
     crf: '20',
     preset: '1',
     threads: '8'
@@ -317,7 +305,7 @@ test('CodecContext can set options via dictionary', (t) => {
 test('CodecContext can set options via dictionary', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
-  const options = ffmpeg.Dictionary.from({
+  using options = ffmpeg.Dictionary.from({
     crf: 'throws'
   })
 
@@ -344,6 +332,33 @@ test('CodecContext can copy options from another context', (t) => {
   targetCtx.copyOptionsFrom(sourceCtx)
   t.is(targetCtx.getOption('b'), sourceCtx.getOption('b'))
   t.is(targetCtx.getOption('threads'), sourceCtx.getOption('threads'))
+})
+
+test('CodecContext.hwDeviceCtx should be settable (darwin)', darwinFilter, (t) => {
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  t.execution(() => {
+    codecContext.hwDeviceCtx = hwDevice
+  })
+})
+
+test('CodecContext.hwDeviceCtx should be gettable after setting (darwin)', darwinFilter, (t) => {
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  codecContext.hwDeviceCtx = hwDevice
+
+  const retrieved = codecContext.hwDeviceCtx
+  t.ok(retrieved)
+  t.ok(retrieved instanceof ffmpeg.HWDeviceContext)
+})
+
+test('CodecContext.hwDeviceCtx should return null when not set (darwin)', darwinFilter, (t) => {
+  using codecContext = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+
+  const hwDeviceCtx = codecContext.hwDeviceCtx
+  t.is(hwDeviceCtx, null)
 })
 
 // Helpers
@@ -387,7 +402,7 @@ function setupDecoder() {
     let newPixelFormat
 
     while (format.readFrame(packet)) {
-      if (packet.streamIndex != stream.index) continue
+      if (packet.streamIndex !== stream.index) continue
 
       decoder.open()
       newPixelFormat = decoder.pixelFormat

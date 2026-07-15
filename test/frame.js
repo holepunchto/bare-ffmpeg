@@ -2,49 +2,49 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('frame expose a setter for width', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.width = 200
   })
 })
 
 test('frame expose a getter for width', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.width = 200
 
   t.ok(fr.width === 200)
 })
 
 test('frame expose a setter for height', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.height = 200
   })
 })
 
 test('frame expose a getter for height', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.height = 200
 
   t.ok(fr.height === 200)
 })
 
 test('frame expose a setter for format', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.format = ffmpeg.constants.pixelFormats.YUV420P
   })
 })
 
 test('frame expose a getter for format', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.format = ffmpeg.constants.pixelFormats.YUV420P
 
   t.ok(fr.format === ffmpeg.constants.pixelFormats.YUV420P)
 })
 
 test('frame expose an alloc method', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   fr.height = 200
   fr.width = 200
@@ -55,14 +55,14 @@ test('frame expose an alloc method', (t) => {
 })
 
 test('frame expose a setter for nbSamples', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.nbSamples = 1024
   })
 })
 
 test('frame expose a accessor for pts', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.is(fr.pts, -1)
 
@@ -72,7 +72,7 @@ test('frame expose a accessor for pts', (t) => {
 })
 
 test('frame expose a accessor for pkt_dts', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.is(fr.packetDTS, -1)
 
@@ -82,7 +82,7 @@ test('frame expose a accessor for pkt_dts', (t) => {
 })
 
 test('frame expose a accessor for timeBase', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
 
   t.alike(fr.timeBase, new ffmpeg.Rational(0, 1))
 
@@ -93,32 +93,151 @@ test('frame expose a accessor for timeBase', (t) => {
 })
 
 test('frame expose getter for picture type', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.is(fr.pictType, ffmpeg.constants.pictureTypes.NONE)
 })
 
 test('frame expose a setter for sampleRate', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   t.execution(() => {
     fr.sampleRate = 48000
   })
 })
 
 test('frame expose a getter for sampleRate', (t) => {
-  const fr = new ffmpeg.Frame()
+  using fr = new ffmpeg.Frame()
   fr.sampleRate = 48000
 
   t.ok(fr.sampleRate === 48000)
 })
 
 test('copy frame properties', (t) => {
-  const a = new ffmpeg.Frame()
+  using a = new ffmpeg.Frame()
   a.pts = 12
 
-  const b = new ffmpeg.Frame()
+  using b = new ffmpeg.Frame()
   t.not(b.pts, 12)
 
   b.copyProperties(a)
 
   t.is(b.pts, 12)
 })
+
+test('frame transferData should throw on software frames', (t) => {
+  using src = new ffmpeg.Frame()
+  src.width = 100
+  src.height = 100
+  src.format = ffmpeg.constants.pixelFormats.YUV420P
+  src.alloc()
+
+  using dst = new ffmpeg.Frame()
+  dst.width = 100
+  dst.height = 100
+  dst.format = ffmpeg.constants.pixelFormats.YUV420P
+  dst.alloc()
+
+  t.exception(() => {
+    src.transferData(dst)
+  })
+})
+
+test('frame hwFramesCtx getter returns null for software frames', (t) => {
+  using fr = new ffmpeg.Frame()
+  fr.width = 100
+  fr.height = 100
+  fr.format = ffmpeg.constants.pixelFormats.YUV420P
+  fr.alloc()
+
+  t.is(fr.hwFramesCtx, null)
+})
+
+test(
+  'frame hwFramesCtx getter returns context for hardware frames (darwin)',
+  { skip: require('bare-os').platform() !== 'darwin' || require('bare-process').env.CI },
+  (t) => {
+    const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
+
+    using packet = new ffmpeg.Packet()
+    using hwFrame = new ffmpeg.Frame()
+
+    t.plan(1)
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex !== streamIndex) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+
+      if (decoder.receiveFrame(hwFrame)) {
+        t.ok(hwFrame.hwFramesCtx instanceof ffmpeg.HWFramesContext)
+        break
+      }
+    }
+
+    t.teardown(clean)
+  }
+)
+
+test(
+  'frame hwMap should map hardware frame to software frame (darwin)',
+  { skip: require('bare-os').platform() !== 'darwin' || require('bare-process').env.CI },
+  (t) => {
+    const { decoder, format, streamIndex, clean } = initDecoderAndFormat()
+
+    using packet = new ffmpeg.Packet()
+    using hwFrame = new ffmpeg.Frame()
+    using swFrame = new ffmpeg.Frame()
+
+    t.plan(3)
+    while (format.readFrame(packet)) {
+      if (packet.streamIndex !== streamIndex) continue
+
+      decoder.open()
+      decoder.sendPacket(packet)
+
+      if (decoder.receiveFrame(hwFrame)) {
+        t.is(hwFrame.format, ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+
+        hwFrame.hwMap(swFrame, ffmpeg.constants.hwFrameMapFlags.READ)
+
+        t.is(swFrame.width, hwFrame.width)
+        t.is(swFrame.height, hwFrame.height)
+        break
+      }
+    }
+
+    t.teardown(clean)
+  }
+)
+
+// Helpers
+
+function initDecoderAndFormat() {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+
+  const io = new ffmpeg.IOContext(video)
+  const format = new ffmpeg.InputFormatContext(io)
+
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+
+  const decoder = stream.decoder()
+  decoder.hwDeviceCtx = hwDevice
+
+  decoder.getFormat = (_ctx, formats) => {
+    const hwFormat = formats.find((f) => f === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
+    return hwFormat ?? formats[0]
+  }
+
+  return {
+    decoder,
+    format,
+    streamIndex: stream.index,
+    clean: () => {
+      // Note: io is cleaned with format
+      decoder.destroy()
+      format.destroy()
+    }
+  }
+}

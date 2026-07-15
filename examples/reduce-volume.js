@@ -30,11 +30,7 @@ outputs.name = 'in'
 outputs.filterContext = srcCtx
 outputs.padIdx = 0
 
-graph.parse(
-  'volume=0.5,aformat=sample_fmts=s16:channel_layouts=mono',
-  inputs,
-  outputs
-)
+graph.parse('volume=0.5,aformat=sample_fmts=s16:channel_layouts=mono', inputs, outputs)
 
 graph.configure()
 
@@ -50,11 +46,7 @@ inputFrame.alloc()
 const inputSamples = new ffmpeg.Samples()
 inputSamples.fill(inputFrame)
 
-const sampleView = new Int16Array(
-  inputSamples.data.buffer,
-  inputSamples.data.byteOffset,
-  nbSamples
-)
+const sampleView = new Int16Array(inputSamples.data.buffer, inputSamples.data.byteOffset, nbSamples)
 for (let i = 0; i < nbSamples; i++) {
   const value = Math.sin((2 * Math.PI * 1000 * i) / sampleRate) * 0.5
   sampleView[i] = Math.round(value * 32767)

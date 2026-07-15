@@ -20,11 +20,7 @@ test('Samples.read copies PCM data back out of a frame', (t) => {
   const samplesA = new ffmpeg.Samples()
   const len = samplesA.fill(frameA)
 
-  const view = new Int16Array(
-    samplesA.data.buffer,
-    samplesA.data.byteOffset,
-    len / 2
-  )
+  const view = new Int16Array(samplesA.data.buffer, samplesA.data.byteOffset, len / 2)
   for (let i = 0; i < view.length; i++) {
     view[i] = (i * 13) % 32768
   }
@@ -120,11 +116,7 @@ test('Samples.copy copies data between buffers', (t) => {
 test('Samples should expose bufferSize static method', (t) => {
   using audioFrame = makeAudioFrame()
 
-  const len = ffmpeg.Samples.bufferSize(
-    audioFrame.format,
-    2,
-    audioFrame.nbSamples
-  )
+  const len = ffmpeg.Samples.bufferSize(audioFrame.format, 2, audioFrame.nbSamples)
 
   t.is(len, 4096)
 })
