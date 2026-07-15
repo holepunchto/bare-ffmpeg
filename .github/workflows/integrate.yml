@@ -22,6 +22,7 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             arch: x64
+            flags: --sanitize address
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
@@ -98,14 +99,24 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
+            arch: x64
+            source: true
+            flags: --sanitize address
           - os: macos-latest
             platform: darwin
+            arch: arm64
           - os: windows-latest
             platform: win32
+            arch: x64
     runs-on: ${{ matrix.os }}
     needs: prebuild
-    name: Test / ${{ matrix.platform }}
+    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
+        with:
+          source: ${{ matrix.source }}
+          flags: --debug ${{ matrix.flags }}
       - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
+        env:
+          LSAN_OPTIONS: suppressions=test/leaks.txt
