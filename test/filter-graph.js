@@ -75,7 +75,7 @@ test('FilterGraph should expose a parse method', (t) => {
   })
 })
 
-test('FilterGraph.parse should handle multiple inputs', (t) => {
+test('FilterGraph should split one input into multiple outputs', (t) => {
   const bufferContext = new ffmpeg.FilterContext()
   const sinkContext0 = new ffmpeg.FilterContext()
   const sinkContext1 = new ffmpeg.FilterContext()
@@ -104,7 +104,7 @@ test('FilterGraph.parse should handle multiple inputs', (t) => {
   })
 })
 
-test('FilterGraph.parse should handle multiple outputs', (t) => {
+test('FilterGraph should merge multiple inputs into one output', (t) => {
   const bufferContext0 = new ffmpeg.FilterContext()
   const bufferContext1 = new ffmpeg.FilterContext()
   const sinkContext = new ffmpeg.FilterContext()
@@ -130,6 +130,14 @@ test('FilterGraph.parse should handle multiple outputs', (t) => {
 
   t.execution(() => {
     graph.configure()
+  })
+})
+
+test('FilterGraph.parse should work without inputs and outputs', (t) => {
+  using graph = new ffmpeg.FilterGraph()
+
+  t.execution(() => {
+    graph.parse('color=c=black:s=1x1,nullsink')
   })
 })
 
