@@ -87,7 +87,7 @@ test('decode .webm', (t) => {
 })
 
 function decodeImage(image) {
-  const io = new ffmpeg.IOContext(image)
+  using io = new ffmpeg.IOContext(image)
   using format = new ffmpeg.InputFormatContext(io)
 
   let result
@@ -123,7 +123,7 @@ function decodeImage(image) {
 }
 
 function decodeAudio(audio) {
-  const io = new ffmpeg.IOContext(audio)
+  using io = new ffmpeg.IOContext(audio)
   using format = new ffmpeg.InputFormatContext(io)
 
   let result
@@ -189,7 +189,7 @@ function decodeAudio(audio) {
 }
 
 function decodeVideo(video) {
-  const io = new ffmpeg.IOContext(video)
+  using io = new ffmpeg.IOContext(video)
   using format = new ffmpeg.InputFormatContext(io)
 
   using packet = new ffmpeg.Packet()
@@ -216,7 +216,7 @@ function decodeVideo(video) {
     decoder.open()
     decoder.sendPacket(packet)
 
-    while (decoder.receiveFrame(frame)) {}
+    while (decoder.receiveFrame(frame));
 
     if (stream.codecParameters.type === constants.mediaTypes.VIDEO) {
       result.video.push(packet.data)
@@ -226,6 +226,8 @@ function decodeVideo(video) {
 
     packet.unref()
   }
+
+  frame.destroy()
 
   for (const { decoder } of streams) decoder.destroy()
 

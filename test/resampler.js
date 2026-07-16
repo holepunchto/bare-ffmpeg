@@ -107,8 +107,8 @@ test('resampler with audio from aiff file', (t) => {
   const audio = require('./fixtures/audio/sample.aiff', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(audio)
-  const format = new ffmpeg.InputFormatContext(io)
+  using io = new ffmpeg.IOContext(audio)
+  using format = new ffmpeg.InputFormatContext(io)
 
   for (const stream of format.streams) {
     const decoder = stream.decoder()
@@ -141,13 +141,12 @@ test('resampler with audio from aiff file', (t) => {
       }
     }
 
+    packet.destroy()
     inputFrame.destroy()
     outputFrame.destroy()
     decoder.destroy()
     resampler.destroy()
   }
-
-  format.destroy()
 })
 
 test('resampler converts between different sample formats', (t) => {
@@ -155,7 +154,7 @@ test('resampler converts between different sample formats', (t) => {
     with: { type: 'binary' }
   })
 
-  const io = new ffmpeg.IOContext(audio)
+  using io = new ffmpeg.IOContext(audio)
   using format = new ffmpeg.InputFormatContext(io)
   const stream = format.streams[0]
   using decoder = stream.decoder()
@@ -169,8 +168,8 @@ test('resampler converts between different sample formats', (t) => {
     ffmpeg.constants.sampleFormats.FLTP
   )
 
-  const packet = new ffmpeg.Packet()
-  const inputFrame = new ffmpeg.Frame()
+  using packet = new ffmpeg.Packet()
+  using inputFrame = new ffmpeg.Frame()
 
   decoder.open()
 
@@ -181,8 +180,7 @@ test('resampler converts between different sample formats', (t) => {
       using outputFrame = new ffmpeg.Frame()
       outputFrame.format = ffmpeg.constants.sampleFormats.FLTP
       outputFrame.nbSamples = inputFrame.nbSamples
-      outputFrame.channelLayout =
-        inputFrame.channelLayout || ffmpeg.constants.channelLayouts.MONO
+      outputFrame.channelLayout = inputFrame.channelLayout || ffmpeg.constants.channelLayouts.MONO
       outputFrame.alloc()
 
       const converted = resampler.convert(inputFrame, outputFrame)

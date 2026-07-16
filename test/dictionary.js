@@ -2,14 +2,14 @@ const test = require('brittle')
 const ffmpeg = require('..')
 
 test('basic set/get', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
 
   dict.set('foo', 'bar')
   t.is(dict.get('foo'), 'bar', 'retrieves value after set')
 })
 
 test('multiple entries', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
 
   dict.set('a', '1')
   dict.set('b', '2')
@@ -21,13 +21,13 @@ test('multiple entries', (t) => {
 })
 
 test('stringifies numbers', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
   dict.set('a', 1234)
   t.is(dict.get('a'), '1234')
 })
 
 test('overwrite existing key', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
 
   dict.set('foo', 'bar')
   dict.set('foo', 'baz')
@@ -36,28 +36,28 @@ test('overwrite existing key', (t) => {
 })
 
 test('non-existent key returns null', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
 
   t.is(dict.get('missing'), null, 'getting unknown key yields null')
 })
 
 test('it should expose an entries method', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
   dict.set('foo', 'bar')
   dict.set('boo', 'baz')
 
-  let entries = dict.entries()
+  const entries = dict.entries()
 
   t.alike(entries.at(0), ['foo', 'bar'])
   t.alike(entries.at(1), ['boo', 'baz'])
 })
 
 test('it should expose an iterator', (t) => {
-  const dict = new ffmpeg.Dictionary()
+  using dict = new ffmpeg.Dictionary()
   dict.set('foo', 'bar')
   dict.set('boo', 'baz')
 
-  let result = []
+  const result = []
   for (const [key, value] of dict) result.push({ key, value })
 
   t.is(result.at(0).key, 'foo')
@@ -67,7 +67,7 @@ test('it should expose an iterator', (t) => {
 })
 
 test('it should be created from an object', (t) => {
-  const dict = ffmpeg.Dictionary.from({
+  using dict = ffmpeg.Dictionary.from({
     foo: 'bar',
     boo: 'baz'
   })

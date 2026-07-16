@@ -6,15 +6,15 @@ const CodecParameters = require('./lib/codec-parameters')
 const Decoder = require('./lib/decoder')
 const Dictionary = require('./lib/dictionary')
 const Encoder = require('./lib/encoder')
-const {
-  InputFormatContext,
-  OutputFormatContext
-} = require('./lib/format-context')
+const { InputFormatContext, OutputFormatContext } = require('./lib/format-context')
 const Filter = require('./lib/filter')
 const FilterContext = require('./lib/filter-context')
 const FilterGraph = require('./lib/filter-graph')
 const FilterInOut = require('./lib/filter-inout')
 const Frame = require('./lib/frame')
+const HWDeviceContext = require('./lib/hw-device-context')
+const HWFramesContext = require('./lib/hw-frames-context')
+const HWFramesConstraints = require('./lib/hw-frames-constraints')
 const IOContext = require('./lib/io-context')
 const Image = require('./lib/image')
 const InputFormat = require('./lib/input-format')
@@ -40,6 +40,9 @@ exports.FilterContext = FilterContext
 exports.FilterGraph = FilterGraph
 exports.FilterInOut = FilterInOut
 exports.Frame = Frame
+exports.HWDeviceContext = HWDeviceContext
+exports.HWFramesContext = HWFramesContext
+exports.HWFramesConstraints = HWFramesConstraints
 exports.IOContext = IOContext
 exports.Image = Image
 exports.InputFormat = InputFormat

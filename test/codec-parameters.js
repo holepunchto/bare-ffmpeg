@@ -14,9 +14,7 @@ test.hook('setup', () => {
     options,
     'testsrc=size=640x480:rate=30'
   )
-  const stream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
+  const stream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
   codecParam = stream.codecParameters
 })
@@ -85,10 +83,10 @@ test('CodecParameters class should expose a extraData setter', (t) => {
   const buf = Buffer.from('test')
   codecParam.extraData = buf
 
-  t.ok(codecParam.extraData[0] == 't'.charCodeAt(0))
-  t.ok(codecParam.extraData[1] == 'e'.charCodeAt(0))
-  t.ok(codecParam.extraData[2] == 's'.charCodeAt(0))
-  t.ok(codecParam.extraData[3] == 't'.charCodeAt(0))
+  t.ok(codecParam.extraData[0] === 't'.charCodeAt(0))
+  t.ok(codecParam.extraData[1] === 'e'.charCodeAt(0))
+  t.ok(codecParam.extraData[2] === 's'.charCodeAt(0))
+  t.ok(codecParam.extraData[3] === 't'.charCodeAt(0))
 })
 
 test('CodecParameters class should expose bitRate getter', (t) => {
@@ -242,6 +240,42 @@ test('CodecParameters class should expose a frameSize getter', (t) => {
 test('CodecParameters class should expose a frameSize setter', (t) => {
   codecParam.frameSize = 1024
   t.ok(codecParam.frameSize === 1024)
+})
+
+test('CodecParameters class should expose a ColorSpace getter', (t) => {
+  t.is(typeof codecParam.colorSpace, 'number')
+})
+
+test('CodecParameters class should expose a ColorSpace setter', (t) => {
+  codecParam.colorSpace = ffmpeg.constants.colorSpace.SMPTE170M
+  t.is(codecParam.colorSpace, ffmpeg.constants.colorSpace.SMPTE170M)
+})
+
+test('CodecParameters class should expose a ColorPrimaries getter', (t) => {
+  t.is(typeof codecParam.colorPrimaries, 'number')
+})
+
+test('CodecParameters class should expose a ColorPrimaries setter', (t) => {
+  codecParam.colorPrimaries = ffmpeg.constants.colorPrimaries.SMPTE170M
+  t.is(codecParam.colorPrimaries, ffmpeg.constants.colorPrimaries.SMPTE170M)
+})
+
+test('CodecParameters class should expose a ColorPrimaries getter', (t) => {
+  t.is(typeof codecParam.colorTRC, 'number')
+})
+
+test('CodecParameters class should expose a ColorPrimaries setter', (t) => {
+  codecParam.colorTRC = ffmpeg.constants.colorTRC.SMPTE170M
+  t.is(codecParam.colorTRC, ffmpeg.constants.colorTRC.SMPTE170M)
+})
+
+test('CodecParameters class should expose a ColorRange getter', (t) => {
+  t.is(typeof codecParam.colorRange, 'number')
+})
+
+test('CodecParameters class should expose a ColorRange setter', (t) => {
+  codecParam.colorRange = ffmpeg.constants.colorRange.MPEG
+  t.is(codecParam.colorRange, ffmpeg.constants.colorRange.MPEG)
 })
 
 test('create independent CodecParameters', (t) => {

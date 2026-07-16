@@ -4,3 +4,6 @@ sandbox/
 node_modules/
 package-lock.json
 .cache
+
+# Example files
+sine_wave_440hz.webm

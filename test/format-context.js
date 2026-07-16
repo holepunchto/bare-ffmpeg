@@ -10,8 +10,7 @@ test('InputFormatContext should be instantiate with IOContext', (t) => {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(image)
-
+  using io = new ffmpeg.IOContext(image)
   using inputFormatContext = new ffmpeg.InputFormatContext(io)
 
   t.ok(inputFormatContext)
@@ -44,9 +43,7 @@ test('InputFormatContext.getBestStream should return a stream', (t) => {
     fallbackURL
   )
 
-  const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.VIDEO
-  )
+  const bestStream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
   t.ok(bestStream instanceof ffmpeg.Stream)
 })
@@ -58,9 +55,7 @@ test('InputFormatContext.getBestStream should return a null if no stream is foun
     fallbackURL
   )
 
-  const bestStream = inputFormatContext.getBestStream(
-    ffmpeg.constants.mediaTypes.SUBTITLE
-  )
+  const bestStream = inputFormatContext.getBestStream(ffmpeg.constants.mediaTypes.SUBTITLE)
 
   t.is(bestStream, null)
 })
@@ -77,14 +72,22 @@ test('InputFormatContext.inputFormat should expose a inputFormat getter', (t) =>
   t.ok(inputFormat instanceof ffmpeg.InputFormat)
 })
 
+test('InputFormatContext.duration should expose the container duration', (t) => {
+  const video = require('./fixtures/video/sample.mp4', {
+    with: { type: 'binary' }
+  })
+
+  using io = new ffmpeg.IOContext(video)
+  using inputFormatContext = new ffmpeg.InputFormatContext(io)
+
+  t.is(inputFormatContext.duration, 4000000)
+})
+
 // OutputFormatContext
 
 test('OutputFormatContext should expose an outputFormat getter', (t) => {
-  const io = new ffmpeg.IOContext(4096)
-  const outContext = new ffmpeg.OutputFormatContext(
-    new ffmpeg.OutputFormat('webm'),
-    io
-  )
+  using io = new ffmpeg.IOContext(4096)
+  using outContext = new ffmpeg.OutputFormatContext(new ffmpeg.OutputFormat('webm'), io)
 
   const outputFormat = outContext.outputFormat
 

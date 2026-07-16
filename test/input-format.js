@@ -12,10 +12,7 @@ test('InputFormat should expose an extensions getter', (t) => {
 
 test('InputFormat should expose an mimeType getter', (t) => {
   const inputFormat = new ffmpeg.InputFormat('webm')
-  t.is(
-    inputFormat.mimeType,
-    'audio/webm,audio/x-matroska,video/webm,video/x-matroska'
-  )
+  t.is(inputFormat.mimeType, 'audio/webm,audio/x-matroska,video/webm,video/x-matroska')
 })
 
 test('InputFormat should expose an name getter', (t) => {

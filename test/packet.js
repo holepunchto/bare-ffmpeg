@@ -1,9 +1,8 @@
 const test = require('brittle')
 const ffmpeg = require('..')
-const { SideData } = require('../lib/packet')
 
 test('packet should expose a buffer getter', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
 
   t.ok(packet.data instanceof Buffer)
@@ -11,10 +10,10 @@ test('packet should expose a buffer getter', (t) => {
 })
 
 test('packet should expose a streamIndex accessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
 
-  t.ok(typeof packet.streamIndex == 'number')
+  t.ok(typeof packet.streamIndex === 'number')
 
   packet.streamIndex = 9
 
@@ -23,38 +22,38 @@ test('packet should expose a streamIndex accessor', (t) => {
 
 test('packet should be instantiate from an Buffer', (t) => {
   const buf = Buffer.from([0x41, 0x42, 0x43, 0x44])
-  const packet = new ffmpeg.Packet(buf)
+  using packet = new ffmpeg.Packet(buf)
   t.ok(packet)
 })
 
 test('packet should copy and expose its data', (t) => {
   const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
-  const packet = new ffmpeg.Packet(inputBuffer)
+  using packet = new ffmpeg.Packet(inputBuffer)
 
   const buffer = packet.data
 
-  t.ok(buffer[0] == 0x41)
-  t.ok(buffer[1] == 0x42)
-  t.ok(buffer[2] == 0x43)
-  t.ok(buffer[3] == 0x44)
+  t.ok(buffer[0] === 0x41)
+  t.ok(buffer[1] === 0x42)
+  t.ok(buffer[2] === 0x43)
+  t.ok(buffer[3] === 0x44)
 })
 
 test('packet set data', (t) => {
   const inputBuffer = Buffer.from([0x41, 0x42, 0x43, 0x44])
-  const packet = new ffmpeg.Packet(inputBuffer)
+  using packet = new ffmpeg.Packet(inputBuffer)
 
   packet.data = Buffer.from([0x45, 0x46, 0x47, 0x48])
 
   const buffer = packet.data
 
-  t.ok(buffer[0] == 0x45)
-  t.ok(buffer[1] == 0x46)
-  t.ok(buffer[2] == 0x47)
-  t.ok(buffer[3] == 0x48)
+  t.ok(buffer[0] === 0x45)
+  t.ok(buffer[1] === 0x46)
+  t.ok(buffer[2] === 0x47)
+  t.ok(buffer[3] === 0x48)
 })
 
 test('packet should expose dts acessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.is(packet.dts, -1)
 
@@ -64,7 +63,7 @@ test('packet should expose dts acessor', (t) => {
 })
 
 test('packet should expose pts acessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.is(packet.pts, -1)
 
@@ -74,7 +73,7 @@ test('packet should expose pts acessor', (t) => {
 })
 
 test('packet should expose timeBase accessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.alike(packet.timeBase, new ffmpeg.Rational(0, 1))
 
@@ -85,7 +84,7 @@ test('packet should expose timeBase accessor', (t) => {
 })
 
 test('packet should expose duration accessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.is(packet.duration, 0)
 
@@ -95,7 +94,7 @@ test('packet should expose duration accessor', (t) => {
 })
 
 test('packet should expose flags accessor', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.is(packet.flags, 0)
 
@@ -105,13 +104,13 @@ test('packet should expose flags accessor', (t) => {
 })
 
 test('packet should expose isKeyFrame getter', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   t.is(typeof packet.isKeyframe, 'boolean')
 })
 
 test('packet should expose isKeyFrame setter', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   packet.isKeyframe = false
   t.is(packet.isKeyframe, false)
@@ -121,7 +120,7 @@ test('packet should expose isKeyFrame setter', (t) => {
 })
 
 test('rescale packet timestamps & timebase', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
 
   const ts = 7000
 
@@ -138,7 +137,7 @@ test('rescale packet timestamps & timebase', (t) => {
 })
 
 test('packet should expose a sideData getter', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
 
   const sideData = packet.sideData
@@ -146,7 +145,7 @@ test('packet should expose a sideData getter', (t) => {
 })
 
 test('packet should expose a sideData setter', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
 
   // TODO: there is crash if I pass two SideData with the same type
@@ -168,7 +167,7 @@ test('packet should expose a sideData setter', (t) => {
 })
 
 test('sideData object should expose a type method', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
   const obj1 = ffmpeg.Packet.SideData.fromData(
     Buffer.from('lol'),
@@ -182,7 +181,7 @@ test('sideData object should expose a type method', (t) => {
 })
 
 test('sideData object should expose a name method', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
   const obj1 = ffmpeg.Packet.SideData.fromData(
     Buffer.from('lol'),
@@ -196,7 +195,7 @@ test('sideData object should expose a name method', (t) => {
 })
 
 test('sideData object should expose a data method', (t) => {
-  const packet = new ffmpeg.Packet()
+  using packet = new ffmpeg.Packet()
   fillPacket(packet)
   const buf = Buffer.from('lol')
   const obj1 = ffmpeg.Packet.SideData.fromData(
@@ -210,8 +209,8 @@ test('sideData object should expose a data method', (t) => {
 })
 
 test('packet copyPropsFrom should copy all properties', (t) => {
-  const sourcePacket = makePacket()
-  const destPacket = new ffmpeg.Packet()
+  using sourcePacket = makePacket()
+  using destPacket = new ffmpeg.Packet()
   destPacket.copyPropsFrom(sourcePacket)
 
   t.is(destPacket.streamIndex, sourcePacket.streamIndex)
@@ -223,18 +222,15 @@ test('packet copyPropsFrom should copy all properties', (t) => {
   t.is(destPacket.isKeyframe, sourcePacket.isKeyframe)
 
   t.is(destPacket.sideData.length, sourcePacket.sideData.length)
-  t.is(
-    destPacket.sideData[0].type,
-    ffmpeg.constants.packetSideDataType.NEW_EXTRADATA
-  )
+  t.is(destPacket.sideData[0].type, ffmpeg.constants.packetSideDataType.NEW_EXTRADATA)
 })
 
 function fillPacket(packet) {
   const image = require('./fixtures/image/sample.jpeg', {
     with: { type: 'binary' }
   })
-  const io = new ffmpeg.IOContext(image)
-  const format = new ffmpeg.InputFormatContext(io)
+  using io = new ffmpeg.IOContext(image)
+  using format = new ffmpeg.InputFormatContext(io)
   format.readFrame(packet)
 }
 
@@ -259,7 +255,7 @@ function makePacket(options = {}) {
 
   options = { ...defaultOptions, ...options }
 
-  for ([key, value] of Object.entries(options)) {
+  for (const [key, value] of Object.entries(options)) {
     packet[key] = value
   }
 
