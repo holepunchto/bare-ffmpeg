@@ -29,8 +29,6 @@ test('FilterContext.setOptionDefaults restores default values', (t) => {
   volumeCtx.setOption('volume', '0.5')
   t.is(Number(volumeCtx.getOption('volume')), 0.5)
 
-  // Also resets options in the wrapped filter's private data (child object),
-  // not just those on the AVFilterContext itself.
   volumeCtx.setOptionDefaults()
   t.is(Number(volumeCtx.getOption('volume')), original)
 })
