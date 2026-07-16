@@ -128,53 +128,47 @@ test('copy frame properties', (t) => {
 
   t.is(b.pts, 12)
   t.is(b.sideData.length, 1)
-  t.is(
-    b.sideData[0].type,
-    ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
-  )
+  t.is(b.sideData[0].type, ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL)
   t.ok(b.sideData[0].data.equals(a.sideData[0].data))
 })
 
 test('Frame sideData round-trips custom payloads', (t) => {
-  const frame = new ffmpeg.Frame()
+  using frame = new ffmpeg.Frame()
 
-  const payload = Buffer.from(
-    Array.from({ length: 32 }, (_, index) => (index * 7) & 0xff)
-  )
+  const payload = Buffer.from(Array.from({ length: 32 }, (_, index) => (index * 7) & 0xff))
 
   frame.sideData = [
-    ffmpeg.Frame.SideData.fromData(
-      payload,
-      ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
-    )
+    ffmpeg.Frame.SideData.fromData(payload, ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL)
   ]
 
   const sideData = frame.sideData
   t.is(sideData.length, 1)
   t.is(sideData[0].type, ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL)
   t.ok(sideData[0].data.equals(payload))
+})
+
+test('Frame removeSideData clears stored side data', (t) => {
+  using frame = new ffmpeg.Frame()
+
+  frame.sideData = [
+    ffmpeg.Frame.SideData.fromData(
+      Buffer.from(Array.from({ length: 32 }, (_, index) => (index * 7) & 0xff)),
+      ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
+    )
+  ]
+  t.is(frame.sideData.length, 1)
 
   frame.removeSideData(ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL)
   t.is(frame.sideData.length, 0)
-
-  frame.destroy()
 })
 
 test('Frame.metadata exposes filter-produced entries', (t) => {
   const { graph, sourceCtx, sinkCtx } = setupAstatsGraph(t)
 
-  const inputFrame = createAudioFrame(0)
-  t.teardown(() => {
-    inputFrame.destroy()
-  })
-
+  using inputFrame = createAudioFrame(0)
   t.ok(graph.pushFrame(sourceCtx, inputFrame) >= 0)
 
-  const outputFrame = new ffmpeg.Frame()
-  t.teardown(() => {
-    outputFrame.destroy()
-  })
-
+  using outputFrame = new ffmpeg.Frame()
   t.ok(graph.pullFrame(sinkCtx, outputFrame) >= 0)
 
   const entries = outputFrame.metadata.entries()
@@ -185,7 +179,11 @@ test('Frame.metadata exposes filter-produced entries', (t) => {
 
   const [key, value] = astatsEntry
   t.is(outputFrame.metadata.get(key), value)
-  t.is(outputFrame.metadata.get('missing-key'), null)
+})
+
+test('Frame.metadata.get returns null for missing keys', (t) => {
+  using frame = new ffmpeg.Frame()
+  t.is(frame.metadata.get('missing-key'), null)
 })
 
 test('frame transferData should throw on software frames', (t) => {
@@ -330,11 +328,7 @@ function createAudioFrame(pts = 0) {
   const samples = new ffmpeg.Samples()
   samples.fill(frame)
 
-  const view = new Int16Array(
-    samples.data.buffer,
-    samples.data.byteOffset,
-    nbSamples
-  )
+  const view = new Int16Array(samples.data.buffer, samples.data.byteOffset, nbSamples)
 
   for (let i = 0; i < nbSamples; i++) {
     const value = Math.sin((2 * Math.PI * 440 * i) / sampleRate)

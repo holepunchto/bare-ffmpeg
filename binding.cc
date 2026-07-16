@@ -4889,6 +4889,11 @@ bare_ffmpeg_set_option_defaults(
   }
 
   av_opt_set_defaults(*owner);
+
+  void *child = nullptr;
+  while ((child = av_opt_child_next(*owner, child))) {
+    av_opt_set_defaults(child);
+  }
 }
 
 static void

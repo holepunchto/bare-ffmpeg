@@ -6,18 +6,31 @@ test('it should expose a FilterContext class', (t) => {
   t.ok(filterCtx)
 })
 
-test('FilterContext exposes runtime option helpers', (t) => {
+test('FilterContext.getOption returns the current option value', (t) => {
+  const volumeCtx = setupVolumePipeline(t)
+
+  const volume = volumeCtx.getOption('volume')
+  t.is(typeof volume, 'string')
+  t.ok(Number.isFinite(Number(volume)))
+})
+
+test('FilterContext.setOption updates the option value', (t) => {
+  const volumeCtx = setupVolumePipeline(t)
+
+  volumeCtx.setOption('volume', '0.5')
+  t.is(Number(volumeCtx.getOption('volume')), 0.5)
+})
+
+test('FilterContext.setOptionDefaults restores default values', (t) => {
   const volumeCtx = setupVolumePipeline(t)
 
   const original = Number(volumeCtx.getOption('volume'))
-  t.is(original, original, 'sanity check succeeded')
 
   volumeCtx.setOption('volume', '0.5')
   t.is(Number(volumeCtx.getOption('volume')), 0.5)
 
-  volumeCtx.setOption('volume', String(original))
-  t.is(Number(volumeCtx.getOption('volume')), original)
-
+  // Also resets options in the wrapped filter's private data (child object),
+  // not just those on the AVFilterContext itself.
   volumeCtx.setOptionDefaults()
   t.is(Number(volumeCtx.getOption('volume')), original)
 })

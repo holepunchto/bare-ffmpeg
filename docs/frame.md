@@ -64,6 +64,59 @@ if (hwFrame.hwFramesCtx) {
 
 **Returns**: `HWFramesContext | null`
 
+### `Frame.metadata`
+
+Gets the frame metadata as a `FrameMetadata` accessor. Metadata is a set of key/value string pairs attached to the frame, for example values produced by filters such as `astats` or `metadata`.
+
+```js
+const metadata = frame.metadata
+
+// Look up a single entry (returns null when the key is absent)
+const peak = metadata.get('lavfi.astats.Overall.Peak_level')
+
+// Iterate over every [key, value] entry
+for (const [key, value] of metadata) {
+  console.log(key, value)
+}
+
+// Or collect them all at once
+const entries = metadata.entries()
+```
+
+**Returns**: `FrameMetadata`
+
+### `Frame.sideData`
+
+Gets or sets the side data associated with the frame. Setting replaces the current side data with the provided list.
+
+```js
+frame.sideData = [
+  ffmpeg.Frame.SideData.fromData(
+    Buffer.from([0, 1, 2, 3]),
+    ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL
+  )
+]
+
+for (const sideData of frame.sideData) {
+  console.log(sideData.type, sideData.name, sideData.data)
+}
+```
+
+**Returns**: `Array<Frame.SideData>`
+
+## Static Properties
+
+### `Frame.SideData`
+
+The frame side data class. Use `Frame.SideData.fromData(data, type)` to build an entry for assignment to `Frame.sideData`.
+
+**Parameters (`fromData`):**
+
+- `data` (`Buffer`): The side data buffer
+- `type` (`number`): A `ffmpeg.constants.frameSideDataType` constant
+
+**Returns**: A new `Frame.SideData` instance with `type`, `name` and `data` accessors.
+
 ## Methods
 
 ### `Frame.alloc()`
@@ -94,6 +147,20 @@ rescaler.convert(src, dst)
 
 dst.copyProperties(src) // transfer all meta-data
 ```
+
+**Returns**: `void`
+
+### `Frame.removeSideData(type)`
+
+Removes all side data of the given type from the frame.
+
+```js
+frame.removeSideData(ffmpeg.constants.frameSideDataType.CONTENT_LIGHT_LEVEL)
+```
+
+**Parameters:**
+
+- `type` (`number`): A `ffmpeg.constants.frameSideDataType` constant
 
 **Returns**: `void`
 
