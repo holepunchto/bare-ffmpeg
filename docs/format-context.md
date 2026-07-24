@@ -20,7 +20,7 @@ Gets the array of media streams.
 
 ### `FormatContext.duration`
 
-Gets the container duration in `AV_TIME_BASE` units, or `-1` if unknown.
+Gets or sets the container duration in `AV_TIME_BASE` units. Set to `-1` to mark the duration as unknown.
 
 **Returns**: `number`
 

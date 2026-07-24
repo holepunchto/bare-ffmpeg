@@ -94,6 +94,19 @@ test('OutputFormatContext should expose an outputFormat getter', (t) => {
   t.ok(outputFormat instanceof ffmpeg.OutputFormat)
 })
 
+test('OutputFormatContext.duration should be settable', (t) => {
+  using io = new ffmpeg.IOContext(4096)
+  using outContext = new ffmpeg.OutputFormatContext(new ffmpeg.OutputFormat('webm'), io)
+
+  outContext.duration = 4000000
+
+  t.is(outContext.duration, 4000000)
+
+  outContext.duration = -1
+
+  t.is(outContext.duration, -1)
+})
+
 // Helpers
 
 function getOptions() {
