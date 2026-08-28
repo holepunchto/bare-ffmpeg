@@ -166,6 +166,30 @@ test('IOContext.transfer() should transfer ownership between IOContext instances
   t.pass('both IOContext instances can be destroyed safely')
 })
 
+test('InputFormatContext surfaces the real ffmpeg error on invalid input', (t) => {
+  const garbage = new Uint8Array(8192).fill(0x41)
+
+  let offset = 0
+  using io = new ffmpeg.IOContext(4096, {
+    onread: (buffer) => {
+      const remaining = garbage.length - offset
+      if (remaining <= 0) return 0
+      const n = Math.min(buffer.length, remaining)
+      buffer.set(garbage.subarray(offset, offset + n))
+      offset += n
+      return n
+    }
+  })
+
+  t.plan(2)
+  try {
+    using _ctx = new ffmpeg.InputFormatContext(io)
+  } catch (err) {
+    t.not(err.message, 'Success')
+    t.ok(/invalid data/i.test(err.message))
+  }
+})
+
 // Helpers
 
 function runStreams(io) {
