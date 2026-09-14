@@ -8,7 +8,7 @@ project(bare_ffmpeg C CXX)
 
 option(BARE_FFMPEG_ENABLE_GPL "Enable GPL-licensed features (e.g., x264)" OFF)
 
-fetch_package("github:holepunchto/libjstl#098664c")
+fetch_package("github:holepunchto/libjstl#7e31e67")
 
 set(ffmpeg_features dav1d svt-av1 opus vpx)
 
