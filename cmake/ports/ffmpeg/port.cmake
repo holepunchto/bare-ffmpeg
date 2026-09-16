@@ -119,13 +119,23 @@ elseif(WIN32)
     --enable-d3d12va
     --enable-dxva2
     --enable-mediafoundation
+    --enable-vulkan
+    --host-extralibs=
   )
+
 endif()
 
 set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
+
+if(WIN32 AND DEFINED ENV{VULKAN_SDK})
+  file(TO_CMAKE_PATH "$ENV{VULKAN_SDK}" VULKAN_SDK_PATH)
+
+  list(APPEND cflags "-I${VULKAN_SDK_PATH}/Include")
+  list(APPEND cxxflags "-I${VULKAN_SDK_PATH}/Include")
+endif()
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
