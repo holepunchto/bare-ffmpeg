@@ -5337,6 +5337,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_NV21)
   V(AV_PIX_FMT_NV24)
   V(AV_PIX_FMT_VIDEOTOOLBOX)
+  V(AV_PIX_FMT_VULKAN)
 
   V(AV_HWDEVICE_TYPE_VIDEOTOOLBOX)
   V(AV_HWDEVICE_TYPE_CUDA)
@@ -5344,6 +5345,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_HWDEVICE_TYPE_DXVA2)
   V(AV_HWDEVICE_TYPE_QSV)
   V(AV_HWDEVICE_TYPE_D3D11VA)
+  V(AV_HWDEVICE_TYPE_VULKAN)
 
   V(AV_HWFRAME_MAP_READ)
   V(AV_HWFRAME_MAP_WRITE)
