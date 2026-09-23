@@ -120,9 +120,7 @@ elseif(WIN32)
     --enable-dxva2
     --enable-mediafoundation
     --enable-vulkan
-    --host-extralibs=
   )
-
 endif()
 
 set(env)

@@ -48,7 +48,6 @@ test('HWDeviceContext.from should return null for null handle', (t) => {
   t.is(result, null)
 })
 
-
 const windowsFilter = {
   skip: process.env.CI || os.platform() !== 'win32'
 }
@@ -60,9 +59,7 @@ test('decode H.264 video with Vulkan', windowsFilter, (t) => {
 
   using io = new ffmpeg.IOContext(video)
   using format = new ffmpeg.InputFormatContext(io)
-  using hwDevice = new ffmpeg.HWDeviceContext(
-    ffmpeg.constants.hwDeviceTypes.VULKAN
-  )
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VULKAN)
 
   const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
 
