@@ -81,12 +81,12 @@ if(APPLE)
 
     --enable-avfoundation
     --enable-videotoolbox
+    --enable-audiotoolbox
   )
 
   if(NOT IOS)
     list(APPEND args
       --enable-appkit
-      --enable-audiotoolbox
     )
   endif()
 elseif(LINUX)
@@ -489,19 +489,17 @@ if(APPLE)
       "-framework CoreServices"
   )
 
-  if(NOT IOS)
-    target_link_libraries(
-      avcodec
-      INTERFACE
-        "-framework AudioToolbox"
-    )
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      "-framework AudioToolbox"
+  )
 
-    target_link_libraries(
-      avdevice
-      INTERFACE
-        "-framework AudioToolbox"
-    )
-  endif()
+  target_link_libraries(
+    avdevice
+    INTERFACE
+      "-framework AudioToolbox"
+  )
 elseif(ANDROID)
   target_link_libraries(
     avcodec
