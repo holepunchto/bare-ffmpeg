@@ -22,6 +22,7 @@ jobs:
       - run: npm run lint
   prebuild:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
@@ -99,6 +100,7 @@ jobs:
           upload: true
   test:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
