@@ -126,5 +126,3 @@ jobs:
           flags: --debug ${{ matrix.flags }}
       - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
-        env:
-          LSAN_OPTIONS: suppressions=test/leaks.txt
