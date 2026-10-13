@@ -152,6 +152,22 @@ if(CMAKE_C_COMPILER)
   endif()
 endif()
 
+# The host compiler is not Apple Clang and so does not locate the macOS SDK on
+# its own.
+if(CMAKE_HOST_APPLE)
+  execute_process(
+    COMMAND xcrun --sdk macosx --show-sdk-path
+    OUTPUT_VARIABLE host_sysroot
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+
+  list(APPEND args
+    "--host-cflags=-isysroot ${host_sysroot}"
+    "--host-ldflags=-isysroot ${host_sysroot}"
+  )
+endif()
+
 if(CMAKE_CXX_COMPILER)
   cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CXX_path)
   cmake_path(GET CMAKE_CXX_COMPILER FILENAME CXX_filename)
