@@ -1,5 +1,13 @@
 include_guard(GLOBAL)
 
+set(env)
+
+if(CMAKE_ASM_NASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH NASM_path)
+
+  list(APPEND env --modify "PATH=path_list_prepend:${NASM_path}")
+endif()
+
 declare_port(
   "git:code.videolan.org/videolan/dav1d#1.5.4"
   dav1d
@@ -8,6 +16,7 @@ declare_port(
   ARGS
     -Denable_tests=false
     -Denable_tools=false
+  ENV ${env}
 )
 
 add_library(dav1d STATIC IMPORTED GLOBAL)

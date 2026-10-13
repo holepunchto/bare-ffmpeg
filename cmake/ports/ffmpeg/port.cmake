@@ -191,6 +191,14 @@ if(CMAKE_ASM_COMPILER)
   list(APPEND args "--as=${AS_filename}")
 endif()
 
+if(CMAKE_ASM_NASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH NASM_path)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER FILENAME NASM_filename)
+
+  list(APPEND path "${NASM_path}")
+  list(APPEND args "--x86asmexe=${NASM_filename}")
+endif()
+
 if(CMAKE_RC_COMPILER)
   cmake_path(GET CMAKE_RC_COMPILER PARENT_PATH RC_path)
   cmake_path(GET CMAKE_RC_COMPILER FILENAME RC_filename)
