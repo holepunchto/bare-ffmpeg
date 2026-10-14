@@ -119,6 +119,7 @@ elseif(WIN32)
     --enable-d3d12va
     --enable-dxva2
     --enable-mediafoundation
+    --enable-vulkan
   )
 endif()
 
@@ -126,6 +127,50 @@ set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
+
+if(WIN32)
+  set(VULKAN_SDK_PATH "")
+
+  # Prefer the SDK path provided by the environment.
+  if(DEFINED ENV{VULKAN_SDK} AND NOT "$ENV{VULKAN_SDK}" STREQUAL "")
+    file(TO_CMAKE_PATH "$ENV{VULKAN_SDK}" vulkan_sdk_candidate)
+
+    if(EXISTS "${vulkan_sdk_candidate}/Include/vulkan/vulkan.h")
+      set(VULKAN_SDK_PATH "${vulkan_sdk_candidate}")
+    endif()
+  endif()
+
+  # Fall back to discovering an installed SDK.
+  if(NOT VULKAN_SDK_PATH)
+    file(GLOB vulkan_sdk_candidates
+      LIST_DIRECTORIES TRUE
+      "C:/VulkanSDK/*"
+    )
+
+    list(SORT vulkan_sdk_candidates
+      COMPARE NATURAL
+      ORDER DESCENDING
+    )
+
+    foreach(vulkan_sdk_candidate IN LISTS vulkan_sdk_candidates)
+      if(EXISTS "${vulkan_sdk_candidate}/Include/vulkan/vulkan.h")
+        set(VULKAN_SDK_PATH "${vulkan_sdk_candidate}")
+        break()
+      endif()
+    endforeach()
+  endif()
+
+  file(TO_CMAKE_PATH
+    "${VULKAN_SDK_PATH}/Include"
+    VULKAN_INCLUDE_PATH
+  )
+
+  list(APPEND cflags "-I${VULKAN_INCLUDE_PATH}")
+  list(APPEND cxxflags "-I${VULKAN_INCLUDE_PATH}")
+endif()
+
+
+
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
