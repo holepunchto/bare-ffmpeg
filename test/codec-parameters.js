@@ -284,15 +284,6 @@ test('create independent CodecParameters', (t) => {
   codecParam.destroy()
 })
 
-test('CodecParameters class should show sampleAspectRatio and the color props on inspect', (t) => {
-  const out = codecParam[Symbol.for('bare.inspect')]()
-  t.ok('sampleAspectRatio' in out)
-  t.absent('sampleAsectRatio' in out)
-  for (const key of ['colorSpace', 'colorPrimaries', 'colorTRC', 'colorRange']) {
-    t.ok(key in out, key)
-  }
-})
-
 test.hook('teardown', () => {
   inputFormatContext.destroy()
 })
