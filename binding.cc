@@ -1,5 +1,7 @@
 #include <cstdio>
+#include <mutex>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_set>
 #include <vector>
@@ -386,6 +388,137 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   context->handle = format;
 
   return handle;
+}
+
+using bare_ffmpeg_device_info_t = std::tuple<std::string, std::string, bool, std::vector<int>>;
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_device_info_list(js_env_t *env, AVDeviceInfoList *list, int res) {
+  int err;
+
+  if (res < 0) {
+    if (list) avdevice_free_list_devices(&list);
+
+    err = js_throw_error(env, NULL, av_err2str(res));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::vector<bare_ffmpeg_device_info_t> devices{};
+
+  for (int i = 0; i < list->nb_devices; i++) {
+    AVDeviceInfo *info = list->devices[i];
+
+    std::vector<int> media_types(info->media_types, info->media_types + info->nb_media_types);
+
+    devices.emplace_back(
+      info->device_name ? info->device_name : "",
+      info->device_description ? info->device_description : "",
+      i == list->default_device,
+      media_types
+    );
+  }
+
+  avdevice_free_list_devices(&list);
+
+  return devices;
+}
+
+// avfoundation doesn't implement get_device_list, it only logs the devices
+// when opened with list_devices. Capture those log lines while listing.
+
+static std::mutex bare_ffmpeg_log_capture_lock;
+static thread_local const AVClass *bare_ffmpeg_log_capture_class = NULL;
+static thread_local std::vector<std::string> *bare_ffmpeg_log_capture_lines = NULL;
+
+static void
+bare_ffmpeg_log_capture(void *avcl, int level, const char *fmt, va_list vl) {
+  if (bare_ffmpeg_log_capture_class && avcl && *(const AVClass **) avcl == bare_ffmpeg_log_capture_class) {
+    char line[1024];
+    vsnprintf(line, sizeof(line), fmt, vl);
+    bare_ffmpeg_log_capture_lines->emplace_back(line);
+    return;
+  }
+
+  av_log_default_callback(avcl, level, fmt, vl);
+}
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_avfoundation_list_devices(const AVInputFormat *format) {
+  std::lock_guard<std::mutex> guard(bare_ffmpeg_log_capture_lock);
+
+  std::vector<std::string> lines;
+
+  bare_ffmpeg_log_capture_lines = &lines;
+  bare_ffmpeg_log_capture_class = format->priv_class;
+  av_log_set_callback(bare_ffmpeg_log_capture);
+
+  AVFormatContext *context = NULL;
+  AVDictionary *options = NULL;
+  av_dict_set(&options, "list_devices", "1", 0);
+
+  // Fails with AVERROR_EXIT once the devices are listed
+  avformat_open_input(&context, "", format, &options);
+
+  av_dict_free(&options);
+  if (context) avformat_close_input(&context);
+
+  av_log_set_callback(av_log_default_callback);
+  bare_ffmpeg_log_capture_class = NULL;
+  bare_ffmpeg_log_capture_lines = NULL;
+
+  std::vector<bare_ffmpeg_device_info_t> devices{};
+  int media_type = AVMEDIA_TYPE_UNKNOWN;
+
+  for (const auto &line : lines) {
+    int index;
+    char description[1024];
+
+    if (sscanf(line.c_str(), "[%d] %1023[^\n]", &index, description) != 2) {
+      if (line.find("video devices") != std::string::npos) media_type = AVMEDIA_TYPE_VIDEO;
+      else if (line.find("audio devices") != std::string::npos) media_type = AVMEDIA_TYPE_AUDIO;
+
+      continue;
+    }
+
+    // avfoundation opens devices as "video:audio", so audio devices are ":<index>"
+    std::string name = media_type == AVMEDIA_TYPE_AUDIO ? ":" + std::to_string(index) : std::to_string(index);
+
+    devices.emplace_back(name, description, false, std::vector<int>{media_type});
+  }
+
+  return devices;
+}
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_input_format_list_devices(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format
+) {
+  AVDeviceInfoList *list = NULL;
+
+  int res = avdevice_list_input_sources(format->handle, NULL, NULL, &list);
+
+  if (res == AVERROR(ENOSYS) && strcmp(format->handle->name, "avfoundation") == 0) {
+    return bare_ffmpeg_avfoundation_list_devices(format->handle);
+  }
+
+  return bare_ffmpeg_device_info_list(env, list, res);
+}
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_output_format_list_devices(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format
+) {
+  AVDeviceInfoList *list = NULL;
+
+  int res = avdevice_list_output_sinks(format->handle, NULL, NULL, &list);
+
+  return bare_ffmpeg_device_info_list(env, list, res);
 }
 
 static int32_t
@@ -4953,12 +5086,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initInputFormat", bare_ffmpeg_input_format_init)
+  V("listInputFormatDevices", bare_ffmpeg_input_format_list_devices)
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
   V("getInputFormatExtensions", bare_ffmpeg_input_format_get_extensions)
   V("getInputFormatMimeType", bare_ffmpeg_input_format_get_mime_type)
   V("getInputFormatName", bare_ffmpeg_input_format_get_name)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
+  V("listOutputFormatDevices", bare_ffmpeg_output_format_list_devices)
   V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
   V("getOutputFormatExtensions", bare_ffmpeg_output_format_get_extensions)
   V("getOutputFormatMimeType", bare_ffmpeg_output_format_get_mime_type)
