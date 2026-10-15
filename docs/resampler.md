@@ -48,6 +48,21 @@ Gets the resampler delay in samples.
 
 ## Methods
 
+### `Resampler.getOutSamples(inputSamples)`
+
+Gets an upper bound for the number of output samples the next `convert()` call will produce for `inputSamples` input samples, including any samples buffered from previous calls. Useful for sizing the output frame.
+
+**Parameters:**
+
+- `inputSamples` (`number`): Number of input samples
+
+**Returns**: `number`
+
+```js
+outputFrame.nbSamples = resampler.getOutSamples(inputFrame.nbSamples)
+outputFrame.alloc()
+```
+
 ### `Resampler.convert(inputFrame, outputFrame)`
 
 Converts audio data from input frame to output frame.

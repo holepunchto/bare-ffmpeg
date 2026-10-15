@@ -29,6 +29,55 @@ test('resampler converts frames', (t) => {
   t.ok(converted <= outputSamples, 'conversion fits in output buffer')
 })
 
+test('resampler getOutSamples makes room for samples buffered from previous calls', (t) => {
+  using resampler = new ffmpeg.Resampler(
+    44100,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16,
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  using inputFrame = createAudioFrame(
+    1024,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  // A smaller output frame leaves samples buffered in the resampler
+  using smallFrame = createAudioFrame(
+    960,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+  t.is(resampler.convert(inputFrame, smallFrame), 960)
+
+  const outSamples = resampler.getOutSamples(inputFrame.nbSamples)
+  t.ok(outSamples > Math.ceil((1024 * 48000) / 44100))
+
+  using outputFrame = createAudioFrame(
+    outSamples,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  t.ok(resampler.convert(inputFrame, outputFrame) < outSamples, 'buffered samples fit')
+})
+
+test('resampler getOutSamples at the same rate', (t) => {
+  using resampler = new ffmpeg.Resampler(
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16,
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  t.is(resampler.getOutSamples(960), 960)
+})
+
 test('resampler converts audio data', (t) => {
   const inputRate = 44100
   const outputRate = 48000
