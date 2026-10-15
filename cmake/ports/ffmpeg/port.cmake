@@ -96,6 +96,7 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
+    --enable-vulkan
   )
 elseif(ANDROID)
   list(APPEND args
@@ -127,6 +128,85 @@ set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
+
+# Initialize these for vulkan setup
+set(depends)
+set(pkg_config_path)
+
+if(LINUX)  
+  set(VULKAN_HEADERS_VERSION "1.3.277")
+  set(VULKAN_HEADERS_USABLE FALSE)
+  unset(VULKAN_INCLUDE_DIR CACHE)
+  unset(VULKAN_INCLUDE_DIR)
+
+  find_path(
+    VULKAN_INCLUDE_DIR
+    NAMES vulkan/vulkan.h
+  )
+
+  if(VULKAN_INCLUDE_DIR AND
+      EXISTS "${VULKAN_INCLUDE_DIR}/vulkan/vulkan_core.h")
+    file(STRINGS
+      "${VULKAN_INCLUDE_DIR}/vulkan/vulkan_core.h"
+      VULKAN_HEADER_VERSION_LINE
+      REGEX "^#define VK_HEADER_VERSION[ \t]+[0-9]+"
+    )
+
+    if(VULKAN_HEADER_VERSION_LINE MATCHES
+        "^#define VK_HEADER_VERSION[ \t]+([0-9]+)")
+      if(CMAKE_MATCH_1 GREATER_EQUAL 277)
+        set(VULKAN_HEADERS_USABLE TRUE)
+      endif()
+    endif()
+  endif()
+
+  if(NOT VULKAN_HEADERS_USABLE)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      VulkanHeaders
+      URL "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v${VULKAN_HEADERS_VERSION}.tar.gz"
+      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+
+    FetchContent_GetProperties(VulkanHeaders)
+
+    if(NOT vulkanheaders_POPULATED)
+      FetchContent_Populate(VulkanHeaders)
+    endif()
+
+    set(
+      VULKAN_INCLUDE_DIR
+      "${vulkanheaders_SOURCE_DIR}/include"
+    )
+
+    # Generate local pkg-config metadata without modifying the system.
+    set(
+      VULKAN_PKGCONFIG_DIR
+      "${CMAKE_CURRENT_BINARY_DIR}/vulkan-pkgconfig"
+    )
+
+    file(MAKE_DIRECTORY "${VULKAN_PKGCONFIG_DIR}")
+
+    file(WRITE "${VULKAN_PKGCONFIG_DIR}/vulkan.pc"
+      "prefix=${vulkanheaders_SOURCE_DIR}\n"
+      "includedir=\${prefix}/include\n"
+      "\n"
+      "Name: Vulkan\n"
+      "Description: Vulkan loader and headers\n"
+      "Version: ${VULKAN_HEADERS_VERSION}\n"
+      "Cflags: -I\${includedir}\n"
+      "Libs: -lvulkan\n"
+      "Libs.private: -ldl\n"
+    )
+
+    # Ensure FFmpeg sees the compatible metadata first.
+    list(PREPEND pkg_config_path "${VULKAN_PKGCONFIG_DIR}")
+  endif()
+
+  list(APPEND cflags "-I${VULKAN_INCLUDE_DIR}")
+  list(APPEND cxxflags "-I${VULKAN_INCLUDE_DIR}")
+endif()
 
 if(WIN32)
   set(VULKAN_SDK_PATH "")
