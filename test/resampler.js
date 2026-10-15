@@ -189,6 +189,38 @@ test('resampler converts between different sample formats', (t) => {
   }
 })
 
+test('resampler accepts sample format strings', (t) => {
+  using resampler = new ffmpeg.Resampler(48000, 'STEREO', 'S16', 48000, 'STEREO', 'FLT')
+
+  using inputFrame = createAudioFrame(
+    4,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+  const input = new ffmpeg.Samples()
+  input.fill(inputFrame)
+  new Int16Array(input.data.buffer, input.data.byteOffset, 8).fill(16384)
+
+  using outputFrame = createAudioFrame(
+    4,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.FLT
+  )
+
+  t.is(resampler.convert(inputFrame, outputFrame), 4)
+
+  const output = new ffmpeg.Samples()
+  output.read(outputFrame)
+  t.is(new Float32Array(output.data.buffer, output.data.byteOffset, 8)[0], 0.5)
+})
+
+test('resampler throws on unknown sample format strings', (t) => {
+  t.exception(
+    () => new ffmpeg.Resampler(48000, 'STEREO', 'NOPE', 48000, 'STEREO', 'FLT'),
+    /UNKNOWN_SAMPLE_FORMAT/
+  )
+})
+
 function createAudioFrame(samples, channelLayout, format, autosize = null) {
   const frame = new ffmpeg.Frame()
 
