@@ -50,7 +50,7 @@ Gets the resampler delay in samples.
 
 ### `Resampler.convert(inputFrame, outputFrame)`
 
-Converts audio data from input frame to output frame.
+Converts audio data from input frame to output frame. Throws if either frame's sample format or channel count differs from those the resampler was created with.
 
 **Parameters:**
 
@@ -61,7 +61,7 @@ Converts audio data from input frame to output frame.
 
 ### `Resampler.flush(outputFrame)`
 
-Flushes any remaining samples in the resampler.
+Flushes any remaining samples in the resampler. Throws if the output frame's sample format or channel count differs from those the resampler was created with.
 
 **Parameters:**
 
