@@ -30,7 +30,7 @@ const scaler = new ffmpeg.Scaler(
 
 ### `Scaler.scale(source, target)`
 
-Scales a source frame to a target frame.
+Scales a source frame to a target frame. Throws if either frame's pixel format or dimensions differ from those the scaler was created with.
 
 **Parameters:**
 
@@ -41,7 +41,7 @@ Scales a source frame to a target frame.
 
 ### `Scaler.scale(source, y, height, target)`
 
-Scales a portion of a source frame to a target frame.
+Scales a portion of a source frame to a target frame. Throws if either frame's pixel format or dimensions differ from those the scaler was created with, or if the slice lies outside the source frame.
 
 **Parameters:**
 
