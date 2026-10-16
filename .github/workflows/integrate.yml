@@ -82,6 +82,10 @@ jobs:
       - uses: holepunchto/actions/bare-base@v1
       - run: pip3 install meson
         if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan-dev vulkan-tools
+        if: ${{ matrix.platform == 'linux' }}
       - run: brew install meson
         if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
       - run: choco install meson msys2 vulkan-sdk
