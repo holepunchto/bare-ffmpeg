@@ -59,17 +59,9 @@ jobs:
     name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
-      - run: pip3 install meson
-        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
-      - run: brew install meson
-        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
-      - run: choco install meson msys2 vulkan-sdk
-        if: ${{ matrix.platform == 'win32' }}
-      - run: pacman --noconfirm -S git make pkgconf
-        shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
-        env:
-          PATH: C:\tools\msys64\usr\bin
-        if: ${{ matrix.platform == 'win32' }}
+      - uses: ./.github/actions/install-dependencies
+        with:
+          platform: ${{ matrix.platform }}
       - uses: holepunchto/actions/compile-prebuilds@v1
         with:
           platform: ${{ matrix.platform }}
