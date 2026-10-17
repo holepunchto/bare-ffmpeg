@@ -1,0 +1,26 @@
+name: Install dependencies
+
+description: Install the build dependencies required for compiling prebuilds
+
+inputs:
+  platform:
+    description: The platform being built for
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - run: pip3 install meson
+      shell: bash
+      if: ${{ inputs.platform == 'linux' || inputs.platform == 'android' }}
+    - run: brew install meson
+      shell: bash
+      if: ${{ inputs.platform == 'darwin' || inputs.platform == 'ios' }}
+    - run: choco install meson msys2 vulkan-sdk
+      shell: pwsh
+      if: ${{ inputs.platform == 'win32' }}
+    - run: pacman --noconfirm -S git make pkgconf
+      shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
+      env:
+        PATH: C:\tools\msys64\usr\bin
+      if: ${{ inputs.platform == 'win32' }}
