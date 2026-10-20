@@ -95,6 +95,34 @@ test('audio fifo with planar format', (t) => {
   t.is(read, nbSamples, 'reads all samples for planar')
 })
 
+test('audio fifo with planar format and more than eight channels', (t) => {
+  const nbSamples = 1024
+  const options = {
+    nbSamples,
+    channels: 16,
+    channelLayout: 0xffff,
+    sampleFormat: ffmpeg.constants.sampleFormats.FLTP
+  }
+  using fifo = createAudioFIFO(options)
+  using writeFrame = createAudioFrame(options)
+  using readFrame = createAudioFrame(options)
+
+  t.is(fifo.write(writeFrame), nbSamples)
+  t.is(fifo.peek(readFrame, nbSamples), nbSamples)
+  t.is(fifo.read(readFrame, nbSamples), nbSamples)
+})
+
+test('audio fifo rejects frames that do not match its configuration', (t) => {
+  using fifo = createAudioFIFO()
+  using monoFrame = createAudioFrame({ channelLayout: ffmpeg.constants.channelLayouts.MONO })
+  using floatFrame = createAudioFrame({ sampleFormat: ffmpeg.constants.sampleFormats.FLT })
+
+  t.exception(() => fifo.write(monoFrame))
+  t.exception(() => fifo.write(floatFrame))
+  t.exception(() => fifo.read(monoFrame, 1024))
+  t.exception(() => fifo.peek(monoFrame, 1024))
+})
+
 function createAudioFIFO({
   channels = 2,
   nbSamples = 1024,
