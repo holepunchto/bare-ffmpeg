@@ -102,6 +102,12 @@ typedef struct {
 
 typedef struct {
   struct SwsContext *handle;
+  AVPixelFormat source_format;
+  int source_width;
+  int source_height;
+  AVPixelFormat target_format;
+  int target_width;
+  int target_height;
 } bare_ffmpeg_scaler_t;
 
 typedef struct {
@@ -110,10 +116,16 @@ typedef struct {
 
 typedef struct {
   struct SwrContext *handle;
+  AVSampleFormat in_fmt;
+  int in_channels;
+  AVSampleFormat out_fmt;
+  int out_channels;
 } bare_ffmpeg_resampler_t;
 
 typedef struct {
   AVAudioFifo *handle;
+  AVSampleFormat sample_fmt;
+  int channels;
 } bare_ffmpeg_audio_fifo_t;
 
 typedef struct {
@@ -3424,6 +3436,10 @@ bare_ffmpeg_image_fill(
 
     throw js_pending_exception;
   }
+
+  frame->handle->format = pixel_format;
+  frame->handle->width = width;
+  frame->handle->height = height;
 }
 
 static void
@@ -3513,6 +3529,21 @@ bare_ffmpeg_samples_buffer_size(
   return len;
 }
 
+static void
+bare_ffmpeg__check_audio_frame(
+  js_env_t *env,
+  const AVFrame *frame,
+  AVSampleFormat sample_fmt,
+  int channels
+) {
+  if (frame->format == sample_fmt && frame->ch_layout.nb_channels == channels) return;
+
+  int err = js_throw_error(env, NULL, "Audio frame format or channel count mismatch");
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
 static int
 bare_ffmpeg_samples_fill(
   js_env_t *env,
@@ -3522,22 +3553,49 @@ bare_ffmpeg_samples_fill(
   uint64_t offset,
   bool no_alignment
 ) {
+  int err;
+
+  auto sample_fmt = static_cast<AVSampleFormat>(frame->handle->format);
+  auto channels = frame->handle->ch_layout.nb_channels;
+  auto planes = av_sample_fmt_is_planar(sample_fmt) ? channels : 1;
+
+  uint8_t **data = frame->handle->data;
+
+  if (planes > AV_NUM_DATA_POINTERS) {
+    data = reinterpret_cast<uint8_t **>(av_calloc(planes, sizeof(*data)));
+
+    if (data == NULL) {
+      err = js_throw_error(env, NULL, av_err2str(AVERROR(ENOMEM)));
+      assert(err == 0);
+
+      throw js_pending_exception;
+    }
+  }
+
   auto res = av_samples_fill_arrays(
-    frame->handle->data,
+    data,
     frame->handle->linesize,
     &target[offset],
-    frame->handle->ch_layout.nb_channels,
+    channels,
     frame->handle->nb_samples,
-    static_cast<AVSampleFormat>(frame->handle->format),
+    sample_fmt,
     no_alignment
   );
 
   if (res < 0) {
-    int err = js_throw_error(env, NULL, av_err2str(res));
+    if (data != frame->handle->data) av_free(data);
+
+    err = js_throw_error(env, NULL, av_err2str(res));
     assert(err == 0);
 
     throw js_pending_exception;
   }
+
+  if (frame->handle->extended_data != frame->handle->data) av_freep(&frame->handle->extended_data);
+
+  if (data != frame->handle->data) memcpy(frame->handle->data, data, sizeof(frame->handle->data));
+
+  frame->handle->extended_data = data;
 
   return res;
 }
@@ -3552,9 +3610,11 @@ bare_ffmpeg_samples_copy(
   int32_t src_offset,
   int32_t nb_samples
 ) {
+  bare_ffmpeg__check_audio_frame(env, dst->handle, static_cast<AVSampleFormat>(src->handle->format), src->handle->ch_layout.nb_channels);
+
   int err = av_samples_copy(
-    dst->handle->data,
-    src->handle->data,
+    dst->handle->extended_data,
+    src->handle->extended_data,
     dst_offset,
     src_offset,
     nb_samples,
@@ -3579,16 +3639,20 @@ bare_ffmpeg_samples_read(
   bool no_alignment
 ) {
   int err;
-  uint8_t *dst_data[8];
-  int dst_linesize[4];
+
+  auto sample_fmt = static_cast<AVSampleFormat>(frame->handle->format);
+  auto channels = frame->handle->ch_layout.nb_channels;
+
+  std::vector<uint8_t *> dst_data(av_sample_fmt_is_planar(sample_fmt) ? channels : 1);
+  int dst_linesize;
 
   auto len = av_samples_fill_arrays(
-    dst_data,
-    dst_linesize,
+    dst_data.data(),
+    &dst_linesize,
     &target[offset],
-    frame->handle->ch_layout.nb_channels,
+    channels,
     frame->handle->nb_samples,
-    static_cast<AVSampleFormat>(frame->handle->format),
+    sample_fmt,
     no_alignment
   );
   if (len < 0) {
@@ -3599,13 +3663,13 @@ bare_ffmpeg_samples_read(
   }
 
   err = av_samples_copy(
-    dst_data,
-    frame->handle->data,
+    dst_data.data(),
+    frame->handle->extended_data,
     0,
     0,
     frame->handle->nb_samples,
-    frame->handle->ch_layout.nb_channels,
-    static_cast<AVSampleFormat>(frame->handle->format)
+    channels,
+    sample_fmt
   );
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
@@ -4034,6 +4098,20 @@ bare_ffmpeg_scaler_init(
     NULL
   );
 
+  if (scaler->handle == NULL) {
+    err = js_throw_error(env, NULL, "Unsupported scaler configuration");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  scaler->source_format = static_cast<AVPixelFormat>(source_format);
+  scaler->source_width = source_width;
+  scaler->source_height = source_height;
+  scaler->target_format = static_cast<AVPixelFormat>(target_format);
+  scaler->target_width = target_width;
+  scaler->target_height = target_height;
+
   return handle;
 }
 
@@ -4046,6 +4124,22 @@ bare_ffmpeg_scaler_destroy(
   sws_freeContext(scaler->handle);
 }
 
+static void
+bare_ffmpeg__check_video_frame(
+  js_env_t *env,
+  const AVFrame *frame,
+  AVPixelFormat format,
+  int width,
+  int height
+) {
+  if (frame->format == format && frame->width == width && frame->height == height) return;
+
+  int err = js_throw_error(env, NULL, "Video frame format or dimensions mismatch");
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
 static int
 bare_ffmpeg_scaler_scale(
   js_env_t *env,
@@ -4056,6 +4150,18 @@ bare_ffmpeg_scaler_scale(
   int height,
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> target
 ) {
+  int err;
+
+  bare_ffmpeg__check_video_frame(env, source->handle, scaler->source_format, scaler->source_width, scaler->source_height);
+  bare_ffmpeg__check_video_frame(env, target->handle, scaler->target_format, scaler->target_width, scaler->target_height);
+
+  if (y < 0 || height <= 0 || height > scaler->source_height - y) {
+    err = js_throw_error(env, NULL, "Slice out of bounds");
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
   return sws_scale(
     scaler->handle,
     reinterpret_cast<const uint8_t *const *>(source->handle->data),
@@ -4161,6 +4267,10 @@ bare_ffmpeg_resampler_init(
   assert(err == 0);
 
   resampler->handle = swr_alloc();
+  resampler->in_fmt = static_cast<AVSampleFormat>(in_fmt);
+  resampler->in_channels = in_layout->handle.nb_channels;
+  resampler->out_fmt = static_cast<AVSampleFormat>(out_fmt);
+  resampler->out_channels = out_layout->handle.nb_channels;
 
   err = swr_alloc_set_opts2(
     &resampler->handle,
@@ -4206,11 +4316,14 @@ bare_ffmpeg_resampler_convert_frames(
 ) {
   int err;
 
+  bare_ffmpeg__check_audio_frame(env, in_frame->handle, resampler->in_fmt, resampler->in_channels);
+  bare_ffmpeg__check_audio_frame(env, out_frame->handle, resampler->out_fmt, resampler->out_channels);
+
   auto result = swr_convert(
     resampler->handle,
-    (uint8_t **) out_frame->handle->data,
+    out_frame->handle->extended_data,
     out_frame->handle->nb_samples,
-    (const uint8_t **) in_frame->handle->data,
+    (const uint8_t **) in_frame->handle->extended_data,
     in_frame->handle->nb_samples
   );
 
@@ -4264,9 +4377,11 @@ bare_ffmpeg_resampler_flush(
 ) {
   int err;
 
+  bare_ffmpeg__check_audio_frame(env, out_frame->handle, resampler->out_fmt, resampler->out_channels);
+
   auto result = swr_convert(
     resampler->handle,
-    out_frame->handle->data,
+    out_frame->handle->extended_data,
     out_frame->handle->nb_samples,
     NULL,
     0
@@ -4372,6 +4487,8 @@ bare_ffmpeg_audio_fifo_init(
     channels,
     nb_samples
   );
+  fifo->sample_fmt = static_cast<AVSampleFormat>(sample_fmt);
+  fifo->channels = channels;
 
   return handle;
 }
@@ -4394,7 +4511,9 @@ bare_ffmpeg_audio_fifo_write(
 ) {
   int err;
 
-  auto len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->data, frame->handle->nb_samples);
+  bare_ffmpeg__check_audio_frame(env, frame->handle, fifo->sample_fmt, fifo->channels);
+
+  auto len = av_audio_fifo_write(fifo->handle, (void **) frame->handle->extended_data, frame->handle->nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
@@ -4416,7 +4535,9 @@ bare_ffmpeg_audio_fifo_read(
 ) {
   int err;
 
-  auto len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->data, nb_samples);
+  bare_ffmpeg__check_audio_frame(env, frame->handle, fifo->sample_fmt, fifo->channels);
+
+  auto len = av_audio_fifo_read(fifo->handle, (void **) frame->handle->extended_data, nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));
@@ -4438,7 +4559,9 @@ bare_ffmpeg_audio_fifo_peek(
 ) {
   int err;
 
-  auto len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->data, nb_samples);
+  bare_ffmpeg__check_audio_frame(env, frame->handle, fifo->sample_fmt, fifo->channels);
+
+  auto len = av_audio_fifo_peek(fifo->handle, (void **) frame->handle->extended_data, nb_samples);
 
   if (len < 0) {
     err = js_throw_error(env, NULL, av_err2str(len));

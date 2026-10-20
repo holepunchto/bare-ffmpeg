@@ -166,8 +166,8 @@ test('resampler with audio from aiff file', (t) => {
 
     const resampler = new ffmpeg.Resampler(
       stream.codecParameters.sampleRate,
-      ffmpeg.constants.channelLayouts.MONO,
-      ffmpeg.constants.sampleFormats.S16,
+      stream.codecParameters.channelLayout,
+      stream.codecParameters.format,
       48000,
       ffmpeg.constants.channelLayouts.STEREO,
       ffmpeg.constants.sampleFormats.FLTP
@@ -210,10 +210,10 @@ test('resampler converts between different sample formats', (t) => {
 
   using resampler = new ffmpeg.Resampler(
     stream.codecParameters.sampleRate,
-    ffmpeg.constants.channelLayouts.MONO,
-    ffmpeg.constants.sampleFormats.S16,
+    stream.codecParameters.channelLayout,
+    stream.codecParameters.format,
     stream.codecParameters.sampleRate,
-    ffmpeg.constants.channelLayouts.MONO,
+    stream.codecParameters.channelLayout,
     ffmpeg.constants.sampleFormats.FLTP
   )
 
@@ -229,13 +229,66 @@ test('resampler converts between different sample formats', (t) => {
       using outputFrame = new ffmpeg.Frame()
       outputFrame.format = ffmpeg.constants.sampleFormats.FLTP
       outputFrame.nbSamples = inputFrame.nbSamples
-      outputFrame.channelLayout = inputFrame.channelLayout || ffmpeg.constants.channelLayouts.MONO
+      outputFrame.channelLayout = inputFrame.channelLayout
       outputFrame.alloc()
 
       const converted = resampler.convert(inputFrame, outputFrame)
       t.is(converted, inputFrame.nbSamples, 'converted all samples')
     }
   }
+})
+
+test('resampler converts planar audio with more than eight channels', (t) => {
+  using resampler = new ffmpeg.Resampler(
+    48000,
+    0xffff,
+    ffmpeg.constants.sampleFormats.FLTP,
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.FLTP
+  )
+
+  using inputFrame = createAudioFrame(1024, 0xffff, ffmpeg.constants.sampleFormats.FLTP)
+  using outputFrame = createAudioFrame(
+    1024,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.FLTP
+  )
+
+  t.ok(resampler.convert(inputFrame, outputFrame) >= 0)
+  t.ok(resampler.flush(outputFrame) >= 0)
+})
+
+test('resampler rejects input frames that do not match its configuration', (t) => {
+  using resampler = new ffmpeg.Resampler(
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16,
+    48000,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  using monoFrame = createAudioFrame(
+    1024,
+    ffmpeg.constants.channelLayouts.MONO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+  using floatFrame = createAudioFrame(
+    1024,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.FLTP
+  )
+  using outputFrame = createAudioFrame(
+    1024,
+    ffmpeg.constants.channelLayouts.STEREO,
+    ffmpeg.constants.sampleFormats.S16
+  )
+
+  t.exception(() => resampler.convert(monoFrame, outputFrame))
+  t.exception(() => resampler.convert(floatFrame, outputFrame))
+  t.exception(() => resampler.convert(outputFrame, monoFrame))
+  t.exception(() => resampler.flush(monoFrame))
 })
 
 function createAudioFrame(samples, channelLayout, format, autosize = null) {

@@ -121,12 +121,49 @@ test('Samples should expose bufferSize static method', (t) => {
   t.is(len, 4096)
 })
 
+test('Samples.read copies planar audio with more than eight channels', (t) => {
+  using frameA = makeAudioFrame({
+    channelLayout: 0xffff,
+    format: ffmpeg.constants.sampleFormats.FLTP
+  })
+  const samplesA = new ffmpeg.Samples()
+  const len = samplesA.fill(frameA)
+
+  for (let i = 0; i < len; i++) samplesA.data[i] = i % 251
+
+  using frameB = makeAudioFrame({
+    channelLayout: 0xffff,
+    format: ffmpeg.constants.sampleFormats.FLTP
+  })
+  const samplesB = new ffmpeg.Samples()
+  samplesB.fill(frameB)
+  samplesB.read(frameA)
+
+  t.alike(samplesB.data, samplesA.data)
+})
+
+test('Samples.copy rejects frames with a different channel count', (t) => {
+  using sourceFrame = makeAudioFrame()
+  using targetFrame = makeAudioFrame({ channelLayout: ffmpeg.constants.channelLayouts.MONO })
+
+  const source = new ffmpeg.Samples()
+  const target = new ffmpeg.Samples()
+
+  source.fill(sourceFrame)
+  target.fill(targetFrame)
+
+  t.exception(() => source.copy(targetFrame))
+})
+
 // Helpers
 
-function makeAudioFrame() {
+function makeAudioFrame({
+  channelLayout = ffmpeg.constants.channelLayouts.STEREO,
+  format = ffmpeg.constants.sampleFormats.S16
+} = {}) {
   const audioFrame = new ffmpeg.Frame()
-  audioFrame.channelLayout = ffmpeg.constants.channelLayouts.STEREO
-  audioFrame.format = ffmpeg.constants.sampleFormats.S16
+  audioFrame.channelLayout = channelLayout
+  audioFrame.format = format
   audioFrame.nbSamples = 1024
   return audioFrame
 }
