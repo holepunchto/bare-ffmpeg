@@ -153,6 +153,11 @@ else()
   endif()
 endif()
 
+if(CMAKE_ASM_NASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH NASM_path)
+  list(APPEND path "${NASM_path}")
+endif()
+
 if(extra_cflags)
   list(JOIN extra_cflags " " extra_cflags_str)
   list(APPEND env "CFLAGS=${extra_cflags_str}")

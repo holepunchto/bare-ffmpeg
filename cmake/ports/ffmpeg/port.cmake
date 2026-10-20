@@ -119,6 +119,7 @@ elseif(WIN32)
     --enable-d3d12va
     --enable-dxva2
     --enable-mediafoundation
+    --enable-vulkan
   )
 endif()
 
@@ -126,6 +127,50 @@ set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
+
+if(WIN32)
+  set(VULKAN_SDK_PATH "")
+
+  # Prefer the SDK path provided by the environment.
+  if(DEFINED ENV{VULKAN_SDK} AND NOT "$ENV{VULKAN_SDK}" STREQUAL "")
+    file(TO_CMAKE_PATH "$ENV{VULKAN_SDK}" vulkan_sdk_candidate)
+
+    if(EXISTS "${vulkan_sdk_candidate}/Include/vulkan/vulkan.h")
+      set(VULKAN_SDK_PATH "${vulkan_sdk_candidate}")
+    endif()
+  endif()
+
+  # Fall back to discovering an installed SDK.
+  if(NOT VULKAN_SDK_PATH)
+    file(GLOB vulkan_sdk_candidates
+      LIST_DIRECTORIES TRUE
+      "C:/VulkanSDK/*"
+    )
+
+    list(SORT vulkan_sdk_candidates
+      COMPARE NATURAL
+      ORDER DESCENDING
+    )
+
+    foreach(vulkan_sdk_candidate IN LISTS vulkan_sdk_candidates)
+      if(EXISTS "${vulkan_sdk_candidate}/Include/vulkan/vulkan.h")
+        set(VULKAN_SDK_PATH "${vulkan_sdk_candidate}")
+        break()
+      endif()
+    endforeach()
+  endif()
+
+  file(TO_CMAKE_PATH
+    "${VULKAN_SDK_PATH}/Include"
+    VULKAN_INCLUDE_PATH
+  )
+
+  list(APPEND cflags "-I${VULKAN_INCLUDE_PATH}")
+  list(APPEND cxxflags "-I${VULKAN_INCLUDE_PATH}")
+endif()
+
+
+
 
 if(CMAKE_C_COMPILER)
   cmake_path(GET CMAKE_C_COMPILER PARENT_PATH CC_path)
@@ -150,6 +195,22 @@ if(CMAKE_C_COMPILER)
   if(CMAKE_LINKER_TYPE MATCHES "LLD")
     list(APPEND ldflags -fuse-ld=lld)
   endif()
+endif()
+
+# The host compiler is not Apple Clang and so does not locate the macOS SDK on
+# its own.
+if(CMAKE_HOST_APPLE)
+  execute_process(
+    COMMAND xcrun --sdk macosx --show-sdk-path
+    OUTPUT_VARIABLE host_sysroot
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+
+  list(APPEND args
+    "--host-cflags=-isysroot ${host_sysroot}"
+    "--host-ldflags=-isysroot ${host_sysroot}"
+  )
 endif()
 
 if(CMAKE_CXX_COMPILER)
@@ -189,6 +250,14 @@ if(CMAKE_ASM_COMPILER)
 
   list(APPEND path "${AS_path}")
   list(APPEND args "--as=${AS_filename}")
+endif()
+
+if(CMAKE_ASM_NASM_COMPILER)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER PARENT_PATH NASM_path)
+  cmake_path(GET CMAKE_ASM_NASM_COMPILER FILENAME NASM_filename)
+
+  list(APPEND path "${NASM_path}")
+  list(APPEND args "--x86asmexe=${NASM_filename}")
 endif()
 
 if(CMAKE_RC_COMPILER)
