@@ -14,6 +14,8 @@ const format = new ffmpeg.OutputFormat(name)
 
 **Returns**: A new `OutputFormat` instance
 
+**Throws**: Error if `name` isn't a string or no output format has that name
+
 ## Properties
 
 ### `OutputFormat.extensions`
@@ -33,6 +35,30 @@ Gets the MIME type for this output format.
 Returns format name
 
 **Returns**: `string` - The short-name (e.g., `webm`)
+
+## Static Methods
+
+### `OutputFormat.listDevices(name[, opts])`
+
+Lists the output devices available for a device format, using `avdevice_list_output_sinks`.
+
+**Parameters:**
+
+- `name` (`string`): The device format name (e.g., `'fbdev'`)
+- `opts.mediaType` (`number`, optional): Only return devices that provide this media type (see `constants.mediaTypes`)
+
+**Returns**: `Array<object>` - One entry per device, with:
+
+- `name` (`string`): The device name to pass when opening the device
+- `description` (`string`): A human friendly name
+- `default` (`boolean`): Whether this is the default device
+- `mediaTypes` (`Array<number>`): Media types the device provides (see `constants.mediaTypes`)
+
+**Throws**: Error if `name` isn't a valid format name or the format can't list devices. On macOS, `audiotoolbox` doesn't support listing devices.
+
+```js
+const devices = ffmpeg.OutputFormat.listDevices('fbdev')
+```
 
 ## Example
 
