@@ -1,6 +1,4 @@
-const os = require('bare-os')
-
-const platform = os.platform()
+const { platform } = Bare
 
 exports.isDarwin = platform === 'darwin'
 exports.isIOS = platform === 'ios'
