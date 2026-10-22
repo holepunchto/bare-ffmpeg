@@ -1,5 +1,6 @@
 const test = require('brittle')
 const ffmpeg = require('..')
+const { isApple, isIOS } = require('./helpers')
 
 test('Encoder with string name for libvpx (VP8)', (t) => {
   const encoder = new ffmpeg.Encoder('libvpx')
@@ -45,4 +46,17 @@ test('Encoder throws for non-existent encoder', (t) => {
   t.exception(() => {
     new ffmpeg.Encoder('non_existent_encoder')
   })
+})
+
+test('Encoder with string name for aac_at', { skip: !isApple }, (t) => {
+  const encoder = new ffmpeg.Encoder('aac_at')
+  t.ok(encoder, 'aac_at encoder found')
+})
+
+test('Encoder ilbc_at is macOS only', { skip: !isApple }, (t) => {
+  if (isIOS) {
+    t.exception(() => new ffmpeg.Encoder('ilbc_at'), 'ilbc_at absent on iOS')
+  } else {
+    t.ok(new ffmpeg.Encoder('ilbc_at'), 'ilbc_at found on macOS')
+  }
 })

@@ -1,5 +1,6 @@
 const test = require('brittle')
 const ffmpeg = require('..')
+const { isApple, isIOS } = require('./helpers')
 
 test('Decoder with string name for vp8', (t) => {
   const decoder = new ffmpeg.Decoder('vp8')
@@ -45,4 +46,19 @@ test('Decoder throws for non-existent decoder', (t) => {
   t.exception(() => {
     new ffmpeg.Decoder('non_existent_decoder')
   })
+})
+
+test('Decoder with string name for aac_at', { skip: !isApple }, (t) => {
+  const decoder = new ffmpeg.Decoder('aac_at')
+  t.ok(decoder, 'aac_at decoder found')
+})
+
+test('Decoder gsm_ms_at and ilbc_at are macOS only', { skip: !isApple }, (t) => {
+  for (const name of ['gsm_ms_at', 'ilbc_at']) {
+    if (isIOS) {
+      t.exception(() => new ffmpeg.Decoder(name), `${name} absent on iOS`)
+    } else {
+      t.ok(new ffmpeg.Decoder(name), `${name} found on macOS`)
+    }
+  }
 })
