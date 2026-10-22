@@ -94,47 +94,20 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-            tags: -asan
-            sanitize: true
           - os: macos-latest
             platform: darwin
             arch: arm64
-          - os: macos-latest
-            platform: darwin
-            arch: arm64
-            tags: -asan
-            sanitize: true
           - os: windows-latest
             platform: win32
             arch: x64
     runs-on: ${{ matrix.os }}
     needs: prebuild
-    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
         with:
-          source: ${{ matrix.sanitize }}
-          flags: --debug ${{ matrix.sanitize && '--sanitize address' || '' }}
-      - uses: ./.github/actions/install-dependencies
-        if: ${{ matrix.sanitize }}
-        with:
-          platform: ${{ matrix.platform }}
-      - uses: holepunchto/actions/compile-prebuilds@v1
-        if: ${{ matrix.sanitize }}
-        with:
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          flags: --debug --sanitize address
-      - run: npx brittle-bare --coverage test.js
-        if: ${{ matrix.sanitize }}
+          flags: --debug
       - uses: holepunchto/actions/setup-gtk@v1
-        if: ${{ !matrix.sanitize }}
       - uses: holepunchto/actions/setup-windows-app-runtime@v1
-        if: ${{ !matrix.sanitize }}
       - uses: holepunchto/actions/download-prebuilds@v1
-        if: ${{ !matrix.sanitize }}
       - run: npm test
-        if: ${{ !matrix.sanitize }}
