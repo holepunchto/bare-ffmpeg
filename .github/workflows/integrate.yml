@@ -105,8 +105,6 @@ jobs:
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
-        with:
-          flags: --debug
       - uses: holepunchto/actions/setup-gtk@v1
       - uses: holepunchto/actions/setup-windows-app-runtime@v1
       - uses: holepunchto/actions/download-prebuilds@v1
