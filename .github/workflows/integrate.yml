@@ -28,11 +28,9 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             arch: x64
-            flags: --sanitize address
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
-            flags: --sanitize address
           - os: ubuntu-24.04
             platform: android
             arch: x64
@@ -52,11 +50,9 @@ jobs:
           - os: macos-15
             platform: darwin
             arch: x64
-            flags: --sanitize address
           - os: macos-15
             platform: darwin
             arch: arm64
-            flags: --sanitize address
           - os: macos-15
             platform: ios
             arch: arm64
@@ -80,17 +76,9 @@ jobs:
     name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
-      - run: pip3 install meson
-        if: ${{ matrix.platform == 'linux' || matrix.platform == 'android' }}
-      - run: brew install meson
-        if: ${{ matrix.platform == 'darwin' || matrix.platform == 'ios' }}
-      - run: choco install meson msys2 vulkan-sdk
-        if: ${{ matrix.platform == 'win32' }}
-      - run: pacman --noconfirm -S git make pkgconf
-        shell: C:\tools\msys64\usr\bin\bash.exe -e {0}
-        env:
-          PATH: C:\tools\msys64\usr\bin
-        if: ${{ matrix.platform == 'win32' }}
+      - uses: ./.github/actions/install-dependencies
+        with:
+          platform: ${{ matrix.platform }}
       - uses: holepunchto/actions/compile-prebuilds@v1
         with:
           platform: ${{ matrix.platform }}
@@ -106,13 +94,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
-            source: true
-            flags: --sanitize address
           - os: macos-latest
             platform: darwin
             arch: arm64
-            source: true
-            flags: --sanitize address
           - os: windows-latest
             platform: win32
             arch: x64
@@ -121,8 +105,7 @@ jobs:
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
-        with:
-          source: ${{ matrix.source }}
-          flags: --debug ${{ matrix.flags }}
+      - uses: holepunchto/actions/setup-gtk@v1
+      - uses: holepunchto/actions/setup-windows-app-runtime@v1
       - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test

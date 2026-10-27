@@ -1,6 +1,6 @@
 # AudioFIFO
 
-The `AudioFIFO` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages.
+The `AudioFIFO` API provides a first in first out buffer for audio samples. This is useful for buffering audio data between different processing stages. Frames passed to `write()`, `read()` and `peek()` must have the sample format and channel count the FIFO was created with, or the call throws.
 
 ## Constructor
 
