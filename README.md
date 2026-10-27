@@ -113,6 +113,24 @@ A few compile options can be configured to customize the addon. Compile options 
 | :----------------------- | :------ | :--------------------------------------- |
 | `BARE_FFMPEG_ENABLE_GPL` | `OFF`   | Enable GPL-licensed features (e.g, x264) |
 
+## Running the tests
+
+`npm test` packs the tests into an app, launches it on this machine and streams the TAP output. To run them on a phone instead, build the addon for it, then name the platform:
+
+```console
+npm test -- --platform android
+npm test -- --platform ios
+```
+
+An iPhone only runs a signed app, so put the signing options in `test/signing.json`: a provisioning profile that covers the phone, and the identity to sign with if the keychain holds several.
+
+```json
+{
+  "identity": "Apple Development: Jane Doe (TEAMID)",
+  "provisioningProfile": "/Users/jane/Library/Developer/Xcode/UserData/Provisioning Profiles/<id>.mobileprovision"
+}
+```
+
 ## License
 
 Apache-2.0

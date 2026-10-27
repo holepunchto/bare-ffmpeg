@@ -1,6 +1,6 @@
 {
   "name": "bare-ffmpeg",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Low-level FFmpeg bindings for Bare",
   "exports": {
     ".": "./index.js",
@@ -19,7 +19,7 @@
   "scripts": {
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
-    "test": "brittle-bare --coverage test.js"
+    "test": "bare-native-test --config test/build.js --defer bare-cov test.js"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,9 @@
   "homepage": "https://github.com/holepunchto/bare-ffmpeg#readme",
   "devDependencies": {
     "bare-assert": "^1.1.0",
-    "brittle": "^3.4.0",
+    "bare-native": "^0.3.6",
+    "bare-native-test": "^0.1.6",
+    "brittle": "^4.5.0",
     "cmake-bare": "^1.1.2",
     "cmake-harden": "^1.0.2",
     "cmake-ports": "^1.6.3",
