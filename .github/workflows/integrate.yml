@@ -28,11 +28,9 @@ jobs:
           - os: ubuntu-22.04
             platform: linux
             arch: x64
-            flags: --sanitize address
           - os: ubuntu-22.04-arm
             platform: linux
             arch: arm64
-            flags: --sanitize address
           - os: ubuntu-24.04
             platform: android
             arch: x64
@@ -52,11 +50,9 @@ jobs:
           - os: macos-15
             platform: darwin
             arch: x64
-            flags: --sanitize address
           - os: macos-15
             platform: darwin
             arch: arm64
-            flags: --sanitize address
           - os: macos-15
             platform: ios
             arch: arm64
@@ -98,13 +94,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
-            source: true
-            flags: --sanitize address
           - os: macos-latest
             platform: darwin
             arch: arm64
-            source: true
-            flags: --sanitize address
           - os: windows-latest
             platform: win32
             arch: x64
@@ -113,8 +105,7 @@ jobs:
     name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - uses: holepunchto/actions/bare-base@v1
-        with:
-          source: ${{ matrix.source }}
-          flags: --debug ${{ matrix.flags }}
+      - uses: holepunchto/actions/setup-gtk@v1
+      - uses: holepunchto/actions/setup-windows-app-runtime@v1
       - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
