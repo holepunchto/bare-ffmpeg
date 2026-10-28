@@ -109,3 +109,31 @@ jobs:
       - uses: holepunchto/actions/setup-windows-app-runtime@v1
       - uses: holepunchto/actions/download-prebuilds@v1
       - run: npm test
+  sanitize:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    name: Sanitize / ${{ matrix.platform }}-${{ matrix.arch }}
+    steps:
+      - uses: holepunchto/actions/bare-base@v1
+      - uses: holepunchto/actions/setup-gtk@v1
+      - uses: ./.github/actions/install-dependencies
+        with:
+          platform: ${{ matrix.platform }}
+      - uses: holepunchto/actions/compile-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          flags: --debug --sanitize address
+      - run: |
+          args=()
+          while IFS= read -r line; do args+=(--env "$line"); done < <(bare-make test env)
+          npx bare-native-test "${args[@]}" --config test/build.js --defer bare-cov test.js
