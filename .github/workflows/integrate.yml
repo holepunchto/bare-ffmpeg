@@ -133,4 +133,4 @@ jobs:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
           flags: --debug --sanitize address
-      - run: bare-make test env | npx bare-native-test --env - --config test/build.js --defer bare-cov test.js
+      - run: bare-make test env | npm test -- --env -
