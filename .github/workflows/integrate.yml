@@ -133,7 +133,4 @@ jobs:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
           flags: --debug --sanitize address
-      - run: |
-          args=()
-          while IFS= read -r line; do args+=(--env "$line"); done < <(bare-make test env)
-          npx bare-native-test "${args[@]}" --config test/build.js --defer bare-cov test.js
+      - run: bare-make test env | npx bare-native-test --env - --config test/build.js --defer bare-cov test.js
