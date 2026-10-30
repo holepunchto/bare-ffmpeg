@@ -34,7 +34,7 @@
   "devDependencies": {
     "bare-assert": "^1.1.0",
     "bare-native": "^0.3.6",
-    "bare-native-test": "^0.1.6",
+    "bare-native-test": "^0.1.7",
     "brittle": "^4.5.0",
     "cmake-bare": "^1.1.2",
     "cmake-harden": "^1.0.2",
