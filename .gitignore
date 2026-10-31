@@ -8,3 +8,4 @@ package-lock.json
 
 # Example files
 sine_wave_440hz.webm
+test/signing.json
