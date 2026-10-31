@@ -4347,6 +4347,27 @@ bare_ffmpeg_resampler_get_delay(
   return swr_get_delay(resampler->handle, base);
 }
 
+static int
+bare_ffmpeg_resampler_get_out_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  int32_t in_samples
+) {
+  int err;
+
+  int result = swr_get_out_samples(resampler->handle, in_samples);
+
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return result;
+}
+
 static int64_t
 bare_ffmpeg_resampler_flush(
   js_env_t *env,
@@ -5350,6 +5371,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
   V("convertResampler", bare_ffmpeg_resampler_convert_frames)
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
+  V("getResamplerOutSamples", bare_ffmpeg_resampler_get_out_samples)
   V("flushResampler", bare_ffmpeg_resampler_flush)
 
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)
