@@ -103,6 +103,7 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
+    --enable-vulkan
   )
 elseif(ANDROID)
   list(APPEND args
@@ -134,6 +135,19 @@ set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
+
+if(LINUX)
+  set(VULKAN_INCLUDE_DIR "")
+
+  find_path(
+    VULKAN_INCLUDE_DIR
+    NAMES vulkan/vulkan.h
+    REQUIRED
+  )
+
+  list(APPEND cflags "-I${VULKAN_INCLUDE_DIR}")
+  list(APPEND cxxflags "-I${VULKAN_INCLUDE_DIR}")
+endif()
 
 if(WIN32)
   set(VULKAN_SDK_PATH "")
