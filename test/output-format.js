@@ -27,3 +27,19 @@ test('OutputFormat should expose a static method to create from handle', (t) => 
 
   t.ok(outputFormat)
 })
+
+test('OutputFormat.listDevices throws when the format cannot list devices', (t) => {
+  t.exception(() => ffmpeg.OutputFormat.listDevices('webm'))
+})
+
+test('OutputFormat.listDevices throws without a valid format name', (t) => {
+  t.exception.all(() => ffmpeg.OutputFormat.listDevices(), TypeError)
+  t.exception.all(() => ffmpeg.OutputFormat.listDevices(null), TypeError)
+  t.exception.all(() => ffmpeg.OutputFormat.listDevices(123), TypeError)
+  t.exception(() => ffmpeg.OutputFormat.listDevices('nope'))
+})
+
+test('OutputFormat throws when the name is not a string', (t) => {
+  t.exception.all(() => new ffmpeg.OutputFormat(), TypeError)
+  t.exception.all(() => new ffmpeg.OutputFormat(null), TypeError)
+})
