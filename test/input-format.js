@@ -45,8 +45,16 @@ test('InputFormat throws when the name is not a string', (t) => {
   t.exception.all(() => new ffmpeg.InputFormat(123), TypeError)
 })
 
+test(
+  'InputFormat.listDevices throws for avfoundation',
+  { skip: os.platform() !== 'darwin' },
+  (t) => {
+    t.exception(() => ffmpeg.InputFormat.listDevices('avfoundation'))
+  }
+)
+
 // Depends on the devices of the machine, dshow fails when there's no microphone
-const deviceFormat = { linux: 'v4l2', win32: 'dshow', darwin: 'avfoundation' }[os.platform()]
+const deviceFormat = { linux: 'v4l2', win32: 'dshow' }[os.platform()]
 const deviceFilter = { skip: !deviceFormat || process.env.CI }
 
 test('InputFormat.listDevices returns an array of devices', deviceFilter, (t) => {
@@ -59,16 +67,4 @@ test('InputFormat.listDevices returns an array of devices', deviceFilter, (t) =>
     t.is(typeof device.default, 'boolean')
     t.ok(Array.isArray(device.mediaTypes))
   }
-})
-
-test('InputFormat.listDevices filters by media type', deviceFilter, (t) => {
-  const { AUDIO } = ffmpeg.constants.mediaTypes
-
-  const all = ffmpeg.InputFormat.listDevices(deviceFormat)
-  const audio = ffmpeg.InputFormat.listDevices(deviceFormat, { mediaType: AUDIO })
-
-  t.alike(
-    audio,
-    all.filter((device) => device.mediaTypes.includes(AUDIO))
-  )
 })

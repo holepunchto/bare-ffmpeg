@@ -41,14 +41,13 @@ Returns format name
 
 ## Static Methods
 
-### `InputFormat.listDevices([name][, opts])`
+### `InputFormat.listDevices([name])`
 
-Lists the input devices available for a device format, using `avdevice_list_input_sources`.
+Lists the input devices of a device format.
 
 **Parameters:**
 
-- `name` (`string`, optional): The device format name (e.g., `'dshow'`, `'v4l2'`, `'avfoundation'`). Defaults to the same platform-specific value as the constructor. Pass `undefined` to use the default with `opts`.
-- `opts.mediaType` (`number`, optional): Only return devices that provide this media type (see `constants.mediaTypes`)
+- `name` (`string`, optional): The device format name (e.g., `'dshow'`, `'v4l2'`). Defaults to the same platform-specific value as the constructor.
 
 **Returns**: `Array<object>` - One entry per device, with:
 
@@ -57,16 +56,10 @@ Lists the input devices available for a device format, using `avdevice_list_inpu
 - `default` (`boolean`): Whether this is the default device
 - `mediaTypes` (`Array<number>`): Media types the device provides (see `constants.mediaTypes`)
 
-**Throws**: Error if `name` isn't a valid format name or the format can't list devices
-
-`avfoundation` doesn't support `avdevice_list_input_sources`, so on macOS the devices are read from its `list_devices` output instead. Video devices, including screens, are named `'<index>'` and audio devices `':<index>'`, matching the `'video:audio'` syntax `avfoundation` uses to open devices. `default` is always `false`.
+**Throws**: Error if `name` isn't a valid format name or the format can't list devices. On macOS and iOS, `avfoundation` can't.
 
 ```js
 const devices = ffmpeg.InputFormat.listDevices('dshow')
-
-const microphones = ffmpeg.InputFormat.listDevices('dshow', {
-  mediaType: ffmpeg.constants.mediaTypes.AUDIO
-})
 ```
 
 ## Example

@@ -38,14 +38,13 @@ Returns format name
 
 ## Static Methods
 
-### `OutputFormat.listDevices(name[, opts])`
+### `OutputFormat.listDevices(name)`
 
-Lists the output devices available for a device format, using `avdevice_list_output_sinks`.
+Lists the output devices of a device format.
 
 **Parameters:**
 
 - `name` (`string`): The device format name (e.g., `'fbdev'`)
-- `opts.mediaType` (`number`, optional): Only return devices that provide this media type (see `constants.mediaTypes`)
 
 **Returns**: `Array<object>` - One entry per device, with:
 
@@ -54,7 +53,7 @@ Lists the output devices available for a device format, using `avdevice_list_out
 - `default` (`boolean`): Whether this is the default device
 - `mediaTypes` (`Array<number>`): Media types the device provides (see `constants.mediaTypes`)
 
-**Throws**: Error if `name` isn't a valid format name or the format can't list devices. On macOS, `audiotoolbox` doesn't support listing devices.
+**Throws**: Error if `name` isn't a valid format name or the format can't list devices. On macOS and iOS, `audiotoolbox` can't.
 
 ```js
 const devices = ffmpeg.OutputFormat.listDevices('fbdev')
