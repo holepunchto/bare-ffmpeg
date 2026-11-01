@@ -406,8 +406,6 @@ using bare_ffmpeg_device_info_t = std::tuple<std::string, std::string, bool, std
 static std::vector<bare_ffmpeg_device_info_t>
 bare_ffmpeg_device_info_list(js_env_t *env, AVDeviceInfoList *list, int res) {
   if (res < 0) {
-    if (list) avdevice_free_list_devices(&list);
-
     int err = js_throw_error(env, NULL, av_err2str(res));
     assert(err == 0);
 
