@@ -48,8 +48,7 @@ test('HWDeviceContext.from should return null for null handle', (t) => {
   t.is(result, null)
 })
 
-//Vulkan
-
+// Needs a GPU with a Vulkan driver, which the CI runners lack.
 const vulkanFilter = {
   skip: process.env.CI || !['win32', 'linux'].includes(os.platform())
 }

@@ -13,11 +13,6 @@ runs:
     - run: pip3 install meson
       shell: bash
       if: ${{ inputs.platform == 'linux' || inputs.platform == 'android' }}
-    - run: |
-          sudo apt-get update
-          sudo apt-get install -y libvulkan-dev vulkan-tools
-      shell: bash    
-      if: ${{ matrix.platform == 'linux' }}  
     - run: brew install meson
       shell: bash
       if: ${{ inputs.platform == 'darwin' || inputs.platform == 'ios' }}

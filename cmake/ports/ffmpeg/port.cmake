@@ -103,7 +103,6 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
-    --enable-vulkan
   )
 elseif(ANDROID)
   list(APPEND args
@@ -135,19 +134,6 @@ set(env)
 set(cflags)
 set(cxxflags)
 set(ldflags)
-
-if(LINUX)
-  set(VULKAN_INCLUDE_DIR "")
-
-  find_path(
-    VULKAN_INCLUDE_DIR
-    NAMES vulkan/vulkan.h
-    REQUIRED
-  )
-
-  list(APPEND cflags "-I${VULKAN_INCLUDE_DIR}")
-  list(APPEND cxxflags "-I${VULKAN_INCLUDE_DIR}")
-endif()
 
 if(WIN32)
   set(VULKAN_SDK_PATH "")
@@ -396,6 +382,12 @@ if(LINUX)
   list(APPEND args --enable-vaapi)
   list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
   list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
+
+  find_port(vulkan-headers)
+
+  list(APPEND depends ${vulkan_headers})
+  list(APPEND args --enable-vulkan)
+  list(APPEND cflags "-isystem${vulkan_headers_PREFIX}/include")
 endif()
 
 if(CMAKE_HOST_WIN32)

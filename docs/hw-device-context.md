@@ -31,6 +31,12 @@ const hwDevice = new ffmpeg.HWDeviceContext(
 )
 ```
 
+### Vulkan
+
+A Vulkan device, `hwDeviceTypes.VULKAN`, is available on Linux and Windows. The Vulkan loader is opened when the device is created, not when the module loads, so a machine without Vulkan is only affected if it asks for one.
+
+The loader reads `VK_ICD_FILENAMES`, `VK_LAYER_PATH`, `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS` from the environment and loads what they point to. Decoding with a Vulkan device also hands the bitstream to the GPU driver. Only create one in a process whose environment and input you trust.
+
 ## Static Methods
 
 ### `HWDeviceContext.from(handle)`
