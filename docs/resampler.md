@@ -18,11 +18,11 @@ const resampler = new ffmpeg.Resampler(
 ### Parameters
 
 - `inputSampleRate` (`number`): Input sample rate in Hz
-- `inputChannelLayout` (`number`): Input channel layout constant
-- `inputSampleFormat` (`number`): Input sample format constant
+- `inputChannelLayout` (`number` | `string`): Input channel layout constant or name (e.g., `'STEREO'`)
+- `inputSampleFormat` (`number` | `string`): Input sample format constant or name (e.g., `'S16'`)
 - `outputSampleRate` (`number`): Output sample rate in Hz
-- `outputChannelLayout` (`number`): Output channel layout constant
-- `outputSampleFormat` (`number`): Output sample format constant
+- `outputChannelLayout` (`number` | `string`): Output channel layout constant or name (e.g., `'STEREO'`)
+- `outputSampleFormat` (`number` | `string`): Output sample format constant or name (e.g., `'FLT'`)
 
 **Returns**: A new `Resampler` instance
 
@@ -47,6 +47,21 @@ Gets the resampler delay in samples.
 **Returns**: `number`
 
 ## Methods
+
+### `Resampler.getOutSamples(inputSamples)`
+
+Gets an upper bound for the number of output samples the next `convert()` call will produce for `inputSamples` input samples, including any samples buffered from previous calls. Useful for sizing the output frame.
+
+**Parameters:**
+
+- `inputSamples` (`number`): Number of input samples
+
+**Returns**: `number`
+
+```js
+outputFrame.nbSamples = resampler.getOutSamples(inputFrame.nbSamples)
+outputFrame.alloc()
+```
 
 ### `Resampler.convert(inputFrame, outputFrame)`
 

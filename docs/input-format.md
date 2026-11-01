@@ -17,6 +17,8 @@ const format = new ffmpeg.InputFormat([name])
 
 **Returns**: A new `InputFormat` instance
 
+**Throws**: Error if `name` isn't a string or no input format has that name
+
 ## Properties
 
 ### `InputFormat.extensions`
@@ -36,6 +38,29 @@ Gets the MIME type for this input format.
 Returns format name
 
 **Returns**: `string` - The short-name (e.g., `webm`)
+
+## Static Methods
+
+### `InputFormat.listDevices([name])`
+
+Lists the input devices of a device format.
+
+**Parameters:**
+
+- `name` (`string`, optional): The device format name (e.g., `'dshow'`, `'v4l2'`). Defaults to the same platform-specific value as the constructor.
+
+**Returns**: `Array<object>` - One entry per device, with:
+
+- `name` (`string`): The device name to pass when opening the device
+- `description` (`string`): A human friendly name
+- `default` (`boolean`): Whether this is the default device
+- `mediaTypes` (`Array<number>`): Media types the device provides (see `constants.mediaTypes`)
+
+**Throws**: Error if `name` isn't a valid format name or the format can't list devices. On macOS and iOS, `avfoundation` can't.
+
+```js
+const devices = ffmpeg.InputFormat.listDevices('dshow')
+```
 
 ## Example
 

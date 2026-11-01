@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_set>
 #include <vector>
@@ -398,6 +399,65 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   context->handle = format;
 
   return handle;
+}
+
+using bare_ffmpeg_device_info_t = std::tuple<std::string, std::string, bool, std::vector<int>>;
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_device_info_list(js_env_t *env, AVDeviceInfoList *list, int res) {
+  if (res < 0) {
+    if (list) avdevice_free_list_devices(&list);
+
+    int err = js_throw_error(env, NULL, av_err2str(res));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  std::vector<bare_ffmpeg_device_info_t> devices{};
+
+  for (int i = 0; i < list->nb_devices; i++) {
+    AVDeviceInfo *info = list->devices[i];
+
+    std::vector<int> media_types(info->media_types, info->media_types + info->nb_media_types);
+
+    devices.emplace_back(
+      info->device_name ? info->device_name : "",
+      info->device_description ? info->device_description : "",
+      i == list->default_device,
+      media_types
+    );
+  }
+
+  avdevice_free_list_devices(&list);
+
+  return devices;
+}
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_input_format_list_devices(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_input_format_t, 1> format
+) {
+  AVDeviceInfoList *list = NULL;
+
+  int res = avdevice_list_input_sources(format->handle, NULL, NULL, &list);
+
+  return bare_ffmpeg_device_info_list(env, list, res);
+}
+
+static std::vector<bare_ffmpeg_device_info_t>
+bare_ffmpeg_output_format_list_devices(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_output_format_t, 1> format
+) {
+  AVDeviceInfoList *list = NULL;
+
+  int res = avdevice_list_output_sinks(format->handle, NULL, NULL, &list);
+
+  return bare_ffmpeg_device_info_list(env, list, res);
 }
 
 static int32_t
@@ -4347,6 +4407,27 @@ bare_ffmpeg_resampler_get_delay(
   return swr_get_delay(resampler->handle, base);
 }
 
+static int
+bare_ffmpeg_resampler_get_out_samples(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_resampler_t, 1> resampler,
+  int32_t in_samples
+) {
+  int err;
+
+  int result = swr_get_out_samples(resampler->handle, in_samples);
+
+  if (result < 0) {
+    err = js_throw_error(env, NULL, av_err2str(result));
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return result;
+}
+
 static int64_t
 bare_ffmpeg_resampler_flush(
   js_env_t *env,
@@ -5076,12 +5157,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyIOContext", bare_ffmpeg_io_context_destroy)
 
   V("initInputFormat", bare_ffmpeg_input_format_init)
+  V("listInputFormatDevices", bare_ffmpeg_input_format_list_devices)
   V("getInputFormatFlags", bare_ffmpeg_input_format_get_flags)
   V("getInputFormatExtensions", bare_ffmpeg_input_format_get_extensions)
   V("getInputFormatMimeType", bare_ffmpeg_input_format_get_mime_type)
   V("getInputFormatName", bare_ffmpeg_input_format_get_name)
 
   V("initOutputFormat", bare_ffmpeg_output_format_init)
+  V("listOutputFormatDevices", bare_ffmpeg_output_format_list_devices)
   V("getOutputFormatFlags", bare_ffmpeg_output_format_get_flags)
   V("getOutputFormatExtensions", bare_ffmpeg_output_format_get_extensions)
   V("getOutputFormatMimeType", bare_ffmpeg_output_format_get_mime_type)
@@ -5350,6 +5433,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("destroyResampler", bare_ffmpeg_resampler_destroy)
   V("convertResampler", bare_ffmpeg_resampler_convert_frames)
   V("getResamplerDelay", bare_ffmpeg_resampler_get_delay)
+  V("getResamplerOutSamples", bare_ffmpeg_resampler_get_out_samples)
   V("flushResampler", bare_ffmpeg_resampler_flush)
 
   V("copyChannelLayout", bare_ffmpeg_channel_layout_copy)

@@ -2,8 +2,10 @@ build/
 prebuilds/
 sandbox/
 node_modules/
+coverage/
 package-lock.json
 .cache
 
 # Example files
 sine_wave_440hz.webm
+test/signing.json

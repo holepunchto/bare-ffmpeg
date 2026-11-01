@@ -81,12 +81,19 @@ if(APPLE)
 
     --enable-avfoundation
     --enable-videotoolbox
+    --enable-audiotoolbox
   )
 
-  if(NOT IOS)
+  if(IOS)
+    # ffat_get_format() compiles out the iLBC and GSM format IDs on iOS and
+    # av_assert0()s when these codecs are opened
+    list(APPEND args
+      --disable-encoder=ilbc_at
+      --disable-decoder=ilbc_at,gsm_ms_at
+    )
+  else()
     list(APPEND args
       --enable-appkit
-      --enable-audiotoolbox
     )
   endif()
 elseif(LINUX)
@@ -572,13 +579,13 @@ if(APPLE)
       "-framework CoreServices"
   )
 
-  if(NOT IOS)
-    target_link_libraries(
-      avcodec
-      INTERFACE
-        "-framework AudioToolbox"
-    )
+  target_link_libraries(
+    avcodec
+    INTERFACE
+      "-framework AudioToolbox"
+  )
 
+  if(NOT IOS)
     target_link_libraries(
       avdevice
       INTERFACE
