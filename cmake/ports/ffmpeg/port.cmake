@@ -382,6 +382,12 @@ if(LINUX)
   list(APPEND args --enable-vaapi)
   list(APPEND pkg_config_path "${libva_PREFIX}/lib/pkgconfig")
   list(APPEND pkg_config_path "${libdrm_PREFIX}/lib/pkgconfig")
+
+  find_port(vulkan-headers)
+
+  list(APPEND depends ${vulkan_headers})
+  list(APPEND args --enable-vulkan)
+  list(APPEND cflags "-isystem${vulkan_headers_PREFIX}/include")
 endif()
 
 if(CMAKE_HOST_WIN32)

@@ -48,11 +48,12 @@ test('HWDeviceContext.from should return null for null handle', (t) => {
   t.is(result, null)
 })
 
-const windowsFilter = {
-  skip: process.env.CI || os.platform() !== 'win32'
+// Needs a GPU with a Vulkan driver, which the CI runners lack.
+const vulkanFilter = {
+  skip: process.env.CI || !['win32', 'linux'].includes(os.platform())
 }
 
-test('decode H.264 video with Vulkan', windowsFilter, (t) => {
+test('decode H.264 video with Vulkan', vulkanFilter, (t) => {
   const video = require('./fixtures/video/sample.mp4', {
     with: { type: 'binary' }
   })
