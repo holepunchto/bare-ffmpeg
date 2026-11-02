@@ -3,16 +3,20 @@ include_guard(GLOBAL)
 find_port(libdrm)
 
 declare_port(
-  "github:intel/libva#2.22.0"
+  "github:intel/libva#2.23.0"
   libva
   MESON
   DEPENDS drm
   BYPRODUCTS
-    lib/libva.so.2.2200.0
-    lib/libva-drm.so.2.2200.0
+    lib/libva.so.2.2300.0
+    lib/libva-drm.so.2.2300.0
   ARGS
     -Denable_docs=false
     -Ddisable_drm=false
+
+    # The drivers come from the system, so look where the distributions put
+    # them rather than under the prefix this build installs to.
+    -Ddriverdir=/usr/lib/x86_64-linux-gnu/dri:/usr/lib/aarch64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri
   ENV
     "PKG_CONFIG_PATH=${libdrm_PREFIX}/lib/pkgconfig"
 )
@@ -26,14 +30,14 @@ add_dependencies(va-drm ${libva})
 set_target_properties(
   va
   PROPERTIES
-  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva.so.2.2200.0"
+  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva.so.2.2300.0"
   IMPORTED_SONAME libva.so.2
 )
 
 set_target_properties(
   va-drm
   PROPERTIES
-  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva-drm.so.2.2200.0"
+  IMPORTED_LOCATION "${libva_PREFIX}/lib/libva-drm.so.2.2300.0"
   IMPORTED_SONAME libva-drm.so.2
 )
 
