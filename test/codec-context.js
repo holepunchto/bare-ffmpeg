@@ -130,6 +130,66 @@ test('receivePacket should return false when no frame has been sent', (t) => {
   t.absent(codecCtx.receivePacket(packet))
 })
 
+test('sendFrame(null) ends the stream and drains the encoder', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open(getEncoderOptions())
+  using frame = fakeFrame()
+  codecCtx.sendFrame(frame)
+
+  t.ok(codecCtx.sendFrame(null))
+
+  using packet = new ffmpeg.Packet()
+  let packets = 0
+  while (codecCtx.receivePacket(packet)) packets++
+
+  t.ok(packets > 0, 'drains the buffered packets')
+  t.absent(codecCtx.receivePacket(packet), 'then has nothing left')
+})
+
+test('flush drops what the encoder holds', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+  setDefaultOptions(codecCtx)
+  codecCtx.open(getEncoderOptions())
+  using frame = fakeFrame()
+  codecCtx.sendFrame(frame)
+
+  codecCtx.flush()
+
+  using packet = new ffmpeg.Packet()
+  t.absent(codecCtx.receivePacket(packet))
+})
+
+test('sendPacket(null) ends the stream and drains the decoder', (t) => {
+  const video = require('./fixtures/video/sample.webm', {
+    with: { type: 'binary' }
+  })
+  using io = new ffmpeg.IOContext(video)
+  using format = new ffmpeg.InputFormatContext(io)
+  const stream = format.getBestStream(ffmpeg.constants.mediaTypes.VIDEO)
+  using decoder = stream.decoder()
+  decoder.open()
+
+  using packet = new ffmpeg.Packet()
+  while (format.readFrame(packet)) {
+    if (packet.streamIndex === stream.index) {
+      decoder.sendPacket(packet)
+      packet.unref()
+      break
+    }
+    packet.unref()
+  }
+
+  t.ok(decoder.sendPacket(null))
+
+  using frame = new ffmpeg.Frame()
+  let frames = 0
+  while (decoder.receiveFrame(frame)) frames++
+
+  t.ok(frames > 0, 'drains the buffered frames')
+  t.absent(decoder.receiveFrame(frame), 'then has nothing left')
+})
+
 test('codec context should expose framerate', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 

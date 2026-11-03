@@ -1981,11 +1981,16 @@ bare_ffmpeg_codec_context_send_packet(
   js_env_t *env,
   js_receiver_t,
   js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1> packet
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_packet_t, 1>> packet
 ) {
   int err;
 
-  err = avcodec_send_packet(context->handle, packet->handle);
+  if (packet) {
+    err = avcodec_send_packet(context->handle, packet.value()->handle);
+  } else {
+    err = avcodec_send_packet(context->handle, NULL); // End of stream
+  }
+
   if (err < 0 && err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -2158,6 +2163,15 @@ bare_ffmpeg_codec_context_receive_frame(
   }
 
   return err == 0;
+}
+
+static void
+bare_ffmpeg_codec_context_flush(
+  js_env_t *,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context
+) {
+  avcodec_flush_buffers(context->handle);
 }
 
 static void
@@ -5249,6 +5263,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("receiveCodecContextPacket", bare_ffmpeg_codec_context_receive_packet)
   V("sendCodecContextFrame", bare_ffmpeg_codec_context_send_frame)
   V("receiveCodecContextFrame", bare_ffmpeg_codec_context_receive_frame)
+  V("flushCodecContext", bare_ffmpeg_codec_context_flush)
 
   V("codecParametersFromContext", bare_ffmpeg_codec_parameters_from_context)
   V("codecParametersToContext", bare_ffmpeg_codec_parameters_to_context)
