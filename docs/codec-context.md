@@ -97,11 +97,11 @@ Opens the codec context for encoding/decoding.
 
 ### `CodecContext.sendFrame(frame)`
 
-Sends a frame to the encoder.
+Sends a frame to the encoder. `null` ends the stream: the encoder then hands out what it still holds through `receivePacket()`, which returns `false` once it is empty.
 
 **Parameters:**
 
-- `frame` (`Frame`): The frame to encode
+- `frame` (`Frame` | `null`): The frame to encode, or `null` to end the stream
 
 **Returns**: `boolean` indicating if the frame was sent
 
@@ -117,13 +117,19 @@ Receives a decoded frame from the decoder.
 
 ### `CodecContext.sendPacket(packet)`
 
-Sends a packet to the decoder.
+Sends a packet to the decoder. `null` ends the stream: the decoder then hands out what it still holds through `receiveFrame()`, which returns `false` once it is empty.
 
 **Parameters:**
 
-- `packet` (`Packet`): The packet to decode
+- `packet` (`Packet` | `null`): The packet to decode, or `null` to end the stream
 
 **Returns**: `boolean` indicating if the packet was sent
+
+### `CodecContext.flush()`
+
+Drops everything the codec holds, frames and packets alike, so that it can start over at another point of the stream, such as after a seek.
+
+**Returns**: `void`
 
 ### `CodecContext.receivePacket(packet)`
 
