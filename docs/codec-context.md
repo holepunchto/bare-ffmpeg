@@ -241,7 +241,7 @@ Sets a codec option.
 **Parameters:**
 
 - `name` (`string`): The option name to set
-- `value` (`string`): The option value
+- `value` (`string` | `number` | `boolean` | `Buffer`): The option value. Numbers and booleans are passed as their string form, which FFmpeg parses; a `Buffer` sets a binary option
 - `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
 
 **Returns**: `void`

@@ -5107,6 +5107,40 @@ bare_ffmpeg_set_option(
   }
 }
 
+static void
+bare_ffmpeg_set_option_binary(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  js_arraybuffer_span_t value,
+  uint64_t offset,
+  uint64_t len,
+  int flags
+) {
+  int err;
+
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+  if (!owner || !*owner) {
+    int err = js_throw_error(env, NULL, "object does not have AVClass");
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+
+  err = av_opt_set_bin(
+    *owner,
+    key.c_str(),
+    &value[static_cast<size_t>(offset)],
+    static_cast<int>(len),
+    flags
+  );
+  if (err < 0) {
+    err = js_throw_error(env, NULL, av_err2str(err));
+    assert(err == 0);
+    throw js_pending_exception;
+  }
+}
+
 static std::optional<std::string>
 bare_ffmpeg_get_option(
   js_env_t *env,
@@ -5599,6 +5633,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("setFilterInOutNext", bare_ffmpeg_filter_inout_set_next)
 
   V("setOption", bare_ffmpeg_set_option)
+  V("setOptionBinary", bare_ffmpeg_set_option_binary)
   V("getOption", bare_ffmpeg_get_option)
   V("listOptionNames", bare_ffmpeg_list_option_names)
   V("setOptionDictionary", bare_ffmpeg_set_option_dictionary)

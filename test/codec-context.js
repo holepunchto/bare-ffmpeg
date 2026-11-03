@@ -323,6 +323,28 @@ test('CodecContext can get and set options', (t) => {
   t.is(codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN), '4')
 })
 
+test('CodecContext.setOption takes a number', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('threads', 4)
+  t.is(codecCtx.getOption('threads'), '4')
+})
+
+test('CodecContext.setOption takes a boolean', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('skip_alpha', true)
+  t.is(codecCtx.getOption('skip_alpha'), 'true')
+})
+
+// No codec option is binary, so the buffer is rejected by FFmpeg rather than
+// by the binding, with an FFmpeg error and not a TypeError.
+test('CodecContext.setOption takes a buffer', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception.all(() => codecCtx.setOption('threads', Buffer.from('4')), /Invalid argument/)
+})
+
 test('CodecContext.setOption throws if option is not found', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 
