@@ -5557,6 +5557,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_NV21)
   V(AV_PIX_FMT_NV24)
   V(AV_PIX_FMT_VIDEOTOOLBOX)
+  V(AV_PIX_FMT_VAAPI)
+  V(AV_PIX_FMT_D3D11)
+  V(AV_PIX_FMT_DXVA2_VLD)
   V(AV_PIX_FMT_VULKAN)
 
   V(AV_HWDEVICE_TYPE_VIDEOTOOLBOX)

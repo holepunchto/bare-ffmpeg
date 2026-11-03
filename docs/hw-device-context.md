@@ -31,18 +31,6 @@ const hwDevice = new ffmpeg.HWDeviceContext(
 )
 ```
 
-### VAAPI
-
-A VAAPI device, `hwDeviceTypes.VAAPI`, is available on Linux. The addon ships `libva`, but the driver comes from the system: `intel-media-driver` for Intel GPUs, `mesa-va-drivers` for AMD. `libva` looks for it in `/usr/lib/x86_64-linux-gnu/dri`, `/usr/lib/aarch64-linux-gnu/dri`, `/usr/lib64/dri` and `/usr/lib/dri`; `LIBVA_DRIVERS_PATH` overrides that list and `LIBVA_DRIVER_NAME` forces a single driver. The device, `/dev/dri/renderD128` by default, has to be readable by the process.
-
-### Vulkan
-
-A Vulkan device, `hwDeviceTypes.VULKAN`, is available on Linux and Windows. The Vulkan loader is opened when the device is created, not when the module loads, so a machine without Vulkan is only affected if it asks for one.
-
-The loader reads `VK_ICD_FILENAMES`, `VK_LAYER_PATH`, `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS` from the environment and loads what they point to. Decoding with a Vulkan device also hands the bitstream to the GPU driver. Only create one in a process whose environment and input you trust.
-
-Decoding needs a driver that exposes `VK_KHR_video_decode_queue`. Some distributions ship Mesa without the video codecs, and on some Intel GPUs Mesa only exposes them with `ANV_DEBUG=video-decode` set in the environment.
-
 ## Static Methods
 
 ### `HWDeviceContext.from(handle)`
@@ -65,30 +53,65 @@ Destroys the `HWDeviceContext` and frees all associated resources. Automatically
 
 ## Usage
 
-Hardware device contexts are typically used with `CodecContext` to enable hardware acceleration:
+Decoding on the GPU takes three steps, the same on every platform: create a device, hand it to the decoder, and pick the hardware pixel format when the decoder asks. The frames then come out in GPU memory, with `frame.hwFramesCtx` set, and `frame.transferData()` copies one into a software frame when the pixels are needed on the CPU.
 
 ```js
-const hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
-const decoder = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.decoder)
+using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+
+const decoder = stream.decoder()
 decoder.hwDeviceCtx = hwDevice
+decoder.getFormat = (context, formats) => {
+  const hwFormat = ffmpeg.constants.pixelFormats.VIDEOTOOLBOX
 
-// Configure getFormat callback to select hardware pixel format
-decoder.getFormat = (ctx, formats) => {
-  const hwFormat = formats.find((f) => f === ffmpeg.constants.pixelFormats.VIDEOTOOLBOX)
-  return hwFormat ?? formats[0]
+  return formats.includes(hwFormat) ? hwFormat : formats[0]
 }
-
 decoder.open()
-// Decoding now uses hardware acceleration
+
+using frame = new ffmpeg.Frame()
+using swFrame = new ffmpeg.Frame()
+
+while (decoder.receiveFrame(frame)) {
+  swFrame.format = ffmpeg.constants.pixelFormats.NV12
+  frame.transferData(swFrame)
+}
 ```
 
-## Supported Hardware Device Types
+Returning `formats[0]` when the hardware format is missing falls back to software decoding instead of failing.
 
-The available hardware device types depend on your FFmpeg build and platform:
+Encoding on the GPU is a matter of picking the right encoder by name. Which device types, pixel formats and encoders exist depends on the platform.
 
-- **macOS/iOS**: `VIDEOTOOLBOX`
-- **Linux**: `VAAPI`, `VDPAU`, `DRM`
-- **Windows**: `D3D11VA`, `DXVA2`
-- **Cross-platform**: `CUDA`, `OPENCL`
+### macOS and iOS
 
-Check `ffmpeg.constants.hwDeviceTypes` for the full list of available types.
+VideoToolbox, `hwDeviceTypes.VIDEOTOOLBOX`, takes no device name and decodes into `pixelFormats.VIDEOTOOLBOX`. The encoders are `h264_videotoolbox`, `hevc_videotoolbox` and `prores_videotoolbox`, and they take software frames directly, no device needed:
+
+```js
+const encoder = new ffmpeg.Encoder('h264_videotoolbox')
+```
+
+### Linux
+
+Two device types. VAAPI, `hwDeviceTypes.VAAPI`, takes the render node as device, `/dev/dri/renderD128` unless the machine has several GPUs, and decodes into `pixelFormats.VAAPI`. Vulkan, `hwDeviceTypes.VULKAN`, takes no device name and decodes into `pixelFormats.VULKAN`. Both need something from the system, see below.
+
+The VAAPI encoders, `h264_vaapi` and `hevc_vaapi`, only accept frames already in GPU memory: create an `HWFramesContext` on the device, set it as `frame.hwFramesCtx`, and upload with `transferData()` from a software frame.
+
+#### VAAPI
+
+A VAAPI device, `hwDeviceTypes.VAAPI`, is available on Linux. The addon ships `libva`, but the driver comes from the system: `intel-media-driver` for Intel GPUs, `mesa-va-drivers` for AMD. `libva` looks for it in `/usr/lib/x86_64-linux-gnu/dri`, `/usr/lib/aarch64-linux-gnu/dri`, `/usr/lib64/dri` and `/usr/lib/dri`; `LIBVA_DRIVERS_PATH` overrides that list and `LIBVA_DRIVER_NAME` forces a single driver. The device, `/dev/dri/renderD128` by default, has to be readable by the process.
+
+#### Vulkan
+
+A Vulkan device, `hwDeviceTypes.VULKAN`, is available on Linux and Windows. The Vulkan loader is opened when the device is created, not when the module loads, so a machine without Vulkan is only affected if it asks for one.
+
+The loader reads `VK_ICD_FILENAMES`, `VK_LAYER_PATH`, `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS` from the environment and loads what they point to. Decoding with a Vulkan device also hands the bitstream to the GPU driver. Only create one in a process whose environment and input you trust.
+
+Decoding needs a driver that exposes `VK_KHR_video_decode_queue`. Some distributions ship Mesa without the video codecs, and on some Intel GPUs Mesa only exposes them with `ANV_DEBUG=video-decode` set in the environment.
+
+### Windows
+
+Three device types, none of which takes a device name. Direct3D 11, `hwDeviceTypes.D3D11VA`, decodes into `pixelFormats.D3D11`. DXVA2, `hwDeviceTypes.DXVA2`, decodes into `pixelFormats.DXVA2_VLD`. Vulkan, `hwDeviceTypes.VULKAN`, decodes into `pixelFormats.VULKAN`, needs a GPU driver that provides `vulkan-1.dll`, and the notes on the Vulkan loader above apply here too. The Direct3D and Vulkan libraries are loaded when the device is created, so a machine without a GPU driver still loads the module and only the device fails.
+
+The encoders come from Media Foundation, `h264_mf`, `hevc_mf` and `aac_mf`, and take software frames directly, no device needed.
+
+### Android
+
+MediaCodec is built into the prebuild but not reachable yet: FFmpeg needs the Java VM of the app, which the addon does not hand over so far. Software codecs work as everywhere else.
