@@ -31,11 +31,17 @@ const hwDevice = new ffmpeg.HWDeviceContext(
 )
 ```
 
+### VAAPI
+
+A VAAPI device, `hwDeviceTypes.VAAPI`, is available on Linux. The addon ships `libva`, but the driver comes from the system: `intel-media-driver` for Intel GPUs, `mesa-va-drivers` for AMD. `libva` looks for it in `/usr/lib/x86_64-linux-gnu/dri`, `/usr/lib/aarch64-linux-gnu/dri`, `/usr/lib64/dri` and `/usr/lib/dri`; `LIBVA_DRIVERS_PATH` overrides that list and `LIBVA_DRIVER_NAME` forces a single driver. The device, `/dev/dri/renderD128` by default, has to be readable by the process.
+
 ### Vulkan
 
 A Vulkan device, `hwDeviceTypes.VULKAN`, is available on Linux and Windows. The Vulkan loader is opened when the device is created, not when the module loads, so a machine without Vulkan is only affected if it asks for one.
 
 The loader reads `VK_ICD_FILENAMES`, `VK_LAYER_PATH`, `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS` from the environment and loads what they point to. Decoding with a Vulkan device also hands the bitstream to the GPU driver. Only create one in a process whose environment and input you trust.
+
+Decoding needs a driver that exposes `VK_KHR_video_decode_queue`. Some distributions ship Mesa without the video codecs, and on some Intel GPUs Mesa only exposes them with `ANV_DEBUG=video-decode` set in the environment.
 
 ## Static Methods
 
