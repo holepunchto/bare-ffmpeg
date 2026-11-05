@@ -87,5 +87,5 @@ test('Decoder with VideoToolbox lists it as a hardware configuration', { skip: !
 })
 
 test('software-only Decoder has no hardware configuration', (t) => {
-  t.alike(new ffmpeg.Decoder('vp8').hwConfigs, [])
+  t.alike(new ffmpeg.Decoder('opus').hwConfigs, [])
 })
