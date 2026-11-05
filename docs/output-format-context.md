@@ -35,6 +35,49 @@ Creates a new stream in the output format.
 
 **Returns**: A new `Stream` instance
 
+### `OutputFormatContext.writeHeader([options])`
+
+Writes the container header. Call once after the streams are created and before writing packets.
+
+**Parameters:**
+
+- `options` (`Dictionary`, optional): Format options
+
+**Returns**: `void`
+
+**Throws**: Error if FFmpeg rejects the header
+
+### `OutputFormatContext.writeFrame(packet)`
+
+Writes a packet to the output, interleaved by `dts` across streams, see `av_interleaved_write_frame()`.
+
+**Parameters:**
+
+- `packet` (`Packet`): The packet to write
+
+**Returns**: `void`
+
+**Throws**: Error if the write fails
+
+### `OutputFormatContext.writeTrailer()`
+
+Flushes the buffered packets and writes the container trailer. Call once after the last `writeFrame()`.
+
+**Returns**: `void`
+
+**Throws**: Error if the write fails
+
+### `OutputFormatContext.dump(printIdx, printUrl)`
+
+Prints the format and stream information to the FFmpeg log at `INFO` level, see `av_dump_format()`.
+
+**Parameters:**
+
+- `printIdx` (`number`, optional): Index printed in the header. Defaults to `0`
+- `printUrl` (`string`, optional): URL printed in the header. Defaults to `''`
+
+**Returns**: `void`
+
 ### `OutputFormatContext.destroy()`
 
 Destroys the `OutputFormatContext` and closes the output format. Automatically called when the object is managed by a `using` declaration.

@@ -42,6 +42,36 @@ Gets or sets the number of audio samples.
 
 **Returns**: `number`
 
+### `Frame.sampleRate`
+
+Gets or sets the sample rate in Hz for audio frames.
+
+**Returns**: `number`
+
+### `Frame.pictType`
+
+Gets the picture type of the frame.
+
+**Returns**: `number` (a `ffmpeg.constants.pictureTypes` constant)
+
+### `Frame.pts`
+
+Gets or sets the presentation timestamp in `timeBase` units, `-1` if unset.
+
+**Returns**: `number`
+
+### `Frame.packetDTS`
+
+Gets or sets the decoding timestamp of the packet the frame was decoded from, `-1` if unset.
+
+**Returns**: `number`
+
+### `Frame.timeBase`
+
+Gets or sets the time base of the frame timestamps.
+
+**Returns**: `Rational` instance
+
 ### `Frame.hwFramesCtx`
 
 Gets or sets the hardware frames context (`HWFramesContext`) for this frame. This property is automatically set by FFmpeg when decoding with hardware acceleration. It can also be set manually when preparing frames for hardware encoding.
@@ -122,6 +152,12 @@ The frame side data class. Use `Frame.SideData.fromData(data, type)` to build an
 ### `Frame.alloc()`
 
 Allocates memory for the frame data.
+
+**Returns**: `void`
+
+### `Frame.unref()`
+
+Unreferences the frame buffers and resets the frame fields so it can be reused.
 
 **Returns**: `void`
 

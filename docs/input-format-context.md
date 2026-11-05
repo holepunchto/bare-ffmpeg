@@ -26,6 +26,17 @@ Gets the input format associated with this context.
 
 ## Methods
 
+### `InputFormatContext.dump(printIdx, printUrl)`
+
+Prints the format and stream information to the FFmpeg log at `INFO` level, see `av_dump_format()`.
+
+**Parameters:**
+
+- `printIdx` (`number`, optional): Index printed in the header. Defaults to `0`
+- `printUrl` (`string`, optional): URL printed in the header. Defaults to `''`
+
+**Returns**: `void`
+
 ### `InputFormatContext.destroy()`
 
 Destroys the `InputFormatContext` and closes the input format. Automatically called when the object is managed by a `using` declaration.

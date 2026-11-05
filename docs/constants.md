@@ -128,7 +128,15 @@ The `constants` module includes the following groups of constants:
 - `sampleFormats`: Audio sample format constants (e.g., `S16`, `FLTP`, `S32`)
 - `channelLayouts`: Audio channel layout constants (e.g., `MONO`, `STEREO`, `5POINT1`)
 - `mediaTypes`: Media type constants (e.g., `VIDEO`, `AUDIO`, `SUBTITLE`)
-- `codecIds`: Codec identifier constants
+- `codecs`: Codec identifier constants (e.g., `H264`, `AAC`, `OPUS`, `FLAC`, `MP3`)
+- `tags`: Codec tag constants used by containers (e.g., `MJPEG`, `AAC`, `FLAC`, `MP3`)
+- `profiles`: Codec profile constants (e.g., `H264_MAIN`)
+- `levels`: Codec level constants (e.g., `UNKNOWN`)
+- `pictureTypes`: Picture type constants (e.g., `NONE`, `I`, `P`, `B`)
+- `logLevels`: Log level constants (e.g., `QUIET`, `ERROR`, `INFO`, `DEBUG`)
+- `codecFlags`: Codec context flag constants (e.g., `GLOBAL_HEADER`, `LOW_DELAY`, `BITEXACT`)
+- `formatFlags`: Container format flag constants (e.g., `GLOBALHEADER`, `NOFILE`, `NOTIMESTAMPS`)
+- `rounding`: Rounding mode constants for timestamp rescaling (e.g., `AV_ROUND_NEAR_INF`, `AV_ROUND_ZERO`)
 - `hwDeviceTypes`: Hardware device type constants (e.g., `VIDEOTOOLBOX`, `VAAPI`)
 - `hwConfigMethods`: How a codec takes its hardware (`HW_DEVICE_CTX`, `HW_FRAMES_CTX`, `INTERNAL`, `AD_HOC`)
 - `hwFrameMapFlags`: Hardware frame mapping flags

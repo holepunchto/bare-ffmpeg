@@ -46,6 +46,16 @@ Gets the best stream of the specified media type.
 
 **Returns**: `Stream` instance or `null` if not found
 
+### `FormatContext.getStream(index)`
+
+Gets the stream at the given index.
+
+**Parameters:**
+
+- `index` (`number`): The stream index
+
+**Returns**: `Stream` instance or `null` if the index is out of range
+
 ### `FormatContext.destroy()`
 
 Destroys the `FormatContext` and frees all associated resources including streams. Automatically called when the object is managed by a `using` declaration.
