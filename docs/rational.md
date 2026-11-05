@@ -33,13 +33,13 @@ Gets the denominator.
 
 Returns if true if rational describes a non-zero & non-negative quantity.
 
-**Returns**: `number`
+**Returns**: `boolean`
 
 ### `Rational.uninitialized`
 
 Returns if true when is not set.
 
-**Returns**: `number`
+**Returns**: `boolean`
 
 ## Methods
 

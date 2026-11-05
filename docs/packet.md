@@ -28,6 +28,36 @@ Gets the stream index this packet belongs to.
 
 **Returns**: `number`
 
+### `Packet.pts`
+
+Gets or sets the presentation timestamp in `timeBase` units, `-1` if unset.
+
+**Returns**: `number`
+
+### `Packet.dts`
+
+Gets or sets the decompression timestamp in `timeBase` units, `-1` if unset.
+
+**Returns**: `number`
+
+### `Packet.duration`
+
+Gets or sets the duration in `timeBase` units, `0` if unknown.
+
+**Returns**: `number`
+
+### `Packet.timeBase`
+
+Gets or sets the time base of the packet timestamps.
+
+**Returns**: `Rational` instance
+
+### `Packet.flags`
+
+Gets or sets the packet flags, a bitwise OR of `AV_PKT_FLAG_*` values.
+
+**Returns**: `number`
+
 ### `Packet.isKeyFrame`
 
 Get or set the key frame flag.
@@ -41,6 +71,27 @@ Gets or sets the side data associated with the packet.
 **Returns**: `Array<SideData>`
 
 ## Methods
+
+### `Packet.rescaleTimestamps(srcTimeBase, dstTimeBase)`
+
+Converts `pts`, `dts` and `duration` from `srcTimeBase` to `dstTimeBase`.
+
+**Parameters:**
+
+- `srcTimeBase` (`Rational`): The current time base of the timestamps
+- `dstTimeBase` (`Rational`): The time base to convert to
+
+**Returns**: `void`
+
+### `Packet.copyPropsFrom(sourcePacket)`
+
+Copies every field except the data from `sourcePacket`, see `av_packet_copy_props()`.
+
+**Parameters:**
+
+- `sourcePacket` (`Packet`): The packet to copy from
+
+**Returns**: `void`
 
 ### `Packet.unref()`
 

@@ -22,6 +22,12 @@ AAC audio codec.
 
 **Returns**: `Codec` instance
 
+### `Codec.OPUS`
+
+Opus audio codec.
+
+**Returns**: `Codec` instance
+
 ### `Codec.AV1`
 
 AV1 video codec.
@@ -47,6 +53,12 @@ VP9 video codec.
 Gets the codec ID.
 
 **Returns**: `number`
+
+### `Codec.name`
+
+Gets the codec name, `undefined` if `id` is not an integer.
+
+**Returns**: `string`
 
 ### `Codec.encoder`
 

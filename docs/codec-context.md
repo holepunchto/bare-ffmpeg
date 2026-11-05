@@ -40,6 +40,48 @@ Gets or sets the frame height for video codecs.
 
 **Returns**: `number`
 
+### `CodecContext.sampleFormat`
+
+Gets or sets the sample format for audio codecs.
+
+**Returns**: `number` (sample format constant)
+
+### `CodecContext.sampleRate`
+
+Gets or sets the sample rate in Hz for audio codecs.
+
+**Returns**: `number`
+
+### `CodecContext.channelLayout`
+
+Gets or sets the channel layout for audio codecs. Accepts a `ChannelLayout`, a channel layout constant or a layout name when setting.
+
+**Returns**: `ChannelLayout` instance
+
+### `CodecContext.frameRate`
+
+Gets or sets the frame rate for video codecs.
+
+**Returns**: `Rational` instance
+
+### `CodecContext.gopSize`
+
+Gets or sets the number of pictures in a group of pictures.
+
+**Returns**: `number`
+
+### `CodecContext.flags`
+
+Gets or sets the codec flags, a bitwise OR of `ffmpeg.constants.codecFlags`.
+
+**Returns**: `number`
+
+### `CodecContext.extraData`
+
+Gets or sets the codec extra data, such as the SPS/PPS of an H.264 stream. Setting copies the buffer.
+
+**Returns**: `Buffer`
+
 ### `CodecContext.frameSize`
 
 Gets the number of samples per channel in an audio frame.
