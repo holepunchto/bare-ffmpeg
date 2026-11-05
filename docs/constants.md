@@ -130,6 +130,7 @@ The `constants` module includes the following groups of constants:
 - `mediaTypes`: Media type constants (e.g., `VIDEO`, `AUDIO`, `SUBTITLE`)
 - `codecIds`: Codec identifier constants
 - `hwDeviceTypes`: Hardware device type constants (e.g., `VIDEOTOOLBOX`, `VAAPI`)
+- `hwConfigMethods`: How a codec takes its hardware (`HW_DEVICE_CTX`, `HW_FRAMES_CTX`, `INTERNAL`, `AD_HOC`)
 - `hwFrameMapFlags`: Hardware frame mapping flags
 - `seek`: Seek mode constants
 - `codecConfig`: Codec configuration type constants

@@ -60,3 +60,15 @@ test('Encoder ilbc_at is macOS only', { skip: !isApple }, (t) => {
     t.ok(new ffmpeg.Encoder('ilbc_at'), 'ilbc_at found on macOS')
   }
 })
+
+test('software-only Encoder has no hardware configuration', (t) => {
+  t.alike(new ffmpeg.Encoder('libvpx').hwConfigs, [])
+})
+
+test('VideoToolbox Encoder lists its hardware configuration', { skip: !isApple }, (t) => {
+  const { hwDeviceTypes } = ffmpeg.constants
+
+  const configs = new ffmpeg.Encoder('h264_videotoolbox').hwConfigs
+
+  t.ok(configs.some((config) => config.deviceType === hwDeviceTypes.VIDEOTOOLBOX))
+})

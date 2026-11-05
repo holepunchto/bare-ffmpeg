@@ -35,6 +35,28 @@ Decoder names available in this build:
 - `'h264'` - H.264 video decoder
 - `'libdav1d'` - AV1 video decoder
 
+## Properties
+
+### `Decoder.hwConfigs`
+
+The hardware configurations the decoder supports, one per entry, each with:
+
+- `pixelFormat` (`number`): The hardware pixel format, from `constants.pixelFormats`, or `NONE` when the method needs none
+- `methods` (`number`): How the hardware is handed over, a mask of `constants.hwConfigMethods`
+- `deviceType` (`number`): The device type, from `constants.hwDeviceTypes`
+
+Empty for a software-only decoder.
+
+**Type**: `Array<object>` (read-only)
+
+```js
+const configs = new ffmpeg.Decoder('h264').hwConfigs
+
+const videotoolbox = configs.find(
+  (config) => config.deviceType === ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX
+)
+```
+
 ## See Also
 
 - [Encoder](encoder.md) - Encoder class for encoding media
