@@ -1064,6 +1064,40 @@ bare_ffmpeg_stream_set_duration(
   stream->handle->duration = duration;
 }
 
+static std::vector<js_object_t>
+bare_ffmpeg_codec_get_hw_configs(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+) {
+  int err;
+
+  std::vector<js_object_t> configs{};
+
+  for (int i = 0;; i++) {
+    const AVCodecHWConfig *config = avcodec_get_hw_config(codec->handle, i);
+
+    if (config == NULL) break;
+
+    js_object_t object;
+    err = js_create_object(env, object);
+    assert(err == 0);
+
+    err = js_set_property(env, object, "pixelFormat", static_cast<int32_t>(config->pix_fmt));
+    assert(err == 0);
+
+    err = js_set_property(env, object, "methods", static_cast<int32_t>(config->methods));
+    assert(err == 0);
+
+    err = js_set_property(env, object, "deviceType", static_cast<int32_t>(config->device_type));
+    assert(err == 0);
+
+    configs.push_back(object);
+  }
+
+  return configs;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_find_decoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
   int err;
@@ -5219,6 +5253,7 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V("findDecoderByName", bare_ffmpeg_find_decoder_by_name)
   V("findEncoderByName", bare_ffmpeg_find_encoder_by_name)
   V("getCodecNameByID", bare_ffmpeg_get_codec_name_by_id)
+  V("getCodecHWConfigs", bare_ffmpeg_codec_get_hw_configs)
   V("getSampleFormatNameByID", bare_ffmpeg_get_sample_format_name_by_id)
   V("getPixelFormatNameByID", bare_ffmpeg_get_pixel_format_name_by_id)
   V("getSupportedConfig", bare_ffmpeg_codec_get_supported_config)
@@ -5563,6 +5598,10 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_VULKAN)
 
   V(AV_HWDEVICE_TYPE_VIDEOTOOLBOX)
+  V(AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)
+  V(AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX)
+  V(AV_CODEC_HW_CONFIG_METHOD_INTERNAL)
+  V(AV_CODEC_HW_CONFIG_METHOD_AD_HOC)
   V(AV_HWDEVICE_TYPE_CUDA)
   V(AV_HWDEVICE_TYPE_VAAPI)
   V(AV_HWDEVICE_TYPE_DXVA2)

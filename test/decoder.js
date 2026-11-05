@@ -62,3 +62,30 @@ test('Decoder gsm_ms_at and ilbc_at are macOS only', { skip: !isApple }, (t) => 
     }
   }
 })
+
+test('Decoder exposes its hardware configurations', (t) => {
+  const configs = new ffmpeg.Decoder('h264').hwConfigs
+
+  t.ok(Array.isArray(configs))
+
+  for (const config of configs) {
+    t.is(typeof config.pixelFormat, 'number')
+    t.is(typeof config.methods, 'number')
+    t.is(typeof config.deviceType, 'number')
+  }
+})
+
+test('Decoder with VideoToolbox lists it as a hardware configuration', { skip: !isApple }, (t) => {
+  const { hwDeviceTypes, hwConfigMethods } = ffmpeg.constants
+
+  const config = new ffmpeg.Decoder('h264').hwConfigs.find(
+    (config) => config.deviceType === hwDeviceTypes.VIDEOTOOLBOX
+  )
+
+  t.ok(config, 'has a VideoToolbox configuration')
+  t.ok(config.methods & hwConfigMethods.HW_DEVICE_CTX, 'takes a device context')
+})
+
+test('software-only Decoder has no hardware configuration', (t) => {
+  t.alike(new ffmpeg.Decoder('opus').hwConfigs, [])
+})
