@@ -41,6 +41,8 @@ Complete API documentation for all components is available in the `/docs` direct
 - [SideData](docs/side-data.md) - Packet side data and metadata
 - [Image](docs/image.md) - Raw pixel data management
 - [Rational](docs/rational.md) - Rational number (fraction) representation
+- [ChannelLayout](docs/channel-layout.md) - Arrangement of audio channels
+- [Samples](docs/samples.md) - Audio samples of a frame as a buffer
 
 ### Processing
 
@@ -61,6 +63,7 @@ Complete API documentation for all components is available in the `/docs` direct
 ### Utilities
 
 - [Constants](docs/constants.md) - FFmpeg constants and utility functions
+- [log](docs/log.md) - How much FFmpeg prints
 
 ## Building
 
