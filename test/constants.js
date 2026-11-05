@@ -75,3 +75,27 @@ test('toChannelLayout should throw for not valid type', (t) => {
     ffmpeg.constants.toChannelLayout(null)
   })
 })
+
+test('color space names round trip', (t) => {
+  const { colorSpace, getColorSpaceName, toColorSpace } = ffmpeg.constants
+
+  t.is(getColorSpaceName(colorSpace.BT709), 'bt709')
+  t.is(toColorSpace('bt709'), colorSpace.BT709)
+  t.exception(() => toColorSpace('nope'))
+})
+
+test('color primaries names round trip', (t) => {
+  const { colorPrimaries, getColorPrimariesName, toColorPrimaries } = ffmpeg.constants
+
+  t.is(getColorPrimariesName(colorPrimaries.BT709), 'bt709')
+  t.is(toColorPrimaries('bt709'), colorPrimaries.BT709)
+  t.exception(() => toColorPrimaries('nope'))
+})
+
+test('color transfer names round trip', (t) => {
+  const { colorTRC, getColorTransferName, toColorTransfer } = ffmpeg.constants
+
+  t.is(getColorTransferName(colorTRC.BT709), 'bt709')
+  t.is(toColorTransfer('bt709'), colorTRC.BT709)
+  t.exception(() => toColorTransfer('nope'))
+})
