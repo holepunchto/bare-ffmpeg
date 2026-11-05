@@ -120,6 +120,40 @@ const name = ffmpeg.constants.getPixelFormatName(ffmpeg.constants.pixelFormats.R
 console.log(name) // 'rgb24'
 ```
 
+### `ffmpeg.constants.getHWDeviceTypeName(type)`
+
+Gets the name of a hardware device type from its constant value.
+
+**Parameters:**
+
+- `type` (`number`): The hardware device type constant
+
+**Returns**: `string` - The hardware device type name
+
+**Example:**
+
+```js
+const name = ffmpeg.constants.getHWDeviceTypeName(ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX)
+console.log(name) // 'videotoolbox'
+```
+
+### `ffmpeg.constants.toHWDeviceType(name)`
+
+Gets the hardware device type constant from its name. Throws if no type has that name.
+
+**Parameters:**
+
+- `name` (`string`): The hardware device type name
+
+**Returns**: `number` - The hardware device type constant
+
+**Example:**
+
+```js
+const type = ffmpeg.constants.toHWDeviceType('videotoolbox')
+console.log(type === ffmpeg.constants.hwDeviceTypes.VIDEOTOOLBOX) // true
+```
+
 ## Available Constant Groups
 
 The `constants` module includes the following groups of constants:

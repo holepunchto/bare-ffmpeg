@@ -3198,6 +3198,46 @@ bare_ffmpeg_hw_device_context_destroy(
   av_buffer_unref(&hw_device_ctx->handle);
 }
 
+static std::vector<int32_t>
+bare_ffmpeg_hw_device_types(js_env_t *env, js_receiver_t) {
+  std::vector<int32_t> types{};
+
+  AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE;
+
+  while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE) {
+    types.push_back(static_cast<int32_t>(type));
+  }
+
+  return types;
+}
+
+static std::string
+bare_ffmpeg_hw_device_type_name(
+  js_env_t *env,
+  js_receiver_t,
+  int type
+) {
+  return av_hwdevice_get_type_name(static_cast<AVHWDeviceType>(type));
+}
+
+static int
+bare_ffmpeg_hw_device_type_from_name(
+  js_env_t *env,
+  js_receiver_t,
+  std::string name
+) {
+  AVHWDeviceType type = av_hwdevice_find_type_by_name(name.c_str());
+
+  if (type == AV_HWDEVICE_TYPE_NONE) {
+    int err = js_throw_errorf(env, NULL, "No hardware device type named '%s'", name.c_str());
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+
+  return static_cast<int>(type);
+}
+
 static void
 bare_ffmpeg_hw_frames_context_destroy(
   js_env_t *env,
@@ -5405,6 +5445,9 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("initHWDeviceContext", bare_ffmpeg_hw_device_context_init)
   V("destroyHWDeviceContext", bare_ffmpeg_hw_device_context_destroy)
+  V("getHWDeviceTypes", bare_ffmpeg_hw_device_types)
+  V("getHWDeviceTypeNameByID", bare_ffmpeg_hw_device_type_name)
+  V("getHWDeviceTypeFromName", bare_ffmpeg_hw_device_type_from_name)
   V("initHWFramesContext", bare_ffmpeg_hw_frames_context_init)
   V("destroyHWFramesContext", bare_ffmpeg_hw_frames_context_destroy)
   V("getHWFramesContextFormat", bare_ffmpeg_hw_frames_context_get_format)
