@@ -3634,7 +3634,7 @@ bare_ffmpeg_samples_fill(
   uint8_t **data = frame->handle->data;
 
   if (planes > AV_NUM_DATA_POINTERS) {
-    data = reinterpret_cast<uint8_t **>(av_calloc(planes, sizeof(*data)));
+    data = reinterpret_cast<uint8_t **>(av_calloc(static_cast<size_t>(planes), sizeof(*data)));
 
     if (data == NULL) {
       err = js_throw_error(env, NULL, av_err2str(AVERROR(ENOMEM)));
@@ -3715,7 +3715,7 @@ bare_ffmpeg_samples_read(
   auto sample_fmt = static_cast<AVSampleFormat>(frame->handle->format);
   auto channels = frame->handle->ch_layout.nb_channels;
 
-  std::vector<uint8_t *> dst_data(av_sample_fmt_is_planar(sample_fmt) ? channels : 1);
+  std::vector<uint8_t *> dst_data(static_cast<size_t>(av_sample_fmt_is_planar(sample_fmt) ? channels : 1));
   int dst_linesize;
 
   auto len = av_samples_fill_arrays(
