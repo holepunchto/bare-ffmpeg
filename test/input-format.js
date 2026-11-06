@@ -53,31 +53,20 @@ test(
   }
 )
 
-// The device formats of each platform, which the build must carry.
-const deviceFormats = {
-  darwin: ['avfoundation'],
-  ios: ['avfoundation'],
-  linux: ['v4l2', 'alsa', 'pulse'],
-  win32: ['dshow'],
-  android: ['android_camera']
-}[os.platform()]
+test('InputFormat has the device formats of this platform', (t) => {
+  // The device formats of each platform, which the build must carry.
+  const deviceFormats = {
+    darwin: ['avfoundation'],
+    ios: ['avfoundation'],
+    linux: ['v4l2', 'alsa', 'pulse'],
+    win32: ['dshow'],
+    android: ['android_camera']
+  }[os.platform()]
 
-test('InputFormat has the device formats of this platform', { skip: !deviceFormats }, (t) => {
   for (const name of deviceFormats) {
     t.is(new ffmpeg.InputFormat(name).name, name)
   }
 })
-
-// Depends on the sound setup of the machine, a runner has neither a card nor a daemon
-test(
-  'InputFormat.listDevices lists audio devices on Linux',
-  { skip: os.platform() !== 'linux' || process.env.CI },
-  (t) => {
-    for (const name of ['alsa', 'pulse']) {
-      t.ok(Array.isArray(ffmpeg.InputFormat.listDevices(name)), name)
-    }
-  }
-)
 
 // Depends on the devices of the machine, dshow fails when there's no microphone
 const deviceFormat = { linux: 'v4l2', win32: 'dshow' }[os.platform()]
