@@ -53,6 +53,20 @@ test(
   }
 )
 
+test('InputFormat has the device formats of this platform', (t) => {
+  const deviceFormats = {
+    darwin: ['avfoundation'],
+    ios: ['avfoundation'],
+    linux: ['v4l2', 'alsa', 'pulse'],
+    win32: ['dshow'],
+    android: ['android_camera']
+  }[os.platform()]
+
+  for (const name of deviceFormats) {
+    t.execution(() => new ffmpeg.InputFormat(name), name)
+  }
+})
+
 // Depends on the devices of the machine, dshow fails when there's no microphone
 const deviceFormat = { linux: 'v4l2', win32: 'dshow' }[os.platform()]
 const deviceFilter = { skip: !deviceFormat || process.env.CI }

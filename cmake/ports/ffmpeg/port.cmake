@@ -103,6 +103,8 @@ elseif(LINUX)
     "--sysroot=${CMAKE_SYSROOT}"
 
     --enable-pthreads
+    --enable-alsa
+    --enable-libpulse
   )
 elseif(ANDROID)
   list(APPEND args
