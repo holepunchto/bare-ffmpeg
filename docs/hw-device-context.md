@@ -120,4 +120,4 @@ The encoders come from Media Foundation, `h264_mf`, `hevc_mf` and `aac_mf`, and 
 
 ### Android
 
-MediaCodec is built into the prebuild but not reachable yet: FFmpeg needs the Java VM of the app, which the addon does not hand over so far. Software codecs work as everywhere else.
+MediaCodec is used through the `*_mediacodec` codecs, such as `h264_mediacodec`. They take and return software frames, so no device is needed.

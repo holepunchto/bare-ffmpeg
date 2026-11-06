@@ -18,6 +18,9 @@ extern "C" {
 #include <libavcodec/codec.h>
 #include <libavcodec/codec_id.h>
 #include <libavcodec/codec_par.h>
+#ifdef __ANDROID__
+#include <libavcodec/jni.h>
+#endif
 #include <libavcodec/packet.h>
 #include <libavdevice/avdevice.h>
 #include <libavfilter/avfilter.h>
@@ -172,6 +175,14 @@ bare_ffmpeg__on_init(void) {
   av_log_set_level(AV_LOG_ERROR);
 
   avdevice_register_all();
+
+#ifdef __ANDROID__
+  void *vm;
+
+  if (bare_context_get("bare.android.jvm.v1", &vm) == 0) {
+    av_jni_set_java_vm(vm, NULL);
+  }
+#endif
 }
 
 static int32_t
@@ -5635,12 +5646,14 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
   V(AV_PIX_FMT_NV21)
   V(AV_PIX_FMT_NV24)
   V(AV_PIX_FMT_VIDEOTOOLBOX)
+  V(AV_PIX_FMT_MEDIACODEC)
   V(AV_PIX_FMT_VAAPI)
   V(AV_PIX_FMT_D3D11)
   V(AV_PIX_FMT_DXVA2_VLD)
   V(AV_PIX_FMT_VULKAN)
 
   V(AV_HWDEVICE_TYPE_VIDEOTOOLBOX)
+  V(AV_HWDEVICE_TYPE_MEDIACODEC)
   V(AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)
   V(AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX)
   V(AV_CODEC_HW_CONFIG_METHOD_INTERNAL)
