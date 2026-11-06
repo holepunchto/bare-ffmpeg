@@ -52,3 +52,42 @@ test('getSupportedConfig for channel layouts', (t) => {
   const channelLayouts = codecCtx.getSupportedConfig(ffmpeg.constants.codecConfig.CHANNEL_LAYOUT)
   t.is(channelLayouts, null, 'all possible channel layouts are accepted')
 })
+
+test('getSupportedConfig from a codec, with no context', (t) => {
+  const { codecConfig } = ffmpeg.constants
+
+  const pixelFormats = ffmpeg.Codec.AV1.encoder.getSupportedConfig(codecConfig.PIX_FORMAT)
+  t.ok(pixelFormats instanceof Int32Array, 'returns Int32Array')
+  t.ok(pixelFormats.length > 0, 'has pixel formats')
+
+  const sampleRates = ffmpeg.Codec.AAC.encoder.getSupportedConfig(codecConfig.SAMPLE_RATE)
+  t.ok(sampleRates instanceof Int32Array, 'returns Int32Array')
+  t.ok(sampleRates.length > 0, 'has sample rates')
+
+  const channelLayouts = ffmpeg.Codec.AAC.encoder.getSupportedConfig(codecConfig.CHANNEL_LAYOUT)
+  t.is(channelLayouts, null, 'all possible channel layouts are accepted')
+
+  const frameRates = new ffmpeg.Encoder('mjpeg').getSupportedConfig(codecConfig.FRAME_RATE)
+  t.is(frameRates, null, 'all possible frame rates are accepted')
+})
+
+test('a context answers for its options, a codec in general', (t) => {
+  const { codecConfig, codecs, colorRange } = ffmpeg.constants
+
+  const mjpeg = ffmpeg.Codec.for(codecs.MJPEG)
+
+  using codecCtx = new ffmpeg.CodecContext(mjpeg.encoder)
+  codecCtx.setOption('strict', 'unofficial')
+
+  t.alike(
+    Array.from(codecCtx.getSupportedConfig(codecConfig.COLOR_RANGE)),
+    [colorRange.MPEG, colorRange.JPEG],
+    'the context accepts both ranges'
+  )
+
+  t.alike(
+    Array.from(mjpeg.encoder.getSupportedConfig(codecConfig.COLOR_RANGE)),
+    [colorRange.JPEG],
+    'the codec alone only the JPEG range'
+  )
+})
