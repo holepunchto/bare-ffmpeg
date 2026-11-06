@@ -53,10 +53,17 @@ test(
   }
 )
 
-const linuxFilter = { skip: os.platform() !== 'linux' }
+// The device formats of each platform, which the build must carry.
+const deviceFormats = {
+  darwin: ['avfoundation'],
+  ios: ['avfoundation'],
+  linux: ['v4l2', 'alsa', 'pulse'],
+  win32: ['dshow'],
+  android: ['android_camera']
+}[os.platform()]
 
-test('InputFormat has the ALSA and PulseAudio device formats on Linux', linuxFilter, (t) => {
-  for (const name of ['alsa', 'pulse']) {
+test('InputFormat has the device formats of this platform', { skip: !deviceFormats }, (t) => {
+  for (const name of deviceFormats) {
     t.is(new ffmpeg.InputFormat(name).name, name)
   }
 })
