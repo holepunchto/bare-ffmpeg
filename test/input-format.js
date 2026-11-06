@@ -54,7 +54,6 @@ test(
 )
 
 test('InputFormat has the device formats of this platform', (t) => {
-  // The device formats of each platform, which the build must carry.
   const deviceFormats = {
     darwin: ['avfoundation'],
     ios: ['avfoundation'],
