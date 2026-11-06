@@ -48,6 +48,22 @@ test('HWDeviceContext.from should return null for null handle', (t) => {
   t.is(result, null)
 })
 
+test('HWDeviceContext.types should list the supported device types', (t) => {
+  const { hwDeviceTypes } = ffmpeg.constants
+  const types = ffmpeg.HWDeviceContext.types()
+
+  t.ok(Array.isArray(types))
+  t.ok(types.every((type) => typeof type === 'number'))
+
+  const expected = {
+    darwin: hwDeviceTypes.VIDEOTOOLBOX,
+    linux: hwDeviceTypes.VAAPI,
+    win32: hwDeviceTypes.D3D11VA
+  }[os.platform()]
+
+  if (expected !== undefined) t.ok(types.includes(expected))
+})
+
 // Needs a GPU with a Vulkan driver, which the CI runners lack.
 const vulkanFilter = {
   skip: process.env.CI || !['win32', 'linux'].includes(os.platform())

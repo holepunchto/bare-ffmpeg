@@ -84,6 +84,14 @@ test('color space names round trip', (t) => {
   t.exception(() => toColorSpace('nope'))
 })
 
+test('hw device type names round trip', (t) => {
+  const { hwDeviceTypes, getHWDeviceTypeName, toHWDeviceType } = ffmpeg.constants
+
+  t.is(getHWDeviceTypeName(hwDeviceTypes.VIDEOTOOLBOX), 'videotoolbox')
+  t.is(toHWDeviceType('videotoolbox'), hwDeviceTypes.VIDEOTOOLBOX)
+  t.exception(() => toHWDeviceType('nope'))
+})
+
 test('color primaries names round trip', (t) => {
   const { colorPrimaries, getColorPrimariesName, toColorPrimaries } = ffmpeg.constants
 

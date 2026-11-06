@@ -43,6 +43,12 @@ Creates a `HWDeviceContext` instance from an existing native handle. Used intern
 
 **Returns**: `HWDeviceContext` instance or `null` if handle is null
 
+### `HWDeviceContext.types()`
+
+Lists the hardware device types this build of FFmpeg supports.
+
+**Returns**: `number[]` - Values from `constants.hwDeviceTypes`
+
 ## Methods
 
 ### `HWDeviceContext.destroy()`
