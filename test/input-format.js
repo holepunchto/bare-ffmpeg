@@ -53,6 +53,25 @@ test(
   }
 )
 
+const linuxFilter = { skip: os.platform() !== 'linux' }
+
+test('InputFormat has the ALSA and PulseAudio device formats on Linux', linuxFilter, (t) => {
+  for (const name of ['alsa', 'pulse']) {
+    t.is(new ffmpeg.InputFormat(name).name, name)
+  }
+})
+
+// Depends on the sound setup of the machine, a runner has neither a card nor a daemon
+test(
+  'InputFormat.listDevices lists audio devices on Linux',
+  { skip: os.platform() !== 'linux' || process.env.CI },
+  (t) => {
+    for (const name of ['alsa', 'pulse']) {
+      t.ok(Array.isArray(ffmpeg.InputFormat.listDevices(name)), name)
+    }
+  }
+)
+
 // Depends on the devices of the machine, dshow fails when there's no microphone
 const deviceFormat = { linux: 'v4l2', win32: 'dshow' }[os.platform()]
 const deviceFilter = { skip: !deviceFormat || process.env.CI }

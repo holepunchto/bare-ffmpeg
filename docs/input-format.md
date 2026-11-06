@@ -47,7 +47,7 @@ Lists the input devices of a device format.
 
 **Parameters:**
 
-- `name` (`string`, optional): The device format name (e.g., `'dshow'`, `'v4l2'`). Defaults to the same platform-specific value as the constructor.
+- `name` (`string`, optional): The device format name (e.g., `'dshow'`, `'v4l2'`, `'alsa'`, `'pulse'`). Defaults to the same platform-specific value as the constructor.
 
 **Returns**: `Array<object>` - One entry per device, with:
 
