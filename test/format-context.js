@@ -107,6 +107,12 @@ test('OutputFormatContext.duration should be settable', (t) => {
   t.is(outContext.duration, -1)
 })
 
+test('OutputFormatContext should release the IOContext when the muxer is unknown', (t) => {
+  using io = new ffmpeg.IOContext(4096, { onwrite: (chunk) => chunk.length })
+
+  t.exception(() => new ffmpeg.OutputFormatContext('no-such-muxer', io))
+})
+
 // Helpers
 
 function getOptions() {
