@@ -43,6 +43,15 @@ test('HWDeviceContext should expose a destroy method (linux)', linuxFilter, (t) 
   })
 })
 
+// Android
+
+const androidFilter = { skip: os.platform() !== 'android' }
+
+test('HWDeviceContext should instantiate with device type (android)', androidFilter, (t) => {
+  using hwDevice = new ffmpeg.HWDeviceContext(ffmpeg.constants.hwDeviceTypes.MEDIACODEC)
+  t.ok(hwDevice)
+})
+
 test('HWDeviceContext.from should return null for null handle', (t) => {
   const result = ffmpeg.HWDeviceContext.from(null)
   t.is(result, null)
