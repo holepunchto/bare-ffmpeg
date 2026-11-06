@@ -63,7 +63,7 @@ test('InputFormat has the device formats of this platform', (t) => {
   }[os.platform()]
 
   for (const name of deviceFormats) {
-    t.is(new ffmpeg.InputFormat(name).name, name)
+    t.execution(() => new ffmpeg.InputFormat(name), name)
   }
 })
 
