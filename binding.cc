@@ -1220,20 +1220,37 @@ bare_ffmpeg_get_pixel_format_name_by_id(js_env_t *env, js_receiver_t, int id) {
   return av_get_pix_fmt_name(static_cast<enum AVPixelFormat>(id));
 }
 
+// `avcodec_get_supported_config()` falls back to `avctx->codec` when no codec
+// is given, so one of the two is required.
+static void
+bare_ffmpeg_codec_check_query(js_env_t *env, const AVCodecContext *ctx, const AVCodec *codec) {
+  if (ctx || codec) return;
+
+  int err = js_throw_error(env, NULL, "Expected a codec context, a codec, or both");
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
 static std::vector<int32_t>
 bare_ffmpeg_codec_get_supported_config(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1>> context,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1>> codec,
   int32_t cfg
 ) {
   int err;
 
+  const AVCodecContext *ctx = context ? context.value()->handle : NULL;
+  const AVCodec *c = codec ? codec.value()->handle : NULL;
+
+  bare_ffmpeg_codec_check_query(env, ctx, c);
+
   int count = 0;
   const void *list = nullptr;
 
-  err = avcodec_get_supported_config(context->handle, codec->handle, static_cast<AVCodecConfig>(cfg), 0, &list, &count);
+  err = avcodec_get_supported_config(ctx, c, static_cast<AVCodecConfig>(cfg), 0, &list, &count);
   if (err < 0) {
     err = js_throw_error(env, NULL, av_err2str(err));
     assert(err == 0);
@@ -1288,13 +1305,15 @@ static std::optional<js_arraybuffer_t>
 bare_ffmpeg_codec_get_supported_frame_rates(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1>> context,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1>> codec
 ) {
   int err;
 
-  const AVCodecContext *ctx = context->handle;
-  const AVCodec *c = codec->handle;
+  const AVCodecContext *ctx = context ? context.value()->handle : NULL;
+  const AVCodec *c = codec ? codec.value()->handle : NULL;
+
+  bare_ffmpeg_codec_check_query(env, ctx, c);
 
   int count = 0;
   const void *list = nullptr;
@@ -1329,14 +1348,16 @@ static std::optional<std::vector<js_arraybuffer_t>>
 bare_ffmpeg_codec_get_supported_channel_layouts(
   js_env_t *env,
   js_receiver_t,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1> context,
-  js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1> codec
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_context_t, 1>> context,
+  std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_codec_t, 1>> codec
 ) {
   int err;
   std::vector<js_arraybuffer_t> result;
 
-  const AVCodecContext *ctx = context->handle;
-  const AVCodec *c = codec->handle;
+  const AVCodecContext *ctx = context ? context.value()->handle : NULL;
+  const AVCodec *c = codec ? codec.value()->handle : NULL;
+
+  bare_ffmpeg_codec_check_query(env, ctx, c);
 
   int count = 0;
   const void *list = nullptr;

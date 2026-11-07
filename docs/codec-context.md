@@ -185,7 +185,7 @@ Receives an encoded packet from the encoder.
 
 ### `CodecContext.getSupportedConfig(config)`
 
-Gets the supported values for a codec configuration option.
+Gets the supported values for a codec configuration option, as this context is configured. Options such as `strict` change the answer; `Decoder.getSupportedConfig()` and `Encoder.getSupportedConfig()` give the answer for the codec alone.
 
 **Parameters:**
 

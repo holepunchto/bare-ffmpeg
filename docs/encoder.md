@@ -53,6 +53,31 @@ Empty for a software-only encoder.
 const configs = new ffmpeg.Encoder('h264_videotoolbox').hwConfigs
 ```
 
+## Methods
+
+### `Encoder.getSupportedConfig(config)`
+
+Gets the supported values for a codec configuration option, for the codec alone. `CodecContext.getSupportedConfig()` gives the answer for a configured context, which may be narrower.
+
+**Parameters:**
+
+- `config` (`number`): The configuration type from `ffmpeg.constants.codecConfig`
+
+**Returns**:
+
+- For `PIX_FORMAT`, `SAMPLE_FORMAT`, `COLOR_RANGE`, `COLOR_SPACE`: `Int32Array` of supported values
+- For `SAMPLE_RATE`: `Int32Array` of supported sample rates, or `null` when the codec accepts any
+- For `FRAME_RATE`: array of `Rational`, or `null` when the codec accepts any
+- For `CHANNEL_LAYOUT`: array of `ChannelLayout`, or `null` when the codec accepts any
+
+**Throws**: Error if the config type does not apply to this codec
+
+```js
+const formats = new ffmpeg.Encoder('libvpx').getSupportedConfig(
+  ffmpeg.constants.codecConfig.PIX_FORMAT
+)
+```
+
 ## See Also
 
 - [Decoder](decoder.md) - Decoder class for decoding media
