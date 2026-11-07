@@ -21,6 +21,31 @@ test('FilterContext.setOption updates the option value', (t) => {
   t.is(Number(volumeCtx.getOption('volume')), 0.5)
 })
 
+test('FilterContext.setOption takes a number', (t) => {
+  const graph = new ffmpeg.FilterGraph()
+  t.teardown(() => graph.destroy())
+
+  const fadeCtx = new ffmpeg.FilterContext()
+  graph.createFilter(fadeCtx, new ffmpeg.Filter('afade'), 'fade')
+
+  fadeCtx.setOption('unity', 0.5)
+  t.is(Number(fadeCtx.getOption('unity')), 0.5)
+})
+
+// `volume` holds an expression, so FFmpeg takes a string for it and refuses a
+// number, as it does in C.
+test('FilterContext.setOption refuses a number for a string option', (t) => {
+  const volumeCtx = setupVolumePipeline(t)
+
+  t.exception(() => volumeCtx.setOption('volume', 0.25))
+})
+
+test('FilterContext.setOption throws on a value it cannot map', (t) => {
+  const volumeCtx = setupVolumePipeline(t)
+
+  t.exception.all(() => volumeCtx.setOption('volume', {}), TypeError)
+})
+
 test('FilterContext.setOptionDefaults restores default values', (t) => {
   const volumeCtx = setupVolumePipeline(t)
 

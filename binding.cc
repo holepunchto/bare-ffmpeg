@@ -5107,6 +5107,118 @@ bare_ffmpeg_set_option(
   }
 }
 
+// The object an option is set on, which every `av_opt_set_*()` takes as its
+// first argument.
+static AVClass **
+bare_ffmpeg_option_owner(js_env_t *env, js_arraybuffer_span_t handle) {
+  AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
+
+  if (owner && *owner) return owner;
+
+  int err = js_throw_error(env, NULL, "object does not have AVClass");
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
+static void
+bare_ffmpeg_option_check(js_env_t *env, int err) {
+  if (err >= 0) return;
+
+  err = js_throw_error(env, NULL, av_err2str(err));
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
+static void
+bare_ffmpeg_set_option_int(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  int64_t value,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  bare_ffmpeg_option_check(env, av_opt_set_int(*owner, key.c_str(), value, flags));
+}
+
+static void
+bare_ffmpeg_set_option_double(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  double value,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  bare_ffmpeg_option_check(env, av_opt_set_double(*owner, key.c_str(), value, flags));
+}
+
+static void
+bare_ffmpeg_set_option_rational(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  int32_t numerator,
+  int32_t denominator,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  AVRational value = {numerator, denominator};
+
+  bare_ffmpeg_option_check(env, av_opt_set_q(*owner, key.c_str(), value, flags));
+}
+
+static void
+bare_ffmpeg_set_option_image_size(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  int32_t width,
+  int32_t height,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  bare_ffmpeg_option_check(env, av_opt_set_image_size(*owner, key.c_str(), width, height, flags));
+}
+
+static void
+bare_ffmpeg_set_option_channel_layout(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  bare_ffmpeg_option_check(env, av_opt_set_chlayout(*owner, key.c_str(), &layout->handle, flags));
+}
+
+static void
+bare_ffmpeg_set_option_dictionary_value(
+  js_env_t *env,
+  js_receiver_t,
+  js_arraybuffer_span_t handle,
+  std::string key,
+  js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dictionary,
+  int flags
+) {
+  AVClass **owner = bare_ffmpeg_option_owner(env, handle);
+
+  bare_ffmpeg_option_check(env, av_opt_set_dict_val(*owner, key.c_str(), dictionary->handle, flags));
+}
+
 static void
 bare_ffmpeg_set_option_binary(
   js_env_t *env,
@@ -5634,6 +5746,12 @@ bare_ffmpeg_exports(js_env_t *env, js_value_t *exports) {
 
   V("setOption", bare_ffmpeg_set_option)
   V("setOptionBinary", bare_ffmpeg_set_option_binary)
+  V("setOptionInt", bare_ffmpeg_set_option_int)
+  V("setOptionDouble", bare_ffmpeg_set_option_double)
+  V("setOptionRational", bare_ffmpeg_set_option_rational)
+  V("setOptionImageSize", bare_ffmpeg_set_option_image_size)
+  V("setOptionChannelLayout", bare_ffmpeg_set_option_channel_layout)
+  V("setOptionDictionaryValue", bare_ffmpeg_set_option_dictionary_value)
   V("getOption", bare_ffmpeg_get_option)
   V("listOptionNames", bare_ffmpeg_list_option_names)
   V("setOptionDictionary", bare_ffmpeg_set_option_dictionary)

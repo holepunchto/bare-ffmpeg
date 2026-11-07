@@ -45,7 +45,20 @@ volumeCtx.setOption('volume', '0.5')
 **Parameters:**
 
 - `name` (`string`): The option name
-- `value` (`string` | `number` | `boolean` | `Buffer`): The option value. Numbers and booleans are passed as their string form, which FFmpeg parses; a `Buffer` sets a binary option
+- `value` (`string` | `number` | `boolean` | `Rational` | `ChannelLayout` | `Dictionary` | `Buffer`): The option value. Each kind goes to the matching `av_opt_set_*()`; a string is parsed by FFmpeg according to the type of the option, which also accepts named constants and expressions
+- `flags` (`number`, optional): Option search flags
+
+**Returns**: `void`
+
+### `FilterContext.setOptionImageSize(name, width, height, flags?)`
+
+Sets an option that holds a size, such as `video_size`. The same option takes a `'WxH'` string through `setOption()`.
+
+**Parameters:**
+
+- `name` (`string`): The option name
+- `width` (`number`): The width in pixels
+- `height` (`number`): The height in pixels
 - `flags` (`number`, optional): Option search flags
 
 **Returns**: `void`
