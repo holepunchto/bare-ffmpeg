@@ -323,6 +323,57 @@ test('CodecContext can get and set options', (t) => {
   t.is(codecCtx.getOption('threads', ffmpeg.constants.optionFlags.SEARCH_CHILDREN), '4')
 })
 
+test('CodecContext.setOption takes every kind of value', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOption('threads', 4)
+  t.is(codecCtx.getOption('threads'), '4', 'an integer')
+
+  codecCtx.setOption('skip_alpha', true)
+  t.is(codecCtx.getOption('skip_alpha'), 'true', 'a boolean')
+
+  codecCtx.setOption('b_qfactor', 1.5)
+  t.is(Number(codecCtx.getOption('b_qfactor')), 1.5, 'a double')
+
+  codecCtx.setOption('time_base', new ffmpeg.Rational(1, 25))
+  t.is(codecCtx.getOption('time_base'), '1/25', 'a Rational')
+
+  codecCtx.setOption('ch_layout', ffmpeg.ChannelLayout.from('STEREO'))
+  t.is(codecCtx.getOption('ch_layout'), 'stereo', 'a ChannelLayout')
+
+  using options = new ffmpeg.Dictionary()
+  options.set('tune', '0')
+  codecCtx.setOption('svtav1-params', options)
+  t.is(codecCtx.getOption('svtav1-params'), 'tune=0', 'a Dictionary')
+
+  codecCtx.setOption('video_size', '320x240')
+  t.is(codecCtx.width, 320, 'a size as a string')
+})
+
+test('CodecContext.setOption throws on a value it cannot map', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception.all(() => codecCtx.setOption('threads', {}), TypeError)
+})
+
+// A buffer goes to `av_opt_set_bin()`, which no codec option takes, so FFmpeg
+// rejects the value as binary instead of parsing it as a string.
+test('CodecContext.setOption sends a buffer as binary', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  t.exception.all(() => codecCtx.setOption('threads', Buffer.from('4')), /Invalid argument/)
+  t.is(codecCtx.getOption('threads'), '1', 'the option is left alone')
+})
+
+test('CodecContext.setOptionImageSize sets a size option', (t) => {
+  using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
+
+  codecCtx.setOptionImageSize('video_size', 640, 480)
+
+  t.is(codecCtx.width, 640)
+  t.is(codecCtx.height, 480)
+})
+
 test('CodecContext.setOption throws if option is not found', (t) => {
   using codecCtx = new ffmpeg.CodecContext(ffmpeg.Codec.AV1.encoder)
 

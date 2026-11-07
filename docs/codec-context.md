@@ -241,7 +241,20 @@ Sets a codec option.
 **Parameters:**
 
 - `name` (`string`): The option name to set
-- `value` (`string`): The option value
+- `value` (`string` | `number` | `boolean` | `Rational` | `ChannelLayout` | `Dictionary` | `Buffer`): The option value. Each kind goes to the matching `av_opt_set_*()`; a string is parsed by FFmpeg according to the type of the option, which also accepts named constants and expressions
+- `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
+
+**Returns**: `void`
+
+### `CodecContext.setOptionImageSize(name, width, height[, flags])`
+
+Sets an option that holds a size, such as `video_size`. The same option takes a `'WxH'` string through `setOption()`.
+
+**Parameters:**
+
+- `name` (`string`): The option name to set
+- `width` (`number`): The width in pixels
+- `height` (`number`): The height in pixels
 - `flags` (`number`, optional): Option search flags (default `ffmpeg.constants.optionFlags.SEARCH_CHILDREN`)
 
 **Returns**: `void`
