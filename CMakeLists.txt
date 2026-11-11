@@ -46,6 +46,43 @@ set(link_libraries
 
 if(LINUX)
   list(APPEND link_libraries va va-drm)
+
+  # libpulse and libasound are optional at runtime, so they're loaded with dlopen() instead of linked
+  find_package(Threads REQUIRED)
+
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/lazy-symbols.h"
+    COMMAND
+      "${CMAKE_COMMAND}"
+      -D "NM=${CMAKE_NM}"
+      -D "LIBRARY=${ffmpeg_PREFIX}/lib/libavdevice.a"
+      -D "OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/lazy-symbols.h"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/lazy.cmake"
+    DEPENDS
+      "${ffmpeg_PREFIX}/lib/libavdevice.a"
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/lazy.cmake"
+  )
+
+  target_sources(
+    ${bare_ffmpeg}
+    PRIVATE
+      lazy.c
+      "${CMAKE_CURRENT_BINARY_DIR}/lazy-symbols.h"
+  )
+
+  target_include_directories(
+    ${bare_ffmpeg}
+    PRIVATE
+      "${CMAKE_CURRENT_BINARY_DIR}"
+  )
+
+  target_compile_definitions(
+    ${bare_ffmpeg}
+    PRIVATE
+      BARE_FFMPEG_LAZY
+  )
+
+  list(APPEND link_libraries ${CMAKE_DL_LIBS} Threads::Threads)
 endif()
 
 target_link_libraries(

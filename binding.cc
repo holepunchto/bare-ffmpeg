@@ -47,6 +47,10 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#ifdef BARE_FFMPEG_LAZY
+#include "lazy.h"
+#endif
+
 using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
 using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_arraybuffer_t, int32_t>;
 using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, int>;
@@ -368,6 +372,17 @@ bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
     throw js_pending_exception;
   }
 
+#ifdef BARE_FFMPEG_LAZY
+  const char *reason;
+
+  if (bare_ffmpeg_lazy_load(format->name, &reason) != 0) {
+    err = js_throw_errorf(env, NULL, "Output format '%s' is not available: %s", format->name, reason);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+#endif
+
   js_arraybuffer_t handle;
 
   bare_ffmpeg_output_format_t *context;
@@ -400,6 +415,17 @@ bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
 
     throw js_pending_exception;
   }
+
+#ifdef BARE_FFMPEG_LAZY
+  const char *reason;
+
+  if (bare_ffmpeg_lazy_load(format->name, &reason) != 0) {
+    err = js_throw_errorf(env, NULL, "Input format '%s' is not available: %s", format->name, reason);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
+#endif
 
   js_arraybuffer_t handle;
 

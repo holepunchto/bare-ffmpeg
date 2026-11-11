@@ -10,6 +10,8 @@
     "index.js",
     "binding.cc",
     "binding.js",
+    "lazy.c",
+    "lazy.h",
     "CMakeLists.txt",
     "lib",
     "prebuilds",

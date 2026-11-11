@@ -67,6 +67,21 @@ test('InputFormat has the device formats of this platform', (t) => {
   }
 })
 
+// alsa and pulse fail without a sound server or card, but they must not take the process with them
+test(
+  'InputFormat.listDevices lists or throws for alsa and pulse',
+  { skip: os.platform() !== 'linux' },
+  (t) => {
+    for (const name of ['alsa', 'pulse']) {
+      try {
+        t.ok(Array.isArray(ffmpeg.InputFormat.listDevices(name)), name)
+      } catch (err) {
+        t.ok(err instanceof Error, name + ': ' + err.message)
+      }
+    }
+  }
+)
+
 // Depends on the devices of the machine, dshow fails when there's no microphone
 const deviceFormat = { linux: 'v4l2', win32: 'dshow' }[os.platform()]
 const deviceFilter = { skip: !deviceFormat || process.env.CI }
