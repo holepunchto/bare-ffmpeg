@@ -17,7 +17,7 @@ const format = new ffmpeg.InputFormat([name])
 
 **Returns**: A new `InputFormat` instance
 
-**Throws**: Error if `name` isn't a string or no input format has that name
+**Throws**: Error if `name` isn't a string or no input format has that name, or, on Linux, if `name` is `'alsa'` or `'pulse'` and libasound or libpulse isn't installed. They're loaded the first time one of these formats is asked for.
 
 ## Properties
 
