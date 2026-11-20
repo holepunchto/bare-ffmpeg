@@ -17,7 +17,7 @@ const format = new ffmpeg.InputFormat([name])
 
 **Returns**: A new `InputFormat` instance
 
-**Throws**: Error if `name` isn't a string or no input format has that name
+**Throws**: Error if `name` isn't a string, no input format has that name, or the format's library is missing. On Linux, `pulse` needs `libpulse.so.0` at runtime.
 
 ## Properties
 

@@ -14,7 +14,7 @@ const format = new ffmpeg.OutputFormat(name)
 
 **Returns**: A new `OutputFormat` instance
 
-**Throws**: Error if `name` isn't a string or no output format has that name
+**Throws**: Error if `name` isn't a string, no output format has that name, or the format's library is missing. On Linux, `pulse` needs `libpulse.so.0` at runtime.
 
 ## Properties
 

@@ -314,6 +314,7 @@ if(CMAKE_STRIP)
 endif()
 
 set(depends)
+set(patches)
 set(pkg_config_path)
 
 if("gpl" IN_LIST features)
@@ -390,6 +391,13 @@ if(LINUX)
   list(APPEND depends ${vulkan_headers})
   list(APPEND args --enable-vulkan)
   list(APPEND cflags "-isystem${vulkan_headers_PREFIX}/include")
+
+  # libpulse is a runtime dependency, not a link-time one: the pulse device
+  # calls it through pointers the addon fills with dlsym(). See pulse/.
+  cmake_path(SET pulse NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/../../../pulse")
+
+  list(APPEND patches patches/01-pulse-dlopen.patch)
+  list(APPEND cflags "-I${pulse}")
 endif()
 
 if(CMAKE_HOST_WIN32)
@@ -460,6 +468,7 @@ declare_port(
   BYPRODUCTS ${byproducts}
   ARGS ${args}
   ENV ${env}
+  PATCHES ${patches}
 )
 
 file(MAKE_DIRECTORY "${ffmpeg_PREFIX}/include")
