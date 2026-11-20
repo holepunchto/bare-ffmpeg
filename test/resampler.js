@@ -1,6 +1,10 @@
 const test = require('brittle')
 const ffmpeg = require('..')
 
+// AV_CH_LAYOUT_HEXADECAGONAL. Resampling rejects layouts with a half-present
+// speaker pair, so a 16 channel layout cannot be a plain 16 bit mask.
+const HEXADECAGONAL = 0x33f737
+
 test('resampler converts frames', (t) => {
   using resampler = new ffmpeg.Resampler(
     44100,
@@ -265,14 +269,14 @@ test('resampler converts between different sample formats', (t) => {
 test('resampler converts planar audio with more than eight channels', (t) => {
   using resampler = new ffmpeg.Resampler(
     48000,
-    0xffff,
+    HEXADECAGONAL,
     ffmpeg.constants.sampleFormats.FLTP,
     48000,
     ffmpeg.constants.channelLayouts.STEREO,
     ffmpeg.constants.sampleFormats.FLTP
   )
 
-  using inputFrame = createAudioFrame(1024, 0xffff, ffmpeg.constants.sampleFormats.FLTP)
+  using inputFrame = createAudioFrame(1024, HEXADECAGONAL, ffmpeg.constants.sampleFormats.FLTP)
   using outputFrame = createAudioFrame(
     1024,
     ffmpeg.constants.channelLayouts.STEREO,
