@@ -34,6 +34,14 @@ target_sources(
     binding.cc
 )
 
+if(LINUX)
+  target_sources(
+    ${bare_ffmpeg}
+    PRIVATE
+      pulse/pulse.c
+  )
+endif()
+
 set(link_libraries
   avcodec
   avdevice

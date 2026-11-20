@@ -47,6 +47,10 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#ifdef __linux__
+#include "pulse/pulse.h"
+#endif
+
 using bare_ffmpeg_io_context_write_cb_t = js_function_t<void, js_arraybuffer_t>;
 using bare_ffmpeg_io_context_read_cb_t = js_function_t<int32_t, js_arraybuffer_t, int32_t>;
 using bare_ffmpeg_io_context_seek_cb_t = js_function_t<int64_t, int64_t, int>;
@@ -355,9 +359,30 @@ bare_ffmpeg_io_context_destroy(
   context->on_seek.reset();
 }
 
+// NULL unless the format needs a library that is loaded on demand and could
+// not be loaded, which keeps a missing libpulse a JavaScript error instead of
+// the "symbol lookup error" that kills the process.
+static const char *
+bare_ffmpeg_format_unavailable([[maybe_unused]] const std::string &name) {
+#ifdef __linux__
+  if (name == "pulse") return bare_ffmpeg_pulse_load();
+#endif
+
+  return NULL;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
+
+  const char *unavailable = bare_ffmpeg_format_unavailable(name);
+
+  if (unavailable != NULL) {
+    err = js_throw_errorf(env, NULL, "Output format '%s' is not available: %s", name.c_str(), unavailable);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 
   const AVOutputFormat *format = av_guess_format(name.c_str(), NULL, NULL);
 
@@ -391,6 +416,15 @@ bare_ffmpeg_output_format_get_flags(
 static js_arraybuffer_t
 bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
   int err;
+
+  const char *unavailable = bare_ffmpeg_format_unavailable(name);
+
+  if (unavailable != NULL) {
+    err = js_throw_errorf(env, NULL, "Input format '%s' is not available: %s", name.c_str(), unavailable);
+    assert(err == 0);
+
+    throw js_pending_exception;
+  }
 
   const AVInputFormat *format = av_find_input_format(name.c_str());
 

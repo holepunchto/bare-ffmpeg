@@ -57,7 +57,7 @@ test('InputFormat has the device formats of this platform', (t) => {
   const deviceFormats = {
     darwin: ['avfoundation'],
     ios: ['avfoundation'],
-    linux: ['v4l2', 'alsa', 'pulse'],
+    linux: ['v4l2', 'alsa'],
     win32: ['dshow'],
     android: ['android_camera']
   }[os.platform()]
@@ -80,5 +80,17 @@ test('InputFormat.listDevices returns an array of devices', deviceFilter, (t) =>
     t.is(typeof device.description, 'string')
     t.is(typeof device.default, 'boolean')
     t.ok(Array.isArray(device.mediaTypes))
+  }
+})
+
+// libpulse is loaded on demand, so pulse is available only where the library
+// is installed. Either way the process survives.
+const pulseFilter = { skip: os.platform() !== 'linux' }
+
+test('InputFormat pulse opens or throws, never kills the process', pulseFilter, (t) => {
+  try {
+    t.ok(Array.isArray(ffmpeg.InputFormat.listDevices('pulse')))
+  } catch (err) {
+    t.ok(err.message.includes("Input format 'pulse' is not available"), err.message)
   }
 })
