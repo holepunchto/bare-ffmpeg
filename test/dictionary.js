@@ -75,3 +75,11 @@ test('it should be created from an object', (t) => {
   t.is(dict.get('foo'), 'bar')
   t.is(dict.get('boo'), 'baz')
 })
+
+test('key or value with a NUL', (t) => {
+  using dict = new ffmpeg.Dictionary()
+
+  t.exception.all(() => dict.set('protocol_whitelist\0x', 'file'), TypeError)
+  t.exception.all(() => dict.set('protocol_whitelist', 'file\0,http'), TypeError)
+  t.is(dict.get('protocol_whitelist'), null, 'nothing was set')
+})

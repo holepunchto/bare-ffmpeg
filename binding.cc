@@ -355,8 +355,20 @@ bare_ffmpeg_io_context_destroy(
   context->on_seek.reset();
 }
 
+static void
+bare_ffmpeg__check_c_string(js_env_t *env, const std::string &value) {
+  if (value.find('\0') == std::string::npos) return;
+
+  int err = js_throw_type_error(env, NULL, "String must not contain null bytes");
+  assert(err == 0);
+
+  throw js_pending_exception;
+}
+
 static js_arraybuffer_t
 bare_ffmpeg_output_format_init(js_env_t *env, js_receiver_t, std::string name) {
+  bare_ffmpeg__check_c_string(env, name);
+
   int err;
 
   const AVOutputFormat *format = av_guess_format(name.c_str(), NULL, NULL);
@@ -390,6 +402,8 @@ bare_ffmpeg_output_format_get_flags(
 
 static js_arraybuffer_t
 bare_ffmpeg_input_format_init(js_env_t *env, js_receiver_t, std::string name) {
+  bare_ffmpeg__check_c_string(env, name);
+
   int err;
 
   const AVInputFormat *format = av_find_input_format(name.c_str());
@@ -571,6 +585,8 @@ bare_ffmpeg_format_context_open_input_with_format(
   js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> options,
   std::string url
 ) {
+  bare_ffmpeg__check_c_string(env, url);
+
   int err;
 
   js_arraybuffer_t handle;
@@ -864,6 +880,8 @@ bare_ffmpeg_format_context_dump(
   int32_t index,
   std::string url
 ) {
+  bare_ffmpeg__check_c_string(env, url);
+
   av_dump_format(context->handle, index, url.c_str(), is_output);
 
   for (int i = 0; i < context->handle->nb_streams; i++) {
@@ -1159,6 +1177,8 @@ bare_ffmpeg_find_encoder_by_id(js_env_t *env, js_receiver_t, uint32_t id) {
 
 static js_arraybuffer_t
 bare_ffmpeg_find_decoder_by_name(js_env_t *env, js_receiver_t, std::string name) {
+  bare_ffmpeg__check_c_string(env, name);
+
   int err;
 
   const AVCodec *decoder = avcodec_find_decoder_by_name(name.c_str());
@@ -1182,6 +1202,8 @@ bare_ffmpeg_find_decoder_by_name(js_env_t *env, js_receiver_t, std::string name)
 
 static js_arraybuffer_t
 bare_ffmpeg_find_encoder_by_name(js_env_t *env, js_receiver_t, std::string name) {
+  bare_ffmpeg__check_c_string(env, name);
+
   int err;
 
   const AVCodec *encoder = avcodec_find_encoder_by_name(name.c_str());
@@ -1597,6 +1619,8 @@ bare_ffmpeg_frame_get_metadata_entry(
   js_arraybuffer_span_of_t<bare_ffmpeg_frame_t, 1> frame,
   std::string key
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVDictionary *dict = frame->handle->metadata;
   if (!dict) return std::nullopt;
 
@@ -2888,6 +2912,8 @@ bare_ffmpeg_color_space_from_name(
   js_receiver_t,
   std::string color_space_name
 ) {
+  bare_ffmpeg__check_c_string(env, color_space_name);
+
   int id = av_color_space_from_name(color_space_name.c_str());
 
   if (id < 0) {
@@ -2915,6 +2941,8 @@ bare_ffmpeg_color_primaries_from_name(
   js_receiver_t,
   std::string color_primaries_name
 ) {
+  bare_ffmpeg__check_c_string(env, color_primaries_name);
+
   int id = av_color_primaries_from_name(color_primaries_name.c_str());
 
   if (id < 0) {
@@ -2942,6 +2970,8 @@ bare_ffmpeg_color_transfer_from_name(
   js_receiver_t,
   std::string color_trc_name
 ) {
+  bare_ffmpeg__check_c_string(env, color_trc_name);
+
   int id = av_color_transfer_from_name(color_trc_name.c_str());
 
   if (id < 0) {
@@ -3195,6 +3225,8 @@ bare_ffmpeg_hw_device_context_init(
   int type,
   std::optional<std::string> device
 ) {
+  if (device.has_value()) bare_ffmpeg__check_c_string(env, device.value());
+
   int err;
 
   js_arraybuffer_t handle;
@@ -3258,6 +3290,8 @@ bare_ffmpeg_hw_device_type_from_name(
   js_receiver_t,
   std::string name
 ) {
+  bare_ffmpeg__check_c_string(env, name);
+
   AVHWDeviceType type = av_hwdevice_find_type_by_name(name.c_str());
 
   if (type == AV_HWDEVICE_TYPE_NONE) {
@@ -4386,6 +4420,9 @@ bare_ffmpeg_dictionary_set_entry(
   std::string key,
   std::string value
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+  bare_ffmpeg__check_c_string(env, value);
+
   int err;
 
   err = av_dict_set(&dict->handle, key.c_str(), value.c_str(), 0);
@@ -4416,6 +4453,8 @@ bare_ffmpeg_dictionary_get_entry(
   js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dict,
   std::string key
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVDictionaryEntry *entry = av_dict_get(dict->handle, key.c_str(), NULL, 0);
 
   if (entry == NULL) {
@@ -4827,6 +4866,8 @@ bare_ffmpeg_filter_get_by_name(
   js_receiver_t,
   std::string name
 ) {
+  bare_ffmpeg__check_c_string(env, name);
+
   int err;
 
   js_arraybuffer_t handle;
@@ -4893,6 +4934,9 @@ bare_ffmpeg_filter_graph_create_filter(
   std::string name,
   std::optional<std::string> args
 ) {
+  bare_ffmpeg__check_c_string(env, name);
+  if (args.has_value()) bare_ffmpeg__check_c_string(env, args.value());
+
   int err = avfilter_graph_create_filter(
     &filter_context->handle,
     filter->handle,
@@ -4919,6 +4963,8 @@ bare_ffmpeg_filter_graph_parse(
   std::optional<js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1>> outputs,
   std::string filter_description
 ) {
+  bare_ffmpeg__check_c_string(env, filter_description);
+
   AVFilterInOut **inputs_ptr = inputs ? &inputs.value()->handle : nullptr;
   AVFilterInOut **outputs_ptr = outputs ? &outputs.value()->handle : nullptr;
 
@@ -5014,6 +5060,8 @@ bare_ffmpeg_filter_inout_set_name(
   js_arraybuffer_span_of_t<bare_ffmpeg_filter_inout_t, 1> filter_inout,
   std::string name
 ) {
+  bare_ffmpeg__check_c_string(env, name);
+
   if (filter_inout->handle->name) {
     av_free(filter_inout->handle->name);
   }
@@ -5085,6 +5133,9 @@ bare_ffmpeg_set_option(
   std::string value,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+  bare_ffmpeg__check_c_string(env, value);
+
   int err;
 
   AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
@@ -5140,6 +5191,8 @@ bare_ffmpeg_set_option_int(
   int64_t value,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   bare_ffmpeg_option_check(env, av_opt_set_int(*owner, key.c_str(), value, flags));
@@ -5154,6 +5207,8 @@ bare_ffmpeg_set_option_double(
   double value,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   bare_ffmpeg_option_check(env, av_opt_set_double(*owner, key.c_str(), value, flags));
@@ -5169,6 +5224,8 @@ bare_ffmpeg_set_option_rational(
   int32_t denominator,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   AVRational value = {numerator, denominator};
@@ -5186,6 +5243,8 @@ bare_ffmpeg_set_option_image_size(
   int32_t height,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   bare_ffmpeg_option_check(env, av_opt_set_image_size(*owner, key.c_str(), width, height, flags));
@@ -5200,6 +5259,8 @@ bare_ffmpeg_set_option_channel_layout(
   js_arraybuffer_span_of_t<bare_ffmpeg_channel_layout_t, 1> layout,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   bare_ffmpeg_option_check(env, av_opt_set_chlayout(*owner, key.c_str(), &layout->handle, flags));
@@ -5214,6 +5275,8 @@ bare_ffmpeg_set_option_dictionary_value(
   js_arraybuffer_span_of_t<bare_ffmpeg_dictionary_t, 1> dictionary,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   AVClass **owner = bare_ffmpeg_option_owner(env, handle);
 
   bare_ffmpeg_option_check(env, av_opt_set_dict_val(*owner, key.c_str(), dictionary->handle, flags));
@@ -5230,6 +5293,8 @@ bare_ffmpeg_set_option_binary(
   uint64_t len,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   int err;
 
   AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
@@ -5261,6 +5326,8 @@ bare_ffmpeg_get_option(
   std::string key,
   int flags
 ) {
+  bare_ffmpeg__check_c_string(env, key);
+
   int err;
   char *buf = NULL;
   AVClass **owner = reinterpret_cast<AVClass **>(handle.data());
