@@ -82,3 +82,7 @@ test('InputFormat.listDevices returns an array of devices', deviceFilter, (t) =>
     t.ok(Array.isArray(device.mediaTypes))
   }
 })
+
+test('InputFormat name with a NUL', (t) => {
+  t.exception.all(() => new ffmpeg.InputFormat('webm\0x'), TypeError)
+})
