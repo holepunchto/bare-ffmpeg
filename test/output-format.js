@@ -1,4 +1,5 @@
 const test = require('brittle')
+const os = require('bare-os')
 const ffmpeg = require('..')
 
 test('it should expose an OutputFormat class', (t) => {
@@ -43,3 +44,17 @@ test('OutputFormat throws when the name is not a string', (t) => {
   t.exception.all(() => new ffmpeg.OutputFormat(), TypeError)
   t.exception.all(() => new ffmpeg.OutputFormat(null), TypeError)
 })
+
+test(
+  'OutputFormat.listDevices lists or throws for alsa and pulse',
+  { skip: os.platform() !== 'linux' },
+  (t) => {
+    for (const name of ['alsa', 'pulse']) {
+      try {
+        t.ok(Array.isArray(ffmpeg.OutputFormat.listDevices(name)), name)
+      } catch (err) {
+        t.ok(err instanceof Error, name + ': ' + err.message)
+      }
+    }
+  }
+)
